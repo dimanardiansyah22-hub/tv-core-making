@@ -1,0 +1,2192 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Visualisasi WIP Core - Readiness Supply Core Making</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="tailwind-cdn.js"></script>
+<!-- Generate to PDF: render ringkasan → gambar → PDF; QR code lokal -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Font: Hanken Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#eb0a1e',
+            surface: '#f9f9f9',
+            'surface-dim': '#dadada',
+            'surface-container': '#f3f3f3',
+            'status-delay': '#c00000',
+            'status-normal': '#ffcc00',
+            'status-advance': '#38761d',
+            'status-trouble': '#f6b26b',
+'row-pink': '#f4b4b4',
+'row-blue': '#a8d4f5',
+            'table-border': '#333333',
+            'dark-surface': '#1a1a2e',
+            'dark-container': '#252540',
+            'dark-header': '#2a2a45',
+            'row-pink-dark': '#6b2c2c',
+            'row-blue-dark': '#1a3a6b',
+          },
+          fontFamily: {
+            sans: ['Hanken Grotesk', 'sans-serif'],
+          },
+          borderRadius: {
+            'none': '0',
+            'sm': '2px',
+            'DEFAULT': '4px',
+            'md': '6px',
+            'lg': '8px',
+          },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+            'tv': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="layout-styles">
+    body {
+      background-color: #f3f4f6;
+      color: #1a1a1a;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      box-shadow: 0 0 0 2px #1a1a1a;
+    }
+
+    th, td {
+      border: 1px solid #1a1a1a;
+      padding: 0;
+    }
+    
+    .cell-input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-weight: 700;
+      font-size: 22px;
+      padding: 0;
+      margin: 0;
+      display: block;
+      box-sizing: border-box;
+      transition: background-color 0.2s;
+    }
+    
+    .cell-input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: inset 0 0 0 3px #eb0a1e;
+      z-index: 10;
+    }
+
+
+    .row-height {
+      height: 26px;
+    }
+
+
+    /* Print styling */
+    @media print {
+      @page { size: A4 landscape; margin: 8mm; }
+      .no-print { display: none; }
+      body { background-color: white; padding: 0; margin: 0; }
+      .shadow-card { box-shadow: none; border: 1px solid #ddd; }
+    }
+
+    /* Fullscreen: lebar kolom C/C & Fr/Rr+Wj/Sb dipertahankan, keterangan menyesuaikan teks */
+    .fullscreen #wip-core-table col[data-k="jam"] {
+      width: 96px !important;
+      min-width: 96px !important;
+    }
+    .fullscreen #wip-core-table col[data-k="cc"],
+    .fullscreen #wip-core-table col[data-k="fr"] {
+      width: 80px !important;
+      min-width: 80px !important;
+      max-width: 80px !important;
+    }
+    .fullscreen #wip-core-table col[data-k="ready"] {
+      width: 480px !important;
+      min-width: 480px !important;
+    }
+    .fullscreen #wip-core-table col[data-k="note"] {
+      width: auto !important;
+      min-width: 130px !important;
+    }
+    .fullscreen td[data-col="readiness"],
+    .fullscreen th[data-col="readiness"] {
+      width: 480px !important;
+      min-width: 480px !important;
+    }
+    .fullscreen td[data-col="note"],
+    .fullscreen th[data-col="note"] {
+      width: auto !important;
+      min-width: 130px !important;
+    }
+
+    /* Stacked note panes: dashed separator within one hour */
+    .note-pane { border-bottom: 1px dashed #1a1a1a !important; height: 24px; min-height: 24px; max-height: 24px; box-sizing: border-box; display: flex; align-items: center; overflow: hidden; }
+.note-pane:last-child { border-bottom: none !important; }
+
+    td[data-col="note"] textarea {
+      font-size: 14px !important;
+    }
+
+    .ef-panel .ef-value { color: #111827; }
+    .ef-panel .ef-label { color: #6b7280; }
+    .ef-panel .ef-bar-track { background: #f3f4f6; }
+    .ef-panel .ef-input {
+      width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 6px;
+      background: #fff; color: #111827; text-align: center; font-weight: 700; font-size: 13px;
+      padding: 5px 6px; min-width: 0;
+    }
+    .ef-panel .ef-input:focus { outline: none; border-color: #eb0a1e; box-shadow: inset 0 0 0 2px rgba(235,10,30,.25); }
+    .ef-panel .ef-input.prod-num {
+      border: none; border-radius: 0; background: transparent;
+      font-size: 17px; padding: 6px 2px;
+    }
+    .ef-panel .ef-input.prod-num:focus { border: none; background: transparent; box-shadow: none; }
+    body.dark-mode .ef-panel {
+      background: #383855 !important;
+    }
+    body.dark-mode .ef-panel .ef-value {
+      color: #f5f5ff !important;
+    }
+    body.dark-mode .ef-panel .ef-label {
+      color: #b0b0d0 !important;
+    }
+    body.dark-mode .ef-panel .ef-bar-track {
+      background: #2d2d44 !important;
+    }
+    body.dark-mode .ef-panel .ef-input {
+      background: #2d2d44; color: #f5f5ff; border-color: #555;
+    }
+    body.dark-mode .ef-panel .ef-input:focus {
+      border-color: #eb0a1e; box-shadow: inset 0 0 0 2px rgba(235,10,30,.35);
+    }
+    body.dark-mode .ef-panel .ef-input.prod-num { background: transparent; color: #fff; }
+    body.dark-mode #oee-bar { background: #e5e7eb !important; }
+
+    /* Tabel Planning Produksi + CT: teks & garis kontras (hitam pagi / putih malam) */
+    .ef-panel .prod-table { color: #111; border-top: 1px solid #333; }
+    .ef-panel .prod-table table { box-shadow: none; }
+    .ef-panel .prod-table th,
+    .ef-panel .prod-table td { color: #111; }
+    .ef-panel .prod-table thead tr { border-bottom: 1px solid #333; }
+    .ef-panel .prod-table tbody tr { border-top: 1px solid #333; }
+    body.dark-mode .ef-panel .prod-table { color: #fff; border-top-color: #fff !important; }
+    body.dark-mode .ef-panel .prod-table th,
+    body.dark-mode .ef-panel .prod-table td {
+      color: #fff;
+      border-color: #fff !important;
+    }
+    body.dark-mode .ef-panel .prod-table thead tr { border-bottom: 1px solid #fff !important; }
+    body.dark-mode .ef-panel .prod-table tbody tr { border-top: 1px solid #fff !important; }
+    .ef-panel .prod-table .ct-sep { border-top: 1px solid #333; }
+    body.dark-mode .ef-panel .prod-table .ct-sep { border-top: 1px solid #fff !important; }
+    body.dark-mode .ef-panel .prod-table td.bg-row-pink,
+    body.dark-mode .ef-panel .prod-table td.bg-row-blue { color: #111; }
+
+    /* ── Dark Mode ── */
+    body.dark-mode {
+      background-color: #2d2d44;
+      color: #e8e8f0;
+    }
+
+    body.dark-mode main > header {
+      background: #3e3e5c !important;
+      border-left-color: #eb0a1e !important;
+    }
+    body.dark-mode main > header h1 { color: #f5f5ff !important; }
+    body.dark-mode main > header p { color: #b0b0d0 !important; }
+
+    body.dark-mode .bg-white.rounded-lg.shadow-tv {
+      background: #383855 !important;
+    }
+    body.dark-mode .bg-white.rounded-lg.shadow-tv > div:last-child {
+      background: #3e3e5c !important;
+      border-top-color: #777 !important;
+    }
+    body.dark-mode .readiness-legend {
+      color: #e0e0f0 !important;
+    }
+
+    body.dark-mode table {
+      box-shadow: 0 0 0 2px #777;
+    }
+    body.dark-mode th,
+    body.dark-mode td {
+      border-color: #777 !important;
+    }
+
+    body.dark-mode thead tr.bg-slate-200 {
+      background: #4a4a6a !important;
+    }
+    body.dark-mode thead tr.bg-slate-200 th {
+      color: #f0f0ff !important;
+    }
+    body.dark-mode thead tr.bg-slate-100 {
+      background: #3c3c5a !important;
+    }
+    body.dark-mode thead tr.bg-slate-100 th {
+      color: #e0e0f0 !important;
+    }
+
+    body.dark-mode .bg-slate-100.text-gray-800 {
+      background: #3c3c5a !important;
+      color: #e0e0f0 !important;
+    }
+
+    body.dark-mode .bg-row-pink {
+      background: #f4b4b4 !important;
+    }
+    body.dark-mode .bg-row-blue {
+      background: #a8d4f5 !important;
+    }
+
+    body.dark-mode .bg-white.readiness-cell {
+      background: #3e3e5c !important;
+    }
+    body.dark-mode td.bg-white[data-col="note"] {
+      background: #3e3e5c !important;
+    }
+
+    body.dark-mode .cell-input {
+      color: #1a1a1a;
+      caret-color: #1a1a1a;
+    }
+    body.dark-mode .cell-input:focus {
+      background: rgba(255, 255, 255, 0.8) !important;
+      color: #1a1a1a;
+    }
+
+    body.dark-mode textarea {
+      color: #e0e0f0 !important;
+      background: transparent !important;
+    }
+
+    body.dark-mode .note-pane { border-bottom: 1px dashed #999 !important; }
+    body.dark-mode .note-pane:last-child { border-bottom: none !important; }
+    body.dark-mode #fullscreenBtn {
+      background: #4a4a6a !important;
+      color: #e0e0f0 !important;
+      border-color: #777 !important;
+    }
+    body.dark-mode #fullscreenBtn:hover {
+      background: #5a5a7a !important;
+    }
+
+    .shift-btn {
+      background: #f3f4f6;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    .shift-btn:hover {
+      background: #e5e7eb;
+    }
+    .shift-btn.active {
+      background: #fef3c7;
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 2px #fbbf24, 0 0 12px rgba(251, 191, 36, 0.5);
+      color: #92400e;
+    }
+
+    body.dark-mode .shift-btn {
+      background: #3a3a58 !important;
+      color: #d0d0e0 !important;
+      border-color: #666 !important;
+    }
+    body.dark-mode .shift-btn:hover {
+      background: #4a4a6a !important;
+    }
+    body.dark-mode .shift-btn.active {
+      background: #4a3a10 !important;
+      border-color: #f59e0b !important;
+      box-shadow: 0 0 0 2px #f59e0b, 0 0 12px rgba(245, 158, 11, 0.5) !important;
+      color: #fbbf24 !important;
+    }
+
+    /* Dashed vertical dividers between keterangan columns */
+
+    /* Sticky layout: header + column titles always visible */
+    body {
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    main[data-purpose="dashboard-main-container"] {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    main > div[data-purpose="table-wrap"] {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+    main > div[data-purpose="table-wrap"] > div[data-purpose="table-container"] {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .wip-table-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+    #wip-core-table {
+      table-layout: fixed;
+    }
+    #wip-core-table col[data-k="jam"] { width: 96px; }
+    #wip-core-table col[data-k="cc"],
+    #wip-core-table col[data-k="fr"] { width: 72px; }
+    #wip-core-table col[data-k="ready"] { width: 128px; }
+    #wip-core-table col[data-k="note"] { width: auto; }
+    .note-cell {
+      overflow: hidden;
+      vertical-align: middle;
+      padding: 0;
+    }
+    #wip-core-table thead {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    #wip-core-table thead tr:first-child th {
+      background: #e2e8f0 !important;
+    }
+    #wip-core-table thead tr:last-child th {
+      background: #f1f5f9 !important;
+      border-bottom: 2px solid #1a1a1a !important;
+    }
+    body.dark-mode #wip-core-table thead tr:first-child th {
+      background: #2a2a48 !important;
+    }
+    body.dark-mode #wip-core-table thead tr:last-child th {
+      background: #3c3c5a !important;
+      border-bottom: 2px solid #777 !important;
+    }
+  .confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .confirm-modal.on { display: flex; }
+
+    /* ── Modal Generate to PDF ── */
+    .pdf-modal { position: fixed; inset: 0; z-index: 1200; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.5); }
+    .pdf-modal.on { display: flex; }
+    .pdf-box { background:#fff; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.4); padding:22px 26px; width:min(92vw,420px); text-align:center; }
+    .pdf-box h3 { margin:0 0 2px; font-size:17px; font-weight:800; color:#111827; }
+    .pdf-status { min-height:20px; font-size:13px; font-weight:600; color:#16a34a; margin-top:8px; }
+    .pdf-status.err { color:#dc2626; }
+    #pdfQrBox { display:flex; align-items:center; justify-content:center; min-height:190px; margin:10px auto 4px; }
+    #pdfQrBox canvas, #pdfQrBox img { border:6px solid #fff; outline:1px solid #e5e7eb; border-radius:6px; }
+    .pdf-actions { display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+    .pdf-actions button, .pdf-actions a {
+      padding:9px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer;
+      text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+    }
+    /* ── Modal History ── */
+    #historyModal .pdf-box { width:min(92vw,540px); text-align:left; }
+    #historyModal h3 { text-align:center; }
+    .hist-list { max-height:56vh; overflow-y:auto; margin-top:10px; border:1px solid #e5e7eb; border-radius:8px; }
+    .hist-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-bottom:1px solid #e5e7eb; font-size:13px; }
+    .hist-item:last-child { border-bottom:none; }
+    .hist-item:hover { background:#f8fafc; }
+    .hist-name { flex:1; min-width:0; cursor:pointer; }
+    .hist-name .n { display:block; font-weight:700; color:#111827; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hist-name .d { font-size:11px; color:#6b7280; }
+    .badge-temp { background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px; flex:none; }
+    .hist-view { border:none; background:#2563eb; color:#fff; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; flex:none; }
+    #pdfDriveBtn { border:none; background:#2563eb; color:#fff; }
+    #pdfDriveBtn:disabled { opacity:.55; cursor:not-allowed; }
+    #pdfDownloadBtn { border:1px solid #d1d5db; background:#fff; color:#374151; display:none; }
+    #pdfCloseBtn { border:none; background:transparent; color:#6b7280; }
+
+    #histRefreshBtn { border:none; background:#2563eb; color:#fff; }
+    #histCloseBtn { border:none; background:#e5e7eb; color:#374151; }
+
+    /* ── Lembar ringkasan (offscreen, di-capture html2canvas) ── */
+    /* Semua style inline agar tidak bergantung pada Tailwind saat render */
+    #pdfSummarySheet { position:fixed; left:-10000px; top:0; width:900px; background:#fff; color:#111827;
+      font-family:Arial, Helvetica, sans-serif; box-sizing:border-box; }
+    .confirm-box {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      padding: 22px 24px;
+      min-width: 320px;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .confirm-box p {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 18px;
+    }
+    .confirm-box .confirm-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .confirm-box .confirm-actions .btn-yes {
+      background: #dc2626;
+      color: #fff;
+    }
+    .confirm-box .confirm-actions .btn-no {
+      background: #e5e7eb;
+      color: #333;
+    }
+    .confirm-box .confirm-actions button {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    body.dark-mode .confirm-box { background: #2d2d44; }
+    body.dark-mode .confirm-box p { color: #e8e8f0; }
+    body.dark-mode .confirm-box .confirm-actions .btn-no { background: #3a3a58; color: #e8e8f0; }
+
+    /* ── Note / Keterangan dialog ── */
+    .note-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .note-modal.on { display: flex; }
+    .note-box {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+      padding: 24px 26px;
+      width: 440px;
+      max-width: 92vw;
+    }
+    .note-box h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+      margin: 0 0 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .note-field { margin-bottom: 14px; }
+    .note-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 5px;
+    }
+    .note-field input[type="text"],
+    .note-field input[type="number"],
+    .note-field textarea {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .note-field textarea {
+      height: auto;
+      min-height: 40px;
+      padding-top: 9px;
+      padding-bottom: 9px;
+      resize: none;
+      line-height: 1.4;
+      font-family: inherit;
+    }
+    .note-field input:focus,
+    .note-field textarea:focus {
+      border-color: #4a8cff;
+      box-shadow: 0 0 0 3px rgba(74, 140, 255, 0.2);
+    }
+    .note-field select {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #111827;
+      outline: none;
+      box-sizing: border-box;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .note-field select:focus {
+      border-color: #4a8cff;
+      box-shadow: 0 0 0 3px rgba(74, 140, 255, 0.2);
+    }
+    .note-types { display: flex; gap: 10px; }
+    .note-types label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 40px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #111827;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-bottom: 0;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .note-types input { display: none; }
+    .note-types label.has-av { color: #6d28d9; border-color: #ddd6fe; }
+    .note-types label.has-pe { color: #0369a1; border-color: #bae6fd; }
+    .note-types label.has-rq { color: #b45309; border-color: #fde68a; }
+    .note-types label.selected.has-av { background: #ede9fe; border-color: #8b5cf6; box-shadow: 0 0 0 2px #a78bfa; }
+    .note-types label.selected.has-pe { background: #e0f2fe; border-color: #0284c7; box-shadow: 0 0 0 2px #7dd3fc; }
+    .note-types label.selected.has-rq { background: #fef3c7; border-color: #D4A017; box-shadow: 0 0 0 2px #fcd34d; }
+    .note-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .note-actions button {
+      flex: 1;
+      height: 42px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .note-actions .nb-save { background: #10b981; color: #fff; }
+    .note-actions .nb-save:hover { background: #059669; }
+    .note-actions .nb-cancel { background: #e5e7eb; color: #374151; }
+    .note-actions .nb-cancel:hover { background: #d1d5db; }
+    .note-actions .nb-clear { background: #fee2e2; color: #b91c1c; }
+    .note-actions .nb-clear:hover { background: #fecaca; }
+    .note-cell .note-summary { overflow: hidden; }
+    .note-cell .note-summary .np { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    body.dark-mode .note-box { background: #2d2d44; }
+    body.dark-mode .note-box h3 { color: #f5f5ff; }
+    body.dark-mode .note-field label { color: #b0b0d0; }
+    body.dark-mode .note-field input[type="text"],
+    body.dark-mode .note-field input[type="number"],
+    body.dark-mode .note-field textarea,
+    body.dark-mode .note-field select {
+      background: #3a3a58; border-color: #555; color: #e8e8f0;
+    }
+    body.dark-mode .note-types label { border-color: #555; color: #e8e8f0; }
+    body.dark-mode .note-types label.selected.has-av { color: #4c1d95; }
+    body.dark-mode .note-types label.selected.has-pe { color: #0c4a6e; }
+    body.dark-mode .note-types label.selected.has-rq { color: #7c2d12; }
+    body.dark-mode .note-actions .nb-cancel { background: #3a3a58; color: #e8e8f0; }
+    body.dark-mode .note-actions .nb-clear { background: #4a2a2a; color: #fca5a5; }
+  </style>
+</head>
+<body class="p-2 font-sans lg:p-4 bg-surface">
+<!-- BEGIN: DashboardContainer -->
+<main class="max-w-[1800px] mx-auto space-y-2" data-purpose="dashboard-main-container">
+<!-- BEGIN: HeaderSection -->
+<header id="pageHeader" class="sticky top-0 z-40 bg-white px-6 py-3 rounded-lg shadow-tv border-l-[8px] border-brand flex items-center justify-between" data-purpose="title-header">
+<div class="flex flex-col justify-center">
+<h1 class="text-[31px] font-extrabold text-gray-900 tracking-tight uppercase leading-tight">
+      Visualisasi WIP Core
+    </h1>
+<p class="text-sm text-gray-600 font-semibold mt-0.5">Pencapaian Produksi Core Making</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2">
+<button onclick="openHistory()" class="no-print flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300" id="historyBtn" title="Lihat arsip PDF yang tersimpan di Drive">
+<span class="material-symbols-outlined text-base">folder_open</span>
+<span>History</span>
+</button>
+<button onclick="generatePdf()" class="no-print flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors border border-red-700" id="generatePdfBtn" title="Cetak / simpan dashboard sebagai PDF">
+<span class="material-symbols-outlined text-base">picture_as_pdf</span>
+<span>Generate to PDF</span>
+</button>
+<div class="no-print w-px self-stretch my-1.5 bg-gray-300" aria-hidden="true"></div>
+<button onclick="switchShift('pagi')" class="shift-btn no-print flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-lg border transition-all" id="shiftPagiBtn">
+<span class="material-symbols-outlined text-base">light_mode</span>
+<span>Shift Pagi</span>
+</button>
+<button onclick="switchShift('malam')" class="shift-btn no-print flex items-center gap-1 px-3 py-1.5 text-sm font-semibold rounded-lg border transition-all" id="shiftMalamBtn">
+<span class="material-symbols-outlined text-base">dark_mode</span>
+<span>Shift Malam</span>
+</button>
+</div>
+<button onclick="toggleFullscreen()" class="no-print flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300" id="fullscreenBtn">
+<span class="material-symbols-outlined text-base" id="fullscreenIcon">fullscreen</span>
+<span id="fullscreenLabel">Full Screen</span>
+</button>
+</div>
+</header>
+<!-- END: HeaderSection -->
+<!-- BEGIN: MainTable -->
+<div class="flex gap-2 items-stretch" data-purpose="table-wrap">
+<aside class="ef-panel hidden xl:flex w-56 shrink-0 bg-white rounded-lg shadow-tv overflow-y-auto" data-purpose="efficiency-panel">
+<div class="w-full p-2.5 flex flex-col">
+<div class="text-center">
+<div class="ef-label text-[15px] font-bold uppercase tracking-widest">OEE</div>
+<div id="oee-value" class="ef-value text-3xl font-black mt-1 leading-none">0%</div>
+<div class="ef-bar-track mt-2 h-3 rounded-full overflow-hidden">
+<div id="oee-bar" class="ef-bar h-full rounded-full transition-all duration-300" style="width:0%;background:#111827"></div>
+</div>
+</div>
+<div class="mt-3 space-y-2">
+<div>
+<div class="flex items-baseline justify-between">
+<span class="ef-label text-[12px] font-extrabold">AV</span>
+<span id="av-value" class="ef-value text-[13px] font-black leading-none">0%</span>
+</div>
+<div class="ef-bar-track mt-1 h-2 rounded-full overflow-hidden">
+<div id="av-bar" class="ef-bar h-full rounded-full transition-all duration-300" style="width:0%;background:#8b5cf6"></div>
+</div>
+</div>
+<div>
+<div class="flex items-baseline justify-between">
+<span class="ef-label text-[12px] font-extrabold">PE</span>
+<span id="pe-value" class="ef-value text-[13px] font-black leading-none">0%</span>
+</div>
+<div class="ef-bar-track mt-1 h-2 rounded-full overflow-hidden">
+<div id="pe-bar" class="ef-bar h-full rounded-full transition-all duration-300" style="width:0%;background:#0284c7"></div>
+</div>
+</div>
+<div>
+<div class="flex items-baseline justify-between">
+<span class="ef-label text-[12px] font-extrabold">RQ</span>
+<span id="rq-value" class="ef-value text-[13px] font-black leading-none">0%</span>
+</div>
+<div class="ef-bar-track mt-1 h-2 rounded-full overflow-hidden">
+<div id="rq-bar" class="ef-bar h-full rounded-full transition-all duration-300" style="width:0%;background:#D4A017"></div>
+</div>
+</div>
+</div>
+<div class="mt-3 pt-2 border-t border-gray-300">
+<div class="ef-label text-[15px] font-bold uppercase tracking-widest">Line Stop / Mesin</div>
+<div id="machine-list" class="mt-1.5 space-y-1.5 max-h-52 overflow-y-auto"></div>
+</div>
+<div class="mt-auto pt-2 border-t prod-table">
+<div class="ef-label text-[15px] font-bold uppercase tracking-widest text-center">Planning Produksi</div>
+<table class="w-full text-xs mt-1.5 border-collapse">
+<thead>
+<tr>
+<th class="text-center pb-1 font-semibold">TR</th>
+<th class="text-center pb-1 font-semibold">Plan</th>
+<th class="text-center pb-1 font-semibold">Actual</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="py-1 font-bold text-center align-middle bg-row-pink">1 TR</td>
+<td class="py-1 text-center align-middle"><input type="text" inputmode="numeric" id="prod-1tr-plan" class="ef-input prod-num" placeholder="0"></td>
+<td class="py-1 text-center align-middle"><input type="text" inputmode="numeric" id="prod-1tr-act" class="ef-input prod-num" placeholder="0"></td>
+</tr>
+<tr>
+<td class="py-1 font-bold text-center align-middle bg-row-blue">2 TR</td>
+<td class="py-1 text-center align-middle"><input type="text" inputmode="numeric" id="prod-2tr-plan" class="ef-input prod-num" placeholder="0"></td>
+<td class="py-1 text-center align-middle"><input type="text" inputmode="numeric" id="prod-2tr-act" class="ef-input prod-num" placeholder="0"></td>
+</tr>
+</tbody>
+</table>
+<div class="mt-2 pt-2 ct-sep">
+<div class="flex items-center justify-between">
+<span class="ef-label text-[15px] font-bold uppercase tracking-widest">Cycle Time</span>
+<input type="text" inputmode="decimal" id="ct-input" class="ef-input !w-24" placeholder="0" title="Cycle Time menit per pcs">
+</div>
+</div>
+<div id="plan-notice" class="hidden mt-2 px-2 py-1.5 bg-yellow-50 border border-yellow-300 rounded text-[12px] text-yellow-700 font-semibold text-center leading-tight">
+  Masukkan Planning Produksi &amp; Cycle Time
+</div>
+</div>
+</div>
+</aside>
+<div class="flex-1 min-w-0 bg-white rounded-lg shadow-tv overflow-hidden" data-purpose="table-container">
+<div class="overflow-x-auto wip-table-scroll">
+<table class="min-w-full" id="wip-core-table">
+<colgroup class="wip-cols">
+<col data-k="jam">
+<col data-k="cc" span="2">
+<col data-k="cc" span="2">
+<col data-k="fr" span="2">
+<col data-k="ready">
+<col data-k="note">
+</colgroup>
+<thead class="text-lg font-bold uppercase text-gray-900">
+<!-- Main Header Row -->
+<tr class="bg-slate-200">
+<th class="w-24 px-2" rowspan="2">JAM</th>
+<th class="w-36 py-1" colspan="2">C/C DI CONVEYOR</th>
+<th class="w-36" colspan="2">C/C DI DOLLY</th>
+<th class="w-36" colspan="2">FR/RR &amp; WJ/SB</th>
+<th class="w-32 px-2 leading-tight" rowspan="2" data-col="readiness">READINESS INDICATOR</th>
+<th class="px-2 w-[360px]" colspan="1" rowspan="2" data-col="note">KETERANGAN</th>
+</tr>
+<!-- Sub Header Row (PLAN/ACT) -->
+<tr class="bg-slate-100">
+<th class="w-20 border-t py-1">PLAN</th>
+<th class="w-20 border-t py-1">ACT</th>
+<th class="w-20 border-t py-1">PLAN</th>
+<th class="w-20 border-t py-1">ACT</th>
+<th class="w-20 border-t py-1">PLAN</th>
+<th class="w-20 border-t py-1">ACT</th>
+</tr>
+</thead>
+<tbody></tbody>
+
+</table>
+</div>
+<div class="flex justify-between items-center gap-2 px-4 py-3 border-t border-gray-300 bg-white">
+<div class="flex items-center gap-4 text-xs font-semibold text-gray-700 readiness-legend">
+<span class="flex items-center gap-1.5"><span class="inline-flex w-9 h-4 items-center justify-center rounded-sm text-[9px] font-bold text-gray-800" style="background:#f4b4b4">1 TR</span></span>
+<span class="flex items-center gap-1.5"><span class="inline-flex w-9 h-4 items-center justify-center rounded-sm text-[9px] font-bold text-gray-800" style="background:#a8d4f5">2 TR</span></span>
+<span class="flex items-center gap-1.5"><span class="inline-block w-8 h-4 rounded-sm" style="background:#8b0000"></span> Stock Habis</span>
+<span class="flex items-center gap-1.5"><span class="inline-block h-4 flex justify-center"><span class="inline-block w-8" style="background:linear-gradient(to left,#F4D125,#C65C10)"></span></span> Ready</span>
+<span class="flex items-center gap-1.5"><span class="inline-block h-4 w-4 flex justify-center"><span class="inline-block h-full border-l border-dashed" style="border-left-width:1.5px;border-color:#9ca3af"></span></span> Standar WIP</span>
+<span class="flex items-center gap-1.5"><span class="inline-block h-4 flex justify-center"><span class="inline-block w-8" style="background:linear-gradient(to right,#2e7d32,#4caf50,#66ff99)"></span></span> Advance</span>
+</div>
+<div class="flex items-center gap-2">
+<button onclick="clearPlanOnly()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-base">playlist_remove</span>
+<span>Hapus PLAN</span>
+</button>
+<button onclick="clearActOnly()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-base">playlist_remove</span>
+<span>Hapus ACT</span>
+</button>
+<button onclick="clearNotesData()" class="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-base">playlist_remove</span>
+<span>Hapus Keterangan</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- END: MainTable -->
+
+<div class="note-modal" id="noteModal">
+  <div class="note-box">
+    <h3>Keterangan Line Stop</h3>
+    <div class="note-field">
+      <label for="note-problem">Problem</label>
+      <input type="text" id="note-problem" maxlength="80" placeholder="Nama masalah...">
+    </div>
+    <div class="note-field">
+      <label for="note-waktu">Waktu Line Stop (menit)</label>
+      <input type="number" id="note-waktu" min="0" step="1" placeholder="0">
+    </div>
+    <div class="note-field">
+      <label>Jenis Line Stop</label>
+      <div class="note-types">
+        <label class="has-av selected" data-type="AV"><input type="radio" name="note-type" value="AV" checked> AV</label>
+        <label class="has-pe" data-type="PE"><input type="radio" name="note-type" value="PE"> PE</label>
+        <label class="has-rq" data-type="RQ"><input type="radio" name="note-type" value="RQ"> RQ</label>
+      </div>
+    </div>
+    <div class="note-field">
+      <label for="note-mesin">Mesin</label>
+      <select id="note-mesin">
+        <option value="">— Pilih Mesin —</option>
+        <option value="ICM 002">ICM 002</option>
+        <option value="ICM 003">ICM 003</option>
+        <option value="ICM 006">ICM 006</option>
+        <option value="ICM 007">ICM 007</option>
+        <option value="ICM 008">ICM 008</option>
+        <option value="ICM 009">ICM 009</option>
+        <option value="Conveyor Crank Case">Conveyor Crank Case</option>
+        <option value="Dolly Lifter">Dolly Lifter</option>
+      </select>
+    </div>
+    <div class="note-field">
+      <label for="note-pg">Penanggulangan</label>
+      <textarea id="note-pg" rows="2" maxlength="120" placeholder="Tindakan penanggulangan..."></textarea>
+    </div>
+    <div class="note-actions">
+      <button class="nb-clear" id="noteClearBtn" type="button">Hapus</button>
+      <button class="nb-cancel" id="noteCancelBtn" type="button">Batal</button>
+      <button class="nb-save" id="noteSaveBtn" type="button">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="sync-core.js"></script>
+<script>
+const daySlots = [
+  "07:20 - 08:00",
+  "08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00", 
+  "11:00 - 12:00", "12:00 - 13:00", "13:00 - 14:00", 
+  "14:00 - 15:00", "15:00 - 16:00", "16:00 - 17:00",
+  "17:00 - 18:00", "18:00 - 19:00", "19:00 - 20:00"
+];
+
+const nightSlots = [
+  "19:00 - 20:00", "20:00 - 21:00", "21:00 - 22:00",
+  "22:00 - 23:00", "23:00 - 00:00", "00:00 - 01:00",
+  "01:00 - 02:00", "02:00 - 03:00", "03:00 - 04:00",
+  "04:00 - 05:00", "05:00 - 06:00", "06:00 - 07:00",
+  "07:00 - 08:00"
+];
+
+function getStorageKey() {
+  const shift = localStorage.getItem('wip-shift') === 'malam' ? 'malam' : 'pagi';
+  return `wip-core-data-${shift}`;
+}
+
+function currentShift() {
+  return localStorage.getItem('wip-shift') === 'malam' ? 'malam' : 'pagi';
+}
+
+function collectWipData() {
+  const data = {};
+  document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+    const slot = el.dataset.slot;
+    const idx = el.dataset.idx;
+    if (slot && idx !== undefined) data[`${slot}_${idx}`] = el.value;
+  });
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
+    const slot = el.dataset.slot;
+    const idx = el.dataset.idx;
+    if (slot && idx !== undefined) data[`note_${slot}_${idx}`] = el.dataset.note || '';
+  });
+  data._prod_1tr_plan = document.getElementById('prod-1tr-plan') ? document.getElementById('prod-1tr-plan').value : '';
+  data._prod_1tr_act = document.getElementById('prod-1tr-act') ? document.getElementById('prod-1tr-act').value : '';
+  data._prod_2tr_plan = document.getElementById('prod-2tr-plan') ? document.getElementById('prod-2tr-plan').value : '';
+  data._prod_2tr_act = document.getElementById('prod-2tr-act') ? document.getElementById('prod-2tr-act').value : '';
+  data._ct = document.getElementById('ct-input') ? document.getElementById('ct-input').value : '';
+  return data;
+}
+
+/* Peta id elemen panel (Planning Produksi + CT) ke kunci data di collectWipData */
+const PANEL_KEYS = {
+  'prod-1tr-plan': '_prod_1tr_plan',
+  'prod-1tr-act': '_prod_1tr_act',
+  'prod-2tr-plan': '_prod_2tr_plan',
+  'prod-2tr-act': '_prod_2tr_act',
+  'ct-input': '_ct'
+};
+
+function setPanelVal(data, id, fallback) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const k = PANEL_KEYS[id];
+  const v = data[k] !== undefined ? data[k] : data[id];
+  el.value = v !== undefined ? v : fallback;
+}
+
+/* ── Sinkronisasi terpusat (sync-core.js) ── */
+let _wipSaveTimer = null;
+let _wipPendingSave = {};
+let _wipLastTs = {};
+
+function saveAllData() {
+  localStorage.setItem(getStorageKey(), JSON.stringify(collectWipData()));
+  scheduleWipSave();
+}
+
+function scheduleWipSave() {
+  if (!window.Sync || !Sync.hasUrl()) return;
+  const shift = currentShift();
+  _wipPendingSave[shift] = true;
+  clearTimeout(_wipSaveTimer);
+  const snapshot = { shift, data: collectWipData() };
+  _wipSaveTimer = setTimeout(() => syncWipSave(snapshot), 800);
+}
+
+async function syncWipSave(snapshot) {
+  if (!window.Sync || !Sync.hasUrl()) return;
+  try {
+    const res = await Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data });
+    if (res && res.updatedAt) _wipLastTs[snapshot.shift] = res.updatedAt;
+    _wipPendingSave[snapshot.shift] = false;
+  } catch (e) {
+    _wipPendingSave[snapshot.shift] = false;
+  }
+}
+
+function noteValueForCell(data, slot, idx) {
+  let str = data[`note_${slot}_${idx}`];
+  if (!str && String(idx) === '2') str = data[`note_${slot}_3`];
+  return str !== undefined ? str : '';
+}
+
+function applyWipData(data) {
+  document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+    const slot = el.dataset.slot;
+    const idx = el.dataset.idx;
+    const key = `${slot}_${idx}`;
+    if (data[key] !== undefined) el.value = data[key];
+  });
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
+    const slot = el.dataset.slot;
+    const idx = el.dataset.idx;
+    const str = noteValueForCell(data, slot, idx);
+    el.dataset.note = str;
+    noteRenderSummary(el, str);
+  });
+  setPanelVal(data, 'prod-1tr-plan', '');
+  setPanelVal(data, 'prod-1tr-act', '');
+  setPanelVal(data, 'prod-2tr-plan', '');
+  setPanelVal(data, 'prod-2tr-act', '');
+  setPanelVal(data, 'ct-input', '');
+  renderReadiness();
+  updateEfficiency();
+}
+
+async function wipSyncFromServer() {
+  if (!window.Sync || !Sync.hasUrl()) return;
+  const shift = currentShift();
+  if (_wipPendingSave[shift]) return;
+  try {
+    const res = await Sync.get('wip', { shift, action: 'get' });
+    const data = (res && res.ok && res.data) ? res.data : null;
+    if (!data || !data.updatedAt) return;
+    if (data.updatedAt !== _wipLastTs[shift]) {
+      _wipLastTs[shift] = data.updatedAt;
+      const values = Object.assign({}, data);
+      delete values.updatedAt;
+      localStorage.setItem(getStorageKey(), JSON.stringify(values));
+      applyWipData(values);
+    }
+  } catch (e) {}
+}
+
+function loadSavedData() {
+  try {
+    const raw = localStorage.getItem(getStorageKey());
+    const data = raw ? JSON.parse(raw) : {};
+    document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+      const slot = el.dataset.slot;
+      const idx = el.dataset.idx;
+      const key = `${slot}_${idx}`;
+      if (data[key] !== undefined) el.value = data[key];
+      else el.value = '';
+    });
+    document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
+      const slot = el.dataset.slot;
+      const idx = el.dataset.idx;
+      const str = noteValueForCell(data, slot, idx);
+      el.dataset.note = str;
+      noteRenderSummary(el, str);
+    });
+    setPanelVal(data, 'prod-1tr-plan', '');
+    setPanelVal(data, 'prod-1tr-act', '');
+    setPanelVal(data, 'prod-2tr-plan', '');
+    setPanelVal(data, 'prod-2tr-act', '');
+    setPanelVal(data, 'ct-input', '');
+  } catch(e) {}
+}
+
+function renderTimeSlots(slots) {
+  const tbody = document.querySelector('#wip-core-table tbody');
+  tbody.innerHTML = '';
+  slots.forEach(slot => {
+    const slotKey = slot.replace(/ /g, '').replace(/:/g, '');
+    const parts = slot.split(' - ');
+    const slotHtml = `${parts[0]}<br>-<br>${parts[1]}`;
+    const row1 = document.createElement('tr');
+    row1.style.height = '36px';
+    row1.innerHTML = `
+      <td rowspan="2" class="text-center font-bold text-base bg-slate-100 text-gray-800 leading-none align-middle">${slotHtml}</td>
+      <td class="bg-row-pink"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="0"></td>
+      <td class="bg-row-pink"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="1"></td>
+      <td class="bg-row-pink"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="2"></td>
+      <td class="bg-row-pink"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="3"></td>
+      <td class="bg-row-pink"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="4"></td>
+      <td class="bg-row-pink"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="5"></td>
+      <td class="bg-white readiness-cell" rowspan="2" data-col="readiness"></td>
+      <td class="bg-white note-cell cursor-pointer p-0 align-middle" rowspan="2" data-col="note" data-slot="${slotKey}">
+        <div class="note-pane cursor-pointer p-1 flex items-center" data-slot="${slotKey}" data-idx="0" onclick="openNoteDialog('${slotKey}', 0)" title="Klik untuk input keterangan line stop"><div class="note-summary w-full h-full flex items-center gap-1 text-[12px] font-bold leading-tight overflow-hidden"></div></div>
+        <div class="note-pane cursor-pointer p-1 flex items-center" data-slot="${slotKey}" data-idx="1" onclick="openNoteDialog('${slotKey}', 1)" title="Klik untuk input keterangan line stop"><div class="note-summary w-full h-full flex items-center gap-1 text-[12px] font-bold leading-tight overflow-hidden"></div></div>
+        <div class="note-pane cursor-pointer p-1 flex items-center" data-slot="${slotKey}" data-idx="2" onclick="openNoteDialog('${slotKey}', 2)" title="Klik untuk input keterangan line stop"><div class="note-summary w-full h-full flex items-center gap-1 text-[12px] font-bold leading-tight overflow-hidden"></div></div>
+      </td>
+    `;
+    const row2 = document.createElement('tr');
+    row2.style.height = '36px';
+    row2.innerHTML = `
+      <td class="bg-row-blue"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="6"></td>
+      <td class="bg-row-blue"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="7"></td>
+      <td class="bg-row-blue"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="8"></td>
+      <td class="bg-row-blue"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="9"></td>
+      <td class="bg-row-blue"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="10"></td>
+      <td class="bg-row-blue"><input type="text" class="cell-input" data-slot="${slotKey}" data-idx="11"></td>
+    `;
+    tbody.appendChild(row1);
+    tbody.appendChild(row2);
+  });
+  loadSavedData();
+  renderReadiness();
+  bindInputEvents();
+  updateEfficiency();
+}
+
+function plannedMinutes() {
+  const slots = currentShift() === 'malam' ? nightSlots : daySlots;
+  let total = 0;
+  slots.forEach(s => {
+    const p = s.split(' - ');
+    const a = p[0].split(':'), b = p[1].split(':');
+    let d = (parseInt(b[0]) * 60 + parseInt(b[1])) - (parseInt(a[0]) * 60 + parseInt(a[1]));
+    if (d <= 0) d += 1440;
+    total += d;
+  });
+  return total;
+}
+
+function lineStopMinutesByType() {
+  const sums = { AV: 0, PE: 0, RQ: 0 };
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+    const o = noteParse(td.dataset.note || '');
+    if (o && o.tp && o.wt) {
+      const wt = parseInt(o.wt) || 0;
+      if (wt > 0) sums[o.tp] = (sums[o.tp] || 0) + wt;
+    }
+  });
+  return sums;
+}
+
+let MACHINES = [
+  'ICM 002', 'ICM 003', 'ICM 006', 'ICM 007',
+  'ICM 008', 'ICM 009', 'Conveyor Crank Case', 'Dolly Lifter'
+];
+const MACHINE_SHORT = { 'Conveyor Crank Case': 'C.C. Conveyor', 'Dolly Lifter': 'Dolly' };
+
+function renderMachineOptions() {
+  const sel = document.getElementById('note-mesin');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Pilih Mesin —</option>';
+  MACHINES.forEach(function (m) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  });
+  sel.value = cur;
+}
+
+async function loadMachines() {
+  try {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    const res = await Sync.get('machines', { action: 'get' });
+    const list = (res && res.ok && res.data && Array.isArray(res.data.machines)) ? res.data.machines : null;
+    if (list && list.length) {
+      MACHINES = list;
+      renderMachineOptions();
+    } else {
+      // Seed: belum ada konfigurasi → simpan daftar default sekali supaya
+      // Data OEE & Visualisasi WIP memakai daftar master yang sama.
+      await Sync.save('machines', { action: 'save', data: { machines: MACHINES } });
+      renderMachineOptions();
+    }
+  } catch (e) {}
+}
+
+function renderMachineList() {
+  const wrap = document.getElementById('machine-list');
+  if (!wrap) return;
+  const rows = {};
+  const colors = { AV: '#8b5cf6', PE: '#0284c7', RQ: '#D4A017' };
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+    const o = noteParse(td.dataset.note || '');
+    if (!o || !o.me || !o.wt) return;
+    const wt = parseInt(o.wt) || 0;
+    if (wt <= 0) return;
+    if (!rows[o.me]) rows[o.me] = { AV: 0, PE: 0, RQ: 0 };
+    rows[o.me][o.tp || 'AV'] += wt;
+  });
+  const names = Object.keys(rows).sort((a, b) => (
+    (rows[b].AV + rows[b].PE + rows[b].RQ) - (rows[a].AV + rows[a].PE + rows[a].RQ)
+  ));
+  if (!names.length) {
+    wrap.innerHTML = '<div class="ef-label text-[15px] text-gray-400">Belum ada line stop</div>';
+    return;
+  }
+  const max = Math.max(1, ...names.map(m => rows[m].AV + rows[m].PE + rows[m].RQ));
+  wrap.innerHTML = names.map(m => {
+    const r = rows[m];
+    const total = r.AV + r.PE + r.RQ;
+    const short = MACHINE_SHORT[m] || m;
+    const segs = ['AV', 'PE', 'RQ'].map(tp =>
+      r[tp] ? '<span class="h-full flex-none" style="background:' + colors[tp] + ';width:' + (r[tp] / max) * 100 + '%"></span>' : ''
+    ).join('');
+    return '<div>'
+      + '<div class="flex items-baseline justify-between gap-1">'
+      + '<span class="ef-label text-[15px] font-bold truncate" title="' + esc(m) + '">' + esc(short) + '</span>'
+      + '<span class="ef-value text-[17px] font-black shrink-0">' + total + 'm</span>'
+      + '</div>'
+      + '<div class="ef-bar-track mt-0.5 h-2 rounded-full overflow-hidden flex">' + segs + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function computeOee() {
+  const read = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const plan1 = read('prod-1tr-plan');
+  const plan2 = read('prod-2tr-plan');
+  const ct = read('ct-input');
+  const ls = lineStopMinutesByType();
+  /* Baseline 100% OEE = (Plan 1TR + Plan 2TR) × 5 lot/pcs × Cycle Time */
+  const baseTime = (plan1 + plan2) * 5 * ct;
+  if (baseTime <= 0) {
+    return { av: 0, pe: 0, rq: 0, oee: 0, ls, pt: 0, hasBaseline: false };
+  }
+  const av = Math.max(0, Math.min(100, 100 * (1 - (ls.AV || 0) / baseTime)));
+  const pe = Math.max(0, Math.min(100, 100 * (1 - (ls.PE || 0) / baseTime)));
+  const rq = Math.max(0, Math.min(100, 100 * (1 - (ls.RQ || 0) / baseTime)));
+  const oee = (av * pe * rq) / 10000;
+  return { av, pe, rq, oee, ls, pt: baseTime, hasBaseline: true };
+}
+
+function updateEfficiency() {
+  const { av, pe, rq, oee, ls, pt, hasBaseline } = computeOee();
+  const notice = document.getElementById('plan-notice');
+  if (notice) notice.classList.toggle('hidden', !!hasBaseline);
+  const fmt = n => Math.round(n) + '%';
+  const set = (id, v) => {
+    document.getElementById(id).textContent = fmt(v);
+    document.getElementById(id.replace('-value', '-bar')).style.width = fmt(v);
+  };
+  set('av-value', av);
+  set('pe-value', pe);
+  set('rq-value', rq);
+  set('oee-value', oee);
+  renderMachineList();
+}
+
+function bindInputEvents() {
+  document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+    el.addEventListener('input', () => {
+      renderReadiness();
+      saveAllData();
+      updateEfficiency();
+    });
+  });
+  bindCellNav();
+}
+
+function bindPanelInputs() {
+  const numericFilter = value => value.replace(/[^0-9.]/g, '');
+  ['prod-1tr-plan', 'prod-1tr-act', 'prod-2tr-plan', 'prod-2tr-act', 'ct-input'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.__bound) {
+      el.__bound = true;
+      el.addEventListener('input', () => {
+        if (el.value !== numericFilter(el.value)) {
+          el.value = numericFilter(el.value);
+        }
+        saveAllData();
+        updateEfficiency();
+      });
+    }
+  });
+}
+
+/* Navigasi keyboard pada panel Planning Produksi + CT (spreadsheet):
+   kiri/kanan pindah Plan ↔ Actual, atas/bawah & Enter turun/naik baris */
+function bindPanelNav() {
+  const rows = [['prod-1tr-plan', 'prod-1tr-act'], ['prod-2tr-plan', 'prod-2tr-act'], ['ct-input']];
+  const ids = rows.flat();
+  const index = x => ids.indexOf(typeof x === 'string' ? x : x.id);
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.__navBound) return;
+    el.__navBound = true;
+    el.addEventListener('keydown', e => {
+      const k = e.key;
+      const cur = index(el);
+      let next = -1;
+
+      if (k === 'ArrowLeft') {
+        if (el.id === 'prod-1tr-act') next = index('prod-1tr-plan');
+        else if (el.id === 'prod-2tr-act') next = index('prod-2tr-plan');
+      } else if (k === 'ArrowRight') {
+        if (el.id === 'prod-1tr-plan') next = index('prod-1tr-act');
+        else if (el.id === 'prod-2tr-plan') next = index('prod-2tr-act');
+      } else if (k === 'ArrowDown' || k === 'Enter') {
+        if (el.id === 'prod-1tr-plan') next = index('prod-2tr-plan');
+        else if (el.id === 'prod-1tr-act') next = index('prod-2tr-act');
+        else if (el.id === 'prod-2tr-plan') next = index('ct-input');
+        else if (el.id === 'prod-2tr-act') next = index('ct-input');
+        else next = index('prod-1tr-plan');
+      } else if (k === 'ArrowUp') {
+        if (el.id === 'prod-2tr-plan') next = index('prod-1tr-plan');
+        else if (el.id === 'prod-2tr-act') next = index('prod-1tr-act');
+        else if (el.id === 'ct-input') next = index('prod-2tr-plan');
+        else return;
+      } else { return; }
+
+      if (next !== -1) {
+        e.preventDefault();
+        const target = document.getElementById(ids[next]);
+        if (target) { target.focus(); target.select(); }
+      }
+    });
+  });
+}
+
+/* Navigasi antar cell pengisian angka layaknya spreadsheet:
+   panah ←→↑↓ berpindah cell, Enter/panah bawah turun ke cell di bawahnya.
+   Grid logis: (slot, row a/b, col 0-5). */
+function bindCellNav() {
+  const table = document.getElementById('wip-core-table');
+  if (!table) return;
+
+  function build() {
+    const inputs = Array.from(document.querySelectorAll('#wip-core-table .cell-input'));
+    const slots = [];
+    const seen = new Set();
+    inputs.forEach(el => {
+      const key = el.dataset.slot;
+      if (!seen.has(key)) { seen.add(key); slots.push(key); }
+      const sidx = slots.indexOf(key);
+      const idx = parseInt(el.dataset.idx, 10) || 0;
+      el._grid = { sidx, row: idx >= 6 ? 1 : 0, col: idx % 6 };
+    });
+    return { inputs, nSlots: slots.length };
+  }
+
+  function find(inputs, sidx, row, col) {
+    for (let i = 0; i < inputs.length; i++) {
+      const g = inputs[i]._grid;
+      if (g && g.sidx === sidx && g.row === row && g.col === col) return inputs[i];
+    }
+    return null;
+  }
+
+  if (!table.__navBound) {
+    table.__navBound = true;
+    table.addEventListener('keydown', (e) => {
+      const el = e.target;
+      if (!el.classList || !el.classList.contains('cell-input')) return;
+      const grid = build();
+      const cur = el._grid;
+      if (!cur) return;
+      const k = e.key;
+      let nS = cur.sidx, nR = cur.row, nC = cur.col;
+      if (k === 'ArrowRight') { nC = Math.min(5, nC + 1); }
+      else if (k === 'ArrowLeft') { nC = Math.max(0, nC - 1); }
+      else if (k === 'ArrowUp') {
+        if (cur.row === 0) { if (cur.sidx > 0) { nS = cur.sidx - 1; nR = 1; } else { return; } }
+        else { nR = 0; }
+      }
+      else if (k === 'ArrowDown' || k === 'Enter') {
+        if (cur.row === 1) { if (cur.sidx + 1 < grid.nSlots) { nS = cur.sidx + 1; nR = 0; } else { return; } }
+        else { nR = 1; }
+      }
+      else { return; }
+      const target = find(grid.inputs, nS, nR, nC);
+      if (target) { e.preventDefault(); target.focus(); target.select(); }
+    });
+  }
+
+  build();
+}
+
+function barColor(ratio, act, actCC, actFR) {
+  if (actCC === 0 && actFR === 0) return '#8b0000';
+  if (actCC === 0 || actFR === 0) return '#8b0000';
+  if (ratio === 0) return 'hsl(50, 90%, 55%)';
+  const abs = Math.min(1, Math.abs(ratio));
+  if (ratio > 0) {
+    const t = Math.min(1, abs);
+    const hue = Math.round(150 - t * 15);
+    const light = Math.round(28 + t * 40);
+    return `hsl(${hue}, 75%, ${light}%)`;
+  }
+  const hue = Math.round(50 - abs * 25);
+  const sat = Math.round(90 - abs * 5);
+  const light = Math.round(55 - abs * 13);
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
+}
+
+function renderReadiness() {
+  const rows = document.querySelectorAll('#wip-core-table tbody tr');
+  for (let i = 0; i < rows.length; i += 2) {
+    const r1 = rows[i];
+    const r2 = rows[i + 1];
+    if (!r2) break;
+
+    const cellInputs = (row) => row.querySelectorAll('.cell-input');
+    const planSum = (row) => {
+      const inputs = cellInputs(row);
+      return (parseFloat(inputs[0]?.value) || 0) + (parseFloat(inputs[2]?.value) || 0) + (parseFloat(inputs[4]?.value) || 0);
+    };
+    const actSum = (row) => {
+      const inputs = cellInputs(row);
+      return (parseFloat(inputs[1]?.value) || 0) + (parseFloat(inputs[3]?.value) || 0) + (parseFloat(inputs[5]?.value) || 0);
+    };
+
+    const readinessCell = r1.querySelector('.readiness-cell');
+    if (!readinessCell) continue;
+
+    const values = [r1, r2].map(row => {
+      const inputs = cellInputs(row);
+      const p = planSum(row);
+      const a = actSum(row);
+      const actCC = parseFloat(inputs[1]?.value) || 0;
+      const actFR = parseFloat(inputs[5]?.value) || 0;
+      const filledCC = (inputs[1]?.value || '').trim() !== '';
+      const filledFR = (inputs[5]?.value || '').trim() !== '';
+      if (!filledCC && !filledFR) return { pending: true };
+      if (p === 0 && a === 0) return { diff: 0, ratio: 0, pct: 0, act: 0, actCC, actFR, pending: false };
+      const maxVal = Math.max(p, a, 1);
+      const diff = a - p;
+      return { diff, ratio: diff / maxVal, pct: (diff / maxVal) * 300, act: a, actCC, actFR, pending: false };
+    });
+
+    const cellW = readinessCell.offsetWidth;
+    const halfW = Math.max(0, Math.floor((cellW - 10) / 2));
+
+    readinessCell.innerHTML = `<div class="h-full w-full flex flex-col gap-0.5 justify-center relative overflow-hidden px-0.5">
+      <div class="absolute left-1/2 top-0 bottom-0 border-l border-dashed border-gray-400" style="border-left-width:1.5px"></div>
+      ${values.map(v => {
+        if (v.pending) return `<div class="flex-1 w-full"></div>`;
+        const zeroStock = v.actCC === 0 || v.actFR === 0;
+        let barW, left, bg;
+        if (zeroStock) {
+          barW = halfW;
+          left = `calc(50% - ${halfW}px)`;
+          bg = '#8b0000';
+        } else {
+          barW = Math.min(Math.abs(v.pct), halfW);
+          left = v.diff >= 0 ? '50%' : `calc(50% - ${barW}px)`;
+          bg = barColor(v.ratio, v.act, v.actCC, v.actFR);
+        }
+        return `<div class="flex-1 flex items-center w-full relative">
+          <div class="h-6 rounded-none" style="margin-left:${left};width:${barW}px;background:${bg};min-width:${v.diff === 0 ? 4 : barW}px"></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+}
+
+function switchShift(value) {
+  const isMalam = value === 'malam';
+  document.body.classList.toggle('dark-mode', isMalam);
+  localStorage.setItem('wip-shift', isMalam ? 'malam' : 'pagi');
+  document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(isMalam ? 'shiftMalamBtn' : 'shiftPagiBtn').classList.add('active');
+  renderTimeSlots(isMalam ? nightSlots : daySlots);
+  wipSyncFromServer();
+}
+
+/* ── Generate to PDF: ringkasan WIP Core ──
+   1. Susun lembar ringkasan (tabel produksi, line stop, OEE/AV/PE/RQ)
+   2. html2canvas → jsPDF (A4 landscape, multi-halaman bila perlu)
+   3. Unggah otomatis ke folder arsip via Apps Script
+   4. Tampilkan QR (link unduh Drive) + tombol simpan/unduh lokal   */
+function pdfEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildSummarySheet() {
+  const isMalam = currentShift() === 'malam';
+  const slots = isMalam ? nightSlots : daySlots;
+  // Kunci slot di tabel = string jam tanpa spasi & titik dua ("0720-0800")
+  const slotIdx = {}; slots.forEach((s, i) => {
+    slotIdx[s.replace(/ /g, '').replace(/:/g, '')] = i;
+  });
+  // Tiap jam punya DUA baris seperti tampilan web:
+  //   a = baris pink (idx 0-5), b = baris biru (idx 6-11)
+  // Urutan tiap baris: [CC-Plan, CC-Act, Dolly-Plan, Dolly-Act, FR-Plan, FR-Act]
+  const rows = slots.map(jam => ({
+    jam,
+    a: ['','','','','',''],
+    b: ['','','','','',''],
+    notes: []
+  }));
+
+  document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+    const i = slotIdx[el.dataset.slot];
+    if (i === undefined) return;
+    const k = parseInt(el.dataset.idx);
+    const v = el.value || '';
+    if (k < 6) rows[i].a[k] = v; else rows[i].b[k - 6] = v;
+  });
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+    const i = slotIdx[td.dataset.slot];
+    const o = noteParse(td.dataset.note || '');
+    if (!o || i === undefined) return;
+    const bits = [];
+    if (o.me) bits.push(o.me);
+    if (o.pr) bits.push(o.pr);
+    if (o.wt && parseInt(o.wt) > 0) bits.push(o.wt + ' mnt');
+    if (!bits.length) return;
+    rows[i].notes.push({
+      tp: ['AV','PE','RQ'].includes(o.tp) ? o.tp : 'AV',
+      text: bits.join(' — ')
+    });
+  });
+
+  // Efisiensi: ambil dari tampilan agar selalu sama dengan dashboard
+  const grab = id => document.getElementById(id).textContent.trim();
+  const oee = grab('oee-value'), av = grab('av-value'), pe = grab('pe-value'), rq = grab('rq-value');
+
+  // Rekap line stop per mesin & per jenis
+  const lsRows = {}, lsTot = { AV: 0, PE: 0, RQ: 0 };  document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+    const o = noteParse(td.dataset.note || '');
+    const wt = parseInt((o && o.wt)) || 0;
+    if (!o || wt <= 0) return;
+    const tp = ['AV','PE','RQ'].includes(o.tp) ? o.tp : 'AV';
+    lsTot[tp] += wt;
+    const me = o.me || '(tanpa nama mesin)';
+    if (!lsRows[me]) lsRows[me] = { AV: 0, PE: 0, RQ: 0 };
+    lsRows[me][tp] += wt;
+  });
+  const machines = Object.keys(lsRows).sort((a,b) =>
+    (lsRows[b].AV+lsRows[b].PE+lsRows[b].RQ) - (lsRows[a].AV+lsRows[a].PE+lsRows[a].RQ));
+
+  const now = productionDate();
+  const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const dd = ('0' + now.getDate()).slice(-2);
+  const tgl = HARI[now.getDay()] + ', ' + dd + ' ' + BULAN[now.getMonth()] + ' ' + now.getFullYear();
+  const jamWib = wibNow();
+  const jam = ('0' + jamWib.getHours()).slice(-2) + '.' + ('0' + jamWib.getMinutes()).slice(-2) + ' WIB';
+
+  // ── Readiness Indicator: replika logika renderReadiness() web ──
+  const READ_W = 150, HALF_W = Math.floor((READ_W - 10) / 2);
+  const rowVals = arr => {
+    const num = i => parseFloat(arr[i]) || 0;
+    const p = num(0) + num(2) + num(4);
+    const a = num(1) + num(3) + num(5);
+    const actCC = num(1), actFR = num(5);
+    const filledCC = (arr[1] || '').trim() !== '', filledFR = (arr[5] || '').trim() !== '';
+    if (!filledCC && !filledFR) return null; // belum diisi
+    if (p === 0 && a === 0) return { diff: 0, ratio: 0, pct: 0, act: a, actCC, actFR };
+    const maxVal = Math.max(p, a, 1);
+    const diff = a - p;
+    return { diff, ratio: diff / maxVal, pct: (diff / maxVal) * 300, act: a, actCC, actFR };
+  };
+  const readBar = v => {
+    if (!v) return '<div style="flex:1"></div>';
+    let bw, left, bg;
+    if (v.actCC === 0 || v.actFR === 0) { // stock habis
+      bw = HALF_W; left = 'calc(50% - ' + HALF_W + 'px)'; bg = '#8b0000';
+    } else {
+      bw = Math.min(Math.abs(v.pct), HALF_W);
+      left = v.diff >= 0 ? '50%' : ('calc(50% - ' + bw + 'px)');
+      bg = barColor(v.ratio, v.act, v.actCC, v.actFR);
+    }
+    return '<div style="flex:1;display:flex;align-items:center;width:100%;position:relative">'
+      + '<div style="height:13px;margin-left:' + left + ';width:' + bw
+      + 'px;background:' + bg + ';min-width:' + (v.diff === 0 ? 4 : bw) + 'px"></div></div>';
+  };
+  const readCell = r =>
+    '<td rowspan="2" style="border:1px solid #cbd5e1;padding:3px;vertical-align:middle;background:#fff">'
+    + '<div style="position:relative;width:' + READ_W + 'px;height:36px;margin:0 auto;box-sizing:border-box;padding:0 2px;'
+    + 'display:flex;flex-direction:column;gap:4px;justify-content:center;overflow:hidden">'
+    + '<div style="position:absolute;left:50%;top:0;bottom:0;border-left:1.5px dashed #9ca3af"></div>'
+    + readBar(rowVals(r.a)) + readBar(rowVals(r.b))
+    + '</div></td>';
+
+  const subCells = (vals, bg) => vals.map(v =>
+    '<td style="border:1px solid #cbd5e1;background:' + bg + ';padding:3px 6px;text-align:center;vertical-align:middle;font-size:12px;font-weight:700;color:#1f2937">'
+    + pdfEsc(v) + '</td>').join('');
+  const noteCell = r => {
+    if (!r.notes.length) return '<td rowspan="2" style="border:1px solid #cbd5e1;background:#fff"></td>';
+    const dot = { AV: '#8b5cf6', PE: '#0284c7', RQ: '#d4a017' };
+    return '<td rowspan="2" style="border:1px solid #cbd5e1;background:#fff;padding:4px 6px;vertical-align:top">'
+      + r.notes.map(n =>
+        '<div style="display:flex;align-items:flex-start;gap:5px;margin:2px 0">'
+        + '<span style="width:8px;height:8px;border-radius:50%;background:' + dot[n.tp] + ';flex:none;margin-top:3px"></span>'
+        + '<span style="font-size:11px;line-height:1.3;font-weight:600;color:#334155">' + pdfEsc(n.text)
+        + ' <span style="color:' + dot[n.tp] + '">(' + n.tp + ')</span></span></div>'
+      ).join('') + '</td>';
+  };
+  // Dua baris per jam seperti tabel di web: pink (a) lalu biru (b)
+  const prodRows = rows.map(r =>
+    '<tr>'
+    + '<td rowspan="2" style="border:1px solid #cbd5e1;background:#f1f5f9;padding:4px 8px;text-align:center;font-size:11.5px;font-weight:800;white-space:nowrap;vertical-align:middle;line-height:1.3">'
+    + pdfEsc(r.jam).replace(' - ', '<br>—<br>') + '</td>'
+    + subCells(r.a, '#f4b4b4') + readCell(r) + noteCell(r) + '</tr>'
+    + '<tr>' + subCells(r.b, '#a8d4f5') + '</tr>'
+  ).join('');
+
+  // Rekap mesin dengan bar bertumpuk AV/PE/RQ (warna sama seperti panel web)
+  const LS_COLORS = { AV: '#8b5cf6', PE: '#0284c7', RQ: '#d4a017' };
+  const maxTot = Math.max(1, ...machines.map(m => lsRows[m].AV + lsRows[m].PE + lsRows[m].RQ));
+  const machineRows = machines.length ? machines.map(m => {
+    const r = lsRows[m], tot = r.AV + r.PE + r.RQ;
+    const seg = ['AV','PE','RQ'].map(tp => r[tp]
+      ? '<span style="height:10px;width:' + Math.max(3, r[tp]/maxTot*100) + '%;background:' + LS_COLORS[tp] + ';display:inline-block"></span>'
+      : '').join('');
+    return '<tr>'
+      + '<td style="border:1px solid #cbd5e1;padding:4px 8px;font-size:12px;font-weight:700;text-align:center;vertical-align:middle;white-space:nowrap">' + pdfEsc(MACHINE_SHORT[m] || m) + '</td>'
+      + '<td style="border:1px solid #cbd5e1;padding:4px 6px;vertical-align:middle"><div style="width:100%;height:10px;border-radius:999px;background:#f1f5f9;overflow:hidden;display:flex">' + seg + '</div></td>'
+      + ['AV','PE','RQ'].map(tp => '<td style="border:1px solid #cbd5e1;padding:4px 6px;font-size:12px;text-align:center;vertical-align:middle;font-weight:700;color:' + LS_COLORS[tp] + '">' + (r[tp] || '-') + '</td>').join('')
+      + '<td style="border:1px solid #cbd5e1;padding:4px 6px;font-size:12px;font-weight:900;text-align:center;vertical-align:middle;background:#f8fafc">' + tot + '</td>'
+      + '</tr>';
+  }).join('') : '<tr><td colspan="6" style="padding:10px;text-align:center;font-size:12px;color:#6b7280">Tidak ada line stop</td></tr>';
+
+  // Kotak efisiensi dengan progress bar mini (meniru panel kiri web)
+  const efBox = (label, valText, color) => {
+    const pct = Math.max(0, Math.min(100, parseInt(valText) || 0));
+    return '<div style="flex:1;border:1px solid #e2e8f0;border-radius:10px;padding:12px 8px 14px;text-align:center;background:#f8fafc">'
+      + '<div style="font-size:10px;font-weight:800;letter-spacing:1.4px;color:#64748b">' + label + '</div>'
+      + '<div style="font-size:30px;font-weight:900;color:' + color + ';line-height:1.2;margin:6px 0 12px">' + pdfEsc(valText) + '</div>'
+      + '<div style="height:6px;border-radius:999px;background:#e2e8f0;overflow:hidden">'
+      + '<div style="height:100%;width:' + pct + '%;background:' + color + '"></div></div></div>';
+  };
+
+  const th = 'style="border:1px solid #94a3b8;padding:5px 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;text-align:center;vertical-align:middle"';
+
+  // ── Planning Produksi + Cycle Time (dari panel kiri web) ──
+  const planVal = id => {
+    const el = document.getElementById(id);
+    return (el && el.value !== '' && el.value !== null) ? pdfEsc(el.value) : '&ndash;';
+  };
+  const cell = (v, extra) => '<td style="border:1px solid #cbd5e1;padding:4px 8px;font-size:12px;font-weight:700;text-align:center;vertical-align:middle' + (extra || '') + '">' + v + '</td>';
+  const planSection =
+    '<div style="flex:1;min-width:0">'
+    +   '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin-bottom:6px;color:#334155">Planning Produksi &amp; Cycle Time</div>'
+    +   '<table style="width:100%;border-collapse:collapse">'
+    +     '<thead><tr style="background:#e2e8f0">'
+    +       '<th ' + th + '>TR</th><th ' + th + '>Plan</th><th ' + th + '>Actual</th>'
+    +     '</tr></thead>'
+    +     '<tbody>'
+    +       '<tr>' + cell('1 TR', ';background:#f4b4b4;font-weight:900') + cell(planVal('prod-1tr-plan')) + cell(planVal('prod-1tr-act')) + '</tr>'
+    +       '<tr>' + cell('2 TR', ';background:#a8d4f5;font-weight:900') + cell(planVal('prod-2tr-plan')) + cell(planVal('prod-2tr-act')) + '</tr>'
+    +     '</tbody>'
+    +   '</table>'
+    +   '<div style="display:flex;align-items:center;justify-content:space-between;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-top:12px">'
+    +     '<span style="font-size:13px;font-weight:900;text-transform:uppercase;color:#334155">Cycle Time</span>'
+    +     '<span style="font-size:16px;font-weight:900;color:#0f172a">' + planVal('ct-input') + ' mnt</span>'
+    +   '</div>'
+    + '</div>';
+
+  const sheet = document.createElement('div');
+  sheet.id = 'pdfSummarySheet';
+  sheet.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid #0f172a;padding-bottom:8px">'
+    +  '<div><div style="font-size:24px;font-weight:900;text-transform:uppercase">Report Daily Production Core Making</div>'
+    +  '<div style="font-size:13px;font-weight:600;color:#475569;margin-top:2px">Pencapaian Produksi Core Making</div></div>'
+    +  '<div style="text-align:right;font-size:13px;font-weight:700">'
+    +  '<div>Shift ' + (isMalam ? 'Malam' : 'Pagi') + '</div>'
+    +  '<div style="font-weight:600;color:#475569">' + pdfEsc(tgl) + ' • ' + pdfEsc(jam) + '</div></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;margin:14px 0">'
+     +  efBox('OEE', oee, '#0f172a') + efBox('AVAILABILITY', av, '#8b5cf6')
+    +  efBox('PERFORMANCE', pe, '#0284c7') + efBox('RATE OF QUALITY', rq, '#d4a017')
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +  '<thead><tr style="background:#e2e8f0">'
+    +  '<th ' + th + '>JAM</th>'
+    +  '<th ' + th + ' colspan="2">C/C DI CONVEYOR</th>'
+    +  '<th ' + th + ' colspan="2">C/C DI DOLLY</th>'
+    +  '<th ' + th + ' colspan="2">FR/RR &amp; WJ/SB</th>'
+    +  '<th ' + th + '>READINESS INDICATOR</th>'
+    +  '<th ' + th + '>KETERANGAN LINE STOP</th></tr>'
+    +  '<tr style="background:#f1f5f9">'
+    +  '<th ' + th + '></th>'
+    +  '<th ' + th + '>PLAN</th><th ' + th + '>ACT</th>'
+    +  '<th ' + th + '>PLAN</th><th ' + th + '>ACT</th>'
+    +  '<th ' + th + '>PLAN</th><th ' + th + '>ACT</th>'
+    +  '<th ' + th + '>Standar WIP (garis putus)</th>'
+    +  '<th ' + th + '>Problem / Mesin / Menit</th></tr></thead>'
+    +  '<tbody>' + prodRows + '</tbody></table>'
+    +'<div style="display:flex;gap:14px;align-items:center;margin-top:6px;font-size:10px;font-weight:600;color:#475569;flex-wrap:wrap">'
+    +  '<span><span style="display:inline-block;width:18px;height:8px;background:#8b0000;vertical-align:middle"></span> Stock Habis</span>'
+    +  '<span><span style="display:inline-block;width:18px;height:8px;background:#2e7d32;vertical-align:middle"></span> Ready / Advance (kanan garis)</span>'
+    +  '<span><span style="display:inline-block;width:18px;height:8px;background:hsl(45,90%,45%);vertical-align:middle"></span> Kurang dari standar (kiri garis)</span>'
+    +'</div>'
+    +'<div style="display:flex;gap:14px;align-items:stretch;margin-top:16px">'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin-bottom:6px">Rekap Line Stop / Mesin &nbsp;<span style="font-size:11px;font-weight:700;color:#475569">(menit)</span></div>'
+    +'<table style="width:100%;border-collapse:collapse">'
+    +  '<thead><tr style="background:#e2e8f0">'
+    +  '<th ' + th + '>Mesin</th><th ' + th + '>Distribusi</th><th ' + th + '>AV</th><th ' + th + '>PE</th><th ' + th + '>RQ</th><th ' + th + '>Total</th>'
+    +  '</tr></thead><tbody>' + machineRows
+    +  '<tr style="background:#f8fafc"><td style="border:1px solid #cbd5e1;padding:4px 8px;font-size:12px;font-weight:900;text-align:center;vertical-align:middle">TOTAL</td>'
+    +  '<td style="border:1px solid #cbd5e1;padding:4px 6px;vertical-align:middle"><div style="width:100%;height:10px;border-radius:999px;background:#e2e8f0;overflow:hidden;display:flex">'
+    +    '<span style="height:100%;background:#8b5cf6;display:inline-block;width:' + (lsTot.AV/Math.max(1,lsTot.AV+lsTot.PE+lsTot.RQ)*100) + '%"></span>'
+    +    '<span style="height:100%;background:#0284c7;display:inline-block;width:' + (lsTot.PE/Math.max(1,lsTot.AV+lsTot.PE+lsTot.RQ)*100) + '%"></span>'
+    +    '<span style="height:100%;background:#d4a017;display:inline-block;width:' + (lsTot.RQ/Math.max(1,lsTot.AV+lsTot.PE+lsTot.RQ)*100) + '%"></span>'
+    +  '</div></td>'
+    +  '<td style="border:1px solid #cbd5e1;padding:4px 6px;font-size:12px;font-weight:900;text-align:center;vertical-align:middle">' + lsTot.AV + '</td>'
+    +  '<td style="border:1px solid #cbd5e1;padding:4px 6px;font-size:12px;font-weight:900;text-align:center;vertical-align:middle">' + lsTot.PE + '</td>'
+    +  '<td style="border:1px solid #cbd5e1;padding:4px 6px;font-size:12px;font-weight:900;text-align:center;vertical-align:middle">' + lsTot.RQ + '</td>'
+    +  '<td style="border:1px solid #cbd5e1;padding:4px 6px;font-size:12px;font-weight:900;text-align:center;vertical-align:middle">' + (lsTot.AV+lsTot.PE+lsTot.RQ) + '</td></tr>'
+    +'</tbody></table>'
+    +'</div>'
+    + planSection
+    +'</div>';
+  return sheet;
+}
+
+/* ── Modal PDF ── */
+let _pdfB64 = '', _pdfName = '', _pdfTemp = false;
+/* Waktu "dinding" WIB: Date dengan getter lokal = jam WIB */
+function wibNow() {
+  return new Date(Date.now() + (420 + new Date().getTimezoneOffset()) * 60000);
+}
+/* Tanggal produksi: shift malam yang dibuat sebelum tengah hari (jam < 12 WIB)
+   dihitung milik tanggal SEBELUM hari berganti. */
+function productionDate() {
+  const d = wibNow();
+  if (currentShift() === 'malam' && d.getHours() < 12) {
+    return new Date(d.getTime() - 86400000);
+  }
+  return d;
+}
+/* Jendela PDF sementara (WIB): 23:45-01:15 & 11:30-13:45 */
+function isWipTempWindow() {
+  const d = wibNow();
+  const m = d.getHours() * 60 + d.getMinutes(); // menit sejak 00:00 WIB
+  return (m >= 1425 || m < 75) ||               // 23:45-01:15 (lintas tengah malam)
+         (m >= 690 && m <= 825);                // 11:30-13:45
+}
+function setPdfStatus(msg, isErr) {
+  const st = document.getElementById('pdfStatus');
+  st.textContent = msg;
+  st.classList.toggle('err', !!isErr);
+}
+function openPdfModal(msg) {
+  document.getElementById('pdfModal').classList.add('on');
+  setPdfStatus(msg || '');
+  document.getElementById('pdfQrBox').innerHTML = '<span style="font-size:12px;color:#9ca3af">Menyiapkan QR code...</span>';
+  document.getElementById('pdfDriveBtn').disabled = true;
+  document.getElementById('pdfDriveLabel').textContent = 'Simpan ke Drive…';
+  document.getElementById('pdfDownloadBtn').style.display = 'none';
+}
+/* Elemen modal ada di akhir <body>, jadi pengikatan ditunda sampai DOM siap */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('pdfCloseBtn').addEventListener('click', () => document.getElementById('pdfModal').classList.remove('on'));
+  document.getElementById('pdfModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('on'); });
+  document.getElementById('histCloseBtn').addEventListener('click', () => document.getElementById('historyModal').classList.remove('on'));
+  document.getElementById('histRefreshBtn').addEventListener('click', loadHistoryList);
+  document.getElementById('historyModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('on'); });
+});
+
+function enableLocalDownload() {
+  try {
+    const blob = new Blob([Utilities_likeB64ToBin(_pdfB64)], { type: 'application/pdf' });
+    const a = document.getElementById('pdfDownloadBtn');
+    a.href = URL.createObjectURL(blob);
+    a.download = _pdfName;
+    a.style.display = 'inline-flex';
+  } catch (e) {}
+}
+function Utilities_likeB64ToBin(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+function renderPdfQr(text) {
+  const box = document.getElementById('pdfQrBox');
+  box.innerHTML = '';
+  new QRCode(box, { text, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+}
+
+function uploadWipPdf() {
+  const btn = document.getElementById('pdfDriveBtn');
+  btn.disabled = true; // cegah klik ganda saat mengunggah
+  setPdfStatus('Mengunggah ke Drive...');
+  const url = (window.Sync && Sync.getUrl()) || '';
+  if (!url) {
+    setPdfStatus('URL Apps Script belum diatur — gunakan unduhan lokal.', true);
+    enableLocalDownload();
+    return;
+  }
+  // Hanya PDF FINAL (akhir produksi) yang disimpan ke histori Data OEE Core
+  if (!_pdfTemp) {
+    saveOeeDataToBackend(url);
+  }
+  fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ app: 'wipreport', action: 'savepdf', name: _pdfName, b64: _pdfB64, temp: _pdfTemp }),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    redirect: 'follow'
+  }).then(r => r.json()).then(res => {
+    if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
+    setPdfStatus(res.temp
+      ? 'Tersimpan di Drive ✓ (sementara — terhapus otomatis dalam 1 jam)'
+      : 'Tersimpan di Drive ✓');
+    document.getElementById('pdfDriveLabel').textContent = 'Tersimpan ✓';
+    document.getElementById('pdfDriveBtn').onclick = () =>
+      window.open('https://drive.google.com/drive/folders/14RPYmYBAddif5TO3NSZoRUP7EEHof7Bm', '_blank');
+    const link = 'https://drive.google.com/uc?export=download&id=' + res.id;
+    renderPdfQr(link);
+    const a = document.getElementById('pdfDownloadBtn');
+    a.href = link;
+    a.download = _pdfName;
+    a.style.display = 'inline-flex';
+  }).catch(err => {
+    setPdfStatus('Gagal unggah ke Drive: ' + err.message + ' — silakan unduh lokal.', true);
+    btn.disabled = false; // boleh coba lagi
+  });
+}
+
+/* ── Kumpulkan payload data OEE + problem line stop untuk histori ── */
+function collectOeePayload() {
+  const { av, pe, rq, oee, ls, pt } = computeOee();
+  const dNow = productionDate();
+  const date = dNow.getFullYear() + '-' +
+    ('0' + (dNow.getMonth() + 1)).slice(-2) + '-' +
+    ('0' + dNow.getDate()).slice(-2);
+  const lsRows = {};
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+    const o = noteParse(td.dataset.note || '');
+    const wt = parseInt((o && o.wt)) || 0;
+    if (!o || wt <= 0) return;
+    const tp = ['AV','PE','RQ'].includes(o.tp) ? o.tp : 'AV';
+    const me = o.me || '(tanpa nama mesin)';
+    if (!lsRows[me]) lsRows[me] = { AV: 0, PE: 0, RQ: 0 };
+    lsRows[me][tp] += wt;
+  });
+  const machines = Object.keys(lsRows).sort((a, b) =>
+    (lsRows[b].AV + lsRows[b].PE + lsRows[b].RQ) - (lsRows[a].AV + lsRows[a].PE + lsRows[a].RQ))
+    .map(m => ({ name: m, AV: lsRows[m].AV, PE: lsRows[m].PE, RQ: lsRows[m].RQ, total: lsRows[m].AV + lsRows[m].PE + lsRows[m].RQ }));
+  const problems = [];
+  document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+    const o = noteParse(td.dataset.note || '');
+    const wt = parseInt((o && o.wt)) || 0;
+    if (!o || wt <= 0) return;
+    problems.push({
+      slot: td.dataset.slot || '',
+      type: ['AV','PE','RQ'].includes(o.tp) ? o.tp : 'AV',
+      problem: o.pr || '',
+      mesin: o.me || '',
+      minutes: wt,
+      pg: o.pg || ''
+    });
+  });
+  return {
+    app: 'oeedata',
+    action: 'save',
+    date,
+    shift: currentShift(),
+    oee: Math.round(oee),
+    av: Math.round(av),
+    pe: Math.round(pe),
+    rq: Math.round(rq),
+    plannedMinutes: pt,
+    machines,
+    problems
+  };
+}
+
+function saveOeeDataToBackend(url) {
+  try {
+    fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(collectOeePayload()),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      redirect: 'follow'
+    }).then(r => r.json()).then(res => {
+      if (res && res.ok) console.log('Data OEE Core tersimpan.');
+      else console.warn('Gagal simpan Data OEE Core:', res && res.error);
+    }).catch(err => console.warn('Gagal simpan Data OEE Core:', err.message));
+  } catch (e) {
+    console.warn('Gagal kumpulkan Data OEE Core:', e.message);
+  }
+}
+
+/* ── History: arsip PDF WIP via Apps Script (tanpa buka drive.google.com) ── */
+function histStatus(msg, isErr) {
+  const st = document.getElementById('histStatus');
+  st.textContent = msg;
+  st.classList.toggle('err', !!isErr);
+}
+function fmtBytes(n) {
+  if (n > 1048576) return (n / 1048576).toFixed(1) + ' MB';
+  if (n > 1024) return Math.round(n / 1024) + ' KB';
+  return n + ' B';
+}
+async function openHistory() {
+  document.getElementById('historyModal').classList.add('on');
+  histStatus('Memuat daftar...');
+  document.getElementById('histList').innerHTML = '';
+  await loadHistoryList();
+}
+async function loadHistoryList() {
+  const listEl = document.getElementById('histList');
+  const url = (window.Sync && Sync.getUrl()) || '';
+  if (!url) { histStatus('URL Apps Script belum diatur.', true); return; }
+  try {
+    const r = await fetch(url + '?app=wipreport&action=list', { redirect: 'follow' });
+    const j = await r.json();
+    if (!j || !j.ok) throw new Error((j && j.error) || 'Server menolak');
+    const items = j.reports || [];
+    histStatus(items.length ? ('Total ' + items.length + ' file PDF tersimpan.') : 'Belum ada PDF tersimpan.');
+    if (!items.length) return;
+    listEl.innerHTML = items.map(it => {
+      const d = new Date(it.ts).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      return '<div class="hist-item">'
+        + '<div class="hist-name" onclick="viewWipPdf(\'' + it.id + '\')" title="Klik untuk membuka">'
+        + '<span class="n">' + pdfEsc(it.name) + '</span>'
+        + '<span class="d">' + d + ' • ' + fmtBytes(it.size) + '</span></div>'
+        + (it.temp ? '<span class="badge-temp">sementara</span>' : '')
+        + '<button class="hist-view" onclick="viewWipPdf(\'' + it.id + '\')">Buka</button>'
+        + '</div>';
+    }).join('');
+  } catch (e) {
+    histStatus('Gagal memuat daftar: ' + e.message, true);
+  }
+}
+async function viewWipPdf(id) {
+  const url = (window.Sync && Sync.getUrl()) || '';
+  if (!url) return;
+  histStatus('Membuka PDF...');
+  try {
+    const r = await fetch(url + '?app=wipreport&action=getpdf&id=' + encodeURIComponent(id), { redirect: 'follow' });
+    const j = await r.json();
+    if (!j || !j.ok) throw new Error((j && j.error) || 'Server menolak');
+    const bin = atob(j.b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const u = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+    window.open(u, '_blank');
+    histStatus('Total ' + document.querySelectorAll('#histList .hist-item').length + ' file PDF tersimpan.');
+  } catch (e) {
+    histStatus('Gagal membuka PDF: ' + e.message, true);
+  }
+}
+
+async function generatePdf() {
+  const btn = document.getElementById('generatePdfBtn');
+  btn.disabled = true;
+  openPdfModal('Menyusun ringkasan...');
+  try {
+    const sheet = buildSummarySheet();
+    document.body.appendChild(sheet);
+    await new Promise(r => setTimeout(r, 80));
+    const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    sheet.remove();
+
+    // A4 Portrait — margin atas/bawah 1 cm, kiri/kanan 0,5 cm
+    const MX = 5, MY = 10; // mm
+    const pdf = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const cw = pw - 2 * MX;           // lebar konten
+    const chAvail = ph - 2 * MY;      // tinggi konten per halaman
+    const pxPerPage = Math.max(1, Math.floor(canvas.width * chAvail / cw));
+    let y = 0, first = true;
+    while (y < canvas.height) {
+      if (!first) pdf.addPage();
+      const h = Math.min(pxPerPage, canvas.height - y);
+      const part = document.createElement('canvas');
+      part.width = canvas.width; part.height = h;
+      const ctx = part.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, h);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', MX, MY, cw, h * cw / canvas.width);
+      y += h; first = false;
+    }
+    _pdfB64 = pdf.output('datauristring').split(',')[1];
+    const dNow = productionDate();
+    const tgl = ('0' + dNow.getDate()).slice(-2) + '-' + ('0' + (dNow.getMonth() + 1)).slice(-2) + '-' + dNow.getFullYear();
+    _pdfName = 'Report Daily Production Core Making (shift ' +
+               (currentShift() === 'malam' ? 'Malam' : 'Pagi') + '), (' + tgl + ').pdf';
+    _pdfTemp = isWipTempWindow();
+    // Otomatis simpan ke Drive lalu tampilkan QR unduhan
+    setPdfStatus(_pdfTemp
+      ? 'Mengunggah ke Drive (mode sementara, 1 jam)...'
+      : 'Mengunggah ke Drive...');
+    uploadWipPdf();
+  } catch (err) {
+    setPdfStatus('Gagal membuat PDF: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function confirmAction(message, onConfirm) {
+  const modal = document.getElementById('confirmModal');
+  document.getElementById('confirmText').textContent = message;
+  modal.classList.add('on');
+  let resolved = false;
+  const done = (ok) => {
+    if (resolved) return;
+    resolved = true;
+    modal.classList.remove('on');
+    if (ok) onConfirm();
+  };
+  document.getElementById('confirmYes').onclick = () => done(true);
+  document.getElementById('confirmNo').onclick = () => done(false);
+  modal.querySelector('.confirm-box').onclick = (e) => e.stopPropagation();
+  modal.onclick = () => done(false);
+}
+
+function clearPlanOnly() {
+  confirmAction('Yakin ingin menghapus semua data angka PLAN pada tabel?', () => {
+    document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+      if (parseInt(el.dataset.idx) % 2 === 0) el.value = '';
+    });
+    saveAllData();
+    renderReadiness();
+    updateEfficiency();
+  });
+}
+
+function clearActOnly() {
+  confirmAction('Yakin ingin menghapus semua data angka ACT pada tabel?', () => {
+    document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+      if (parseInt(el.dataset.idx) % 2 === 1) el.value = '';
+    });
+    saveAllData();
+    renderReadiness();
+    updateEfficiency();
+  });
+}
+
+function clearNotesData() {
+  confirmAction('Yakin ingin menghapus semua data keterangan pada tabel?', () => {
+    document.querySelectorAll('#wip-core-table .note-pane').forEach(td => {
+      td.dataset.note = '';
+      noteRenderSummary(td, '');
+    });
+    saveAllData();
+    renderReadiness();
+    updateEfficiency();
+  });
+}
+
+/* ── Keterangan (note) via dialog: Problem / Waktu Line Stop / Jenis AV-PE-RQ ── */
+let noteTarget = null;
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function noteParse(str) {
+  try {
+    const o = JSON.parse(str);
+    if (o && (o.pr || o.wt || o.me || o.pg)) return o;
+  } catch (e) {}
+  return null;
+}
+
+function noteRenderSummary(td, str) {
+  const el = td.querySelector('.note-summary');
+  if (!el) return;
+  const o = noteParse(str);
+  el.innerHTML = '';
+  if (!o) return;
+  const colMap = { AV: 'text-violet-600', PE: 'text-sky-600', RQ: 'text-[#d4a017]' };
+  const parts = [];
+  if (o.tp) parts.push('<span class="shrink-0 ' + (colMap[o.tp] || 'text-gray-600') + '">[' + esc(o.tp) + ']</span>');
+  if (o.pr) parts.push('<span class="np">' + esc(o.pr) + '</span>');
+  if (o.pg) parts.push('<span class="shrink-0 text-emerald-600">' + esc(o.pg) + '</span>');
+  if (o.me) parts.push('<span class="shrink-0 text-gray-400">' + esc(o.me) + '</span>');
+  if (o.wt) parts.push('<span class="shrink-0">' + esc(o.wt) + 'm</span>');
+  el.innerHTML = parts.join('<span class="shrink-0 text-gray-400">·</span>');
+}
+
+function openNoteDialog(slot, idx) {
+  const panes = document.querySelectorAll('#wip-core-table .note-pane[data-slot="' + slot + '"][data-idx="' + idx + '"]');
+  if (!panes.length) return;
+  noteTarget = panes[0];
+  const cur = noteParse(noteTarget.dataset.note || '');
+  document.getElementById('note-problem').value = cur ? cur.pr : '';
+  document.getElementById('note-waktu').value = cur ? cur.wt : '';
+  document.getElementById('note-mesin').value = cur && cur.me ? cur.me : '';
+  document.getElementById('note-pg').value = cur && cur.pg ? cur.pg : '';
+  const tp = cur ? cur.tp : '';
+  document.querySelectorAll('.note-types label').forEach(lbl => {
+    const lblTp = lbl.getAttribute('data-type');
+    lbl.classList.toggle('selected', lblTp === tp || (!tp && lblTp === 'AV'));
+    if (lblTp === tp || (!tp && lblTp === 'AV')) lbl.querySelector('input').checked = true;
+  });
+  document.getElementById('noteModal').classList.add('on');
+  document.getElementById('note-problem').focus();
+}
+
+function noteClose() {
+  document.getElementById('noteModal').classList.remove('on');
+  noteTarget = null;
+}
+
+function noteSave() {
+  if (!noteTarget) return;
+  const pr = document.getElementById('note-problem').value.trim();
+  const wt = document.getElementById('note-waktu').value.trim();
+  const me = document.getElementById('note-mesin').value;
+  const pg = document.getElementById('note-pg').value.trim();
+  const tp = document.querySelector('input[name="note-type"]:checked').value;
+  const json = (pr || wt || pg) ? JSON.stringify({ pr, wt, tp, me, pg }) : '';
+  noteTarget.dataset.note = json;
+  noteRenderSummary(noteTarget, json);
+  noteClose();
+  saveAllData();
+  renderReadiness();
+  updateEfficiency();
+}
+
+function noteClearCell() {
+  if (!noteTarget) return;
+  noteTarget.dataset.note = '';
+  noteRenderSummary(noteTarget, '');
+  noteClose();
+  saveAllData();
+  renderReadiness();
+  updateEfficiency();
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+/* Fullscreen: ambil 40% lebar kolom keterangan, berikan ke kolom readiness */
+function reallocateFullscreenWidths() {
+  const table = document.getElementById('wip-core-table');
+  const thReady = table.querySelector('th[data-col="readiness"]');
+  const thNote = table.querySelector('th[data-col="note"]');
+  if (!thReady || !thNote) return;
+  const wNote = thNote.getBoundingClientRect().width;
+  const wReady = thReady.getBoundingClientRect().width;
+  if (wNote < 20) return;
+  const shift = Math.round(wNote * 0.4);
+  const newReady = Math.round(wReady + shift);
+  const newNote = Math.round(wNote - shift);
+  const apply = (sel, w) => {
+    table.querySelectorAll(sel).forEach(el => {
+      el.style.setProperty('width', w + 'px', 'important');
+      el.style.setProperty('min-width', w + 'px', 'important');
+    });
+  };
+  apply('col[data-k="ready"], th[data-col="readiness"], td[data-col="readiness"]', newReady);
+  apply('col[data-k="note"], th[data-col="note"], td[data-col="note"]', newNote);
+  renderReadiness();
+}
+
+function clearFullscreenWidths() {
+  const table = document.getElementById('wip-core-table');
+  table.querySelectorAll('col[data-k="ready"], th[data-col="readiness"], td[data-col="readiness"], col[data-k="note"], th[data-col="note"], td[data-col="note"]').forEach(el => {
+    el.style.removeProperty('width');
+    el.style.removeProperty('min-width');
+  });
+}
+
+document.addEventListener('fullscreenchange', function() {
+  const icon = document.getElementById('fullscreenIcon');
+  const label = document.getElementById('fullscreenLabel');
+  const table = document.getElementById('wip-core-table');
+  if (document.fullscreenElement) {
+    icon.textContent = 'fullscreen_exit';
+    label.textContent = 'Exit';
+    table.classList.add('fullscreen');
+    renderReadiness();
+    requestAnimationFrame(() => requestAnimationFrame(reallocateFullscreenWidths));
+  } else {
+    icon.textContent = 'fullscreen';
+    label.textContent = 'Full Screen';
+    clearFullscreenWidths();
+    table.classList.remove('fullscreen');
+    renderReadiness();
+  }
+});
+
+const initialShift = localStorage.getItem('wip-shift') || 'pagi';
+if (initialShift === 'malam') document.body.classList.add('dark-mode');
+document.getElementById(initialShift === 'malam' ? 'shiftMalamBtn' : 'shiftPagiBtn').classList.add('active');
+renderTimeSlots(initialShift === 'malam' ? nightSlots : daySlots);
+bindPanelInputs();
+bindPanelNav();
+
+wipSyncFromServer();
+if (window.Sync) setInterval(wipSyncFromServer, Sync.pollMs);
+
+renderMachineOptions();
+loadMachines();
+
+document.querySelectorAll('.note-types label').forEach(lbl => {
+  lbl.addEventListener('click', () => {
+    document.querySelectorAll('.note-types label').forEach(l => l.classList.remove('selected'));
+    lbl.classList.add('selected');
+    lbl.querySelector('input').checked = true;
+  });
+});
+document.getElementById('noteSaveBtn').addEventListener('click', noteSave);
+document.getElementById('noteCancelBtn').addEventListener('click', noteClose);
+document.getElementById('noteClearBtn').addEventListener('click', noteClearCell);
+document.getElementById('noteModal').addEventListener('click', e => { if (e.target === e.currentTarget) noteClose(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') noteClose(); });
+
+</script>
+
+</main>
+<!-- END: DashboardContainer -->
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-box">
+    <p id="confirmText">Yakin ingin menghapus?</p>
+    <div class="confirm-actions">
+      <button class="btn-yes" id="confirmYes">Hapus</button>
+      <button class="btn-no" id="confirmNo">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Generate to PDF -->
+<div class="pdf-modal" id="pdfModal">
+  <div class="pdf-box">
+    <h3>Ringkasan WIP Core (PDF)</h3>
+    <div style="font-size:12px;color:#6b7280;margin-top:2px">PDF otomatis tersimpan di Drive — scan QR dengan HP untuk mengunduh</div>
+    <div id="pdfStatus" class="pdf-status">Menyusun ringkasan...</div>
+    <div id="pdfQrBox"><span style="font-size:12px;color:#9ca3af">Menyiapkan QR code...</span></div>
+    <div class="pdf-actions">
+      <button id="pdfDriveBtn" disabled><span class="material-symbols-outlined text-base">cloud_upload</span><span id="pdfDriveLabel">Simpan ke Drive…</span></button>
+      <a id="pdfDownloadBtn" download="Report Daily Production Core Making.pdf"><span class="material-symbols-outlined text-base">download</span> Unduh di perangkat ini</a>
+      <button id="pdfCloseBtn">Tutup</button>
+    </div>
+  </div>
+</div>
+<div id="pdfSummarySheet"></div>
+
+<!-- Modal History PDF -->
+<div class="pdf-modal" id="historyModal">
+  <div class="pdf-box">
+    <h3>History — Arsip PDF WIP Core</h3>
+    <div id="histStatus" class="pdf-status">Memuat daftar...</div>
+    <div id="histList" class="hist-list"></div>
+    <div class="pdf-actions">
+      <button id="histRefreshBtn"><span class="material-symbols-outlined text-base">refresh</span> Muat Ulang</button>
+      <button id="histCloseBtn">Tutup</button>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keep-Warm Backend — TV Core Making</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #0f172a; color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 24px; text-align: center;
+  }
+  .title { font-size: 15px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; }
+  .clock { font-size: clamp(40px, 9vw, 88px); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+  .statusRow { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; flex-wrap: wrap; justify-content: center; }
+  .dot { width: 16px; height: 16px; border-radius: 50%; background: #64748b; box-shadow: 0 0 0 4px rgba(100,116,139,.2); transition: background .3s, box-shadow .3s; }
+  .dot.on { background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,.25); }
+  .dot.wait { background: #eab308; box-shadow: 0 0 0 4px rgba(234,179,8,.25); animation: pulse 1s infinite; }
+  .dot.err { background: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.25); }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .meta { font-size: 14px; color: #94a3b8; line-height: 1.8; }
+  .meta b { color: #e2e8f0; font-variant-numeric: tabular-nums; }
+  .next { font-size: clamp(20px, 4vw, 34px); font-weight: 800; font-variant-numeric: tabular-nums; color: #38bdf8; }
+  .url { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: #64748b; word-break: break-all; max-width: 720px; }
+  .btn { border: none; background: #2563eb; color: #fff; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 9px; cursor: pointer; }
+  .btn:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+  <div class="title">Keep-Warm Backend · TV Core Making</div>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="statusRow"><span class="dot" id="dot"></span><span id="status">Menunggu…</span></div>
+  <div class="next" id="next">—</div>
+  <div class="meta">
+    Ping ke-<b id="count">0</b> · Terakhir <b id="last">—</b> · Respons <b id="rtt">—</b>
+  </div>
+  <button class="btn" id="pingNow">Ping Sekarang</button>
+  <div class="url" id="urlBox"></div>
+
+<script>
+(function () {
+  'use strict';
+  var LS_KEY_GAS = 'tvcore-gas-url';
+  var LS_KEY_GAS_ALT = 'antar-shift-gas-url';
+  var CANON_URL = 'https://script.google.com/macros/s/AKfycbwhz_ltIGdXeJZ0qq44u8vamXR0X008SEQJO52K_qmZBY3JqJfFiMR4ohvHO51VfDgOlw/exec';
+  var POLL_MS = 600000; // 10 menit
+
+  function resolveUrl() {
+    var u = '';
+    try { u = localStorage.getItem(LS_KEY_GAS_ALT) || localStorage.getItem(LS_KEY_GAS) || ''; } catch (e) {}
+    try {
+      var q = new URLSearchParams(window.location.search).get('gas');
+      if (q) u = q;
+    } catch (e) {}
+    if (!u) u = CANON_URL;
+    try { localStorage.setItem(LS_KEY_GAS, u); localStorage.setItem(LS_KEY_GAS_ALT, u); } catch (e) {}
+    return u;
+  }
+
+  var url = resolveUrl();
+  document.getElementById('urlBox').textContent = url;
+
+  var elClock = document.getElementById('clock');
+  var elDot = document.getElementById('dot');
+  var elStatus = document.getElementById('status');
+  var elNext = document.getElementById('next');
+  var elCount = document.getElementById('count');
+  var elLast = document.getElementById('last');
+  var elRtt = document.getElementById('rtt');
+
+  function pad(n) { return ('0' + n).slice(-2); }
+  function tickClock() {
+    var d = new Date();
+    elClock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    var left = Math.max(0, Math.ceil((nextAt - Date.now()) / 1000));
+    elNext.textContent = 'Ping berikutnya: ' + pad(Math.floor(left / 60)) + ':' + pad(left % 60);
+  }
+  setInterval(tickClock, 1000);
+
+  var count = 0, nextAt = Date.now() + POLL_MS;
+
+  function ping() {
+    elDot.className = 'dot wait';
+    elStatus.textContent = 'Menghubungi server…';
+    var started = Date.now();
+    fetch(url + '?app=ping&warm=1', { redirect: 'follow' })
+      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r || !r.ok) throw new Error('respon tidak dikenali');
+        count++;
+        elDot.className = 'dot on';
+        elStatus.textContent = 'Server hangat ✓';
+        elCount.textContent = count;
+        elRtt.textContent = (Date.now() - started) + ' ms';
+        elLast.textContent = new Date().toLocaleTimeString('id-ID');
+      })
+      .catch(function (err) {
+        elDot.className = 'dot err';
+        elStatus.textContent = 'Gagal: ' + err.message;
+      })
+      .finally(function () {
+        nextAt = Date.now() + POLL_MS;
+        tickClock();
+      });
+  }
+
+  document.getElementById('pingNow').addEventListener('click', ping);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) ping();
+  });
+
+  elNext.textContent = 'Ping berikutnya: 10:00';
+  ping();
+  setInterval(ping, POLL_MS);
+  tickClock();
+})();
+</script>
+</body>
+</html>

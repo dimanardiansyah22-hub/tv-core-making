@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapping Core Red — Readiness Supply Core Making</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html, body {
+    height: 100%;
+}
+body {
+    font-family: 'Hanken Grotesk', sans-serif;
+    overflow: hidden;
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.wrapper {
+    width: min(100vw, calc((100vh - 165px) * 1.7777777));
+    padding: 8px 12px;
+}
+.headerbar {
+    position: relative;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    margin-bottom: 8px;
+    background: #fff;
+    border-radius: 10px;
+    border-left: 8px solid #eb0a1e;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+.headerbar .title-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.headerbar .title {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+.headerbar .subtitle {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+.stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: url('layout-line.png') no-repeat center center;
+    background-color: #f6ffef;
+    background-size: 100% 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.coreSwitch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.85);
+    color: #333;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    text-decoration: none;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+.coreSwitch:hover {
+    background: rgba(255, 255, 255, 1);
+}
+.coreSwitch .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+.coreSwitch.active {
+    background: #f6ffef;
+    color: #1b5e20;
+    box-shadow: 0 0 0 2px #facc15, 0 4px 12px rgba(250, 204, 21, 0.5);
+}
+
+body.dark-mode {
+    background: #0b0d14;
+}
+body.dark-mode .headerbar {
+    background: #1a1a2e;
+    border-left-color: #4a8cff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+}
+body.dark-mode .headerbar .title {
+    color: #f5f5ff;
+}
+body.dark-mode .headerbar .subtitle {
+    color: #b0b0d0;
+}
+body.dark-mode .coreSwitch {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e8e8f0;
+}
+body.dark-mode .coreSwitch:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+body.dark-mode .coreSwitch.active {
+    background: rgba(74, 140, 255, 0.25);
+    color: #aac1ff;
+    box-shadow: 0 0 0 2px #facc15, 0 0 12px rgba(250, 204, 21, 0.7);
+}
+body.dark-mode .dropdown {
+    background: #1a1a2e;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+}
+body.dark-mode .dropdown .dd-title {
+    color: #b0b0d0;
+}
+body.dark-mode .dropdown .dd-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode .dropdown .dd-item span {
+    color: #e8e8f0;
+}
+.marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    cursor: pointer;
+}
+.marker.z-top {
+    z-index: 99999;
+}
+.marker .cap {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 900;
+    color: #fff;
+    z-index: 12;
+    pointer-events: none;
+    user-select: none;
+}
+.marker .cap.ok {
+    background: #22c55e;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.marker .cap.no {
+    background: #dc2626;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.marker .plus {
+    width: 22px;
+    height: 22px;
+    background: rgba(0, 114, 255, 0.9);
+    color: #fff;
+    border: 1.5px solid #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    transition: transform 0.15s;
+    user-select: none;
+}
+.marker .plus:hover {
+    transform: scale(1.15);
+}
+.marker .photo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid #fff;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    cursor: move;
+    object-fit: cover;
+    display: none;
+}
+.marker .photo.on {
+    display: block;
+}
+.marker .mood {
+    position: absolute;
+    z-index: 12;
+    pointer-events: none;
+}
+.marker .mood-circle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    transform: translate(-50%, -50%);
+}
+.marker .mood-circle .mood-face {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #fff;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+.marker .mood-circle .mood-face img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.marker .mood-circle.alert {
+    pointer-events: auto;
+    cursor: help;
+}
+.marker .mood-circle.alert .mood-face {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3), 0 2px 10px rgba(220, 38, 38, 0.7);
+}
+.marker .mood-circle.alert::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid #ef4444;
+    animation: moodRadar 1.6s ease-out infinite;
+}
+.marker .mood-circle.alert.unfit .mood-face {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.3), 0 2px 10px rgba(124, 58, 237, 0.7);
+}
+.marker .mood-circle.alert.unfit::after {
+    border-color: #8b5cf6;
+}
+@keyframes moodRadar {
+    0% { transform: scale(1); opacity: 0.9; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+.marker .mood.has-callout .mood-callout {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
+    align-items: flex-start;
+    gap: 8px;
+    width: max-content;
+    max-width: 320px;
+    background: #fff;
+    border: 1.5px solid #fbbf24;
+    border-radius: 10px;
+    padding: 6px 10px 6px 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+    pointer-events: auto;
+}
+.marker .mood.has-callout .mood-callout.red {
+    border-color: #dc2626;
+}
+.marker .mood.has-callout:hover .mood-callout,
+.marker .mood.has-callout:focus-within .mood-callout {
+    display: flex;
+    animation: moodSwipe 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.marker .mood-callout .mood-face {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+}
+.marker .mood-callout .mood-face img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.marker .mood-callout .mood-text {
+    min-width: 0;
+    flex: 1 1 auto;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1f2937;
+    word-break: break-word;
+    white-space: pre-line;
+}
+.marker .mood-callout .mood-text.empty {
+    color: #9ca3af;
+    font-style: italic;
+    font-weight: 500;
+}
+@keyframes moodSwipe {
+    from { opacity: 0; transform: translateY(var(--mood-ty, 0%)) translateX(26px) skewX(-6deg); }
+    to { opacity: 1; transform: translateY(var(--mood-ty, 0%)) translateX(0) skewX(0); }
+}
+body.dark-mode .mood-callout {
+    background: #1a1a2e;
+    border-color: #b45309;
+}
+body.dark-mode .mood-callout.red {
+    border-color: #ef4444;
+}
+body.dark-mode .mood-callout .mood-text {
+    color: #e8e8f0;
+}
+
+.note-wrap {
+    position: absolute;
+    left: calc(50% + 47px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 170px;
+    height: 84px;
+}
+:fullscreen .note-wrap {
+    left: calc(50% + 47px);
+    width: 233px;
+}
+.note-input {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 84px;
+    max-height: 84px;
+    padding: 6px 22px 6px 9px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #1f2937;
+    font-size: 12px;
+    font-weight: 600;
+    resize: none;
+    outline: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.note-input::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 11px;
+}
+.note-input:focus {
+    border-color: #4a8cff;
+    box-shadow: 0 0 0 3px rgba(74, 140, 255, 0.25);
+}
+body.dark-mode .note-input:focus {
+    border-color: #4a8cff;
+}
+.note-clear {
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+.note-clear:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: #6b7280;
+}
+body.dark-mode .note-clear {
+    color: #7a7a8f;
+}
+body.dark-mode .note-clear:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #b0b0d0;
+}
+.confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+.confirm-modal.on {
+    display: flex;
+}
+.confirm-box {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    padding: 20px 22px;
+    min-width: 300px;
+    text-align: center;
+}
+.confirm-box p {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+}
+.confirm-box .confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.confirm-box .confirm-actions button {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.confirm-box .confirm-actions .btn-hapus {
+    background: #dc2626;
+    color: #fff;
+}
+.confirm-box .confirm-actions .btn-hapus:hover {
+    background: #b91c1c;
+}
+.confirm-box .confirm-actions .btn-batal {
+    background: #e5e7eb;
+    color: #333;
+}
+.confirm-box .confirm-actions .btn-batal:hover {
+    background: #d1d5db;
+}
+body.dark-mode .confirm-box {
+    background: #1a1a2e;
+}
+body.dark-mode .confirm-box p {
+    color: #e8e8f0;
+}
+body.dark-mode .confirm-box .confirm-actions .btn-batal {
+    background: #2d2d44;
+    color: #e8e8f0;
+}
+.dropdown {
+    position: fixed;
+    z-index: 50;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    width: 260px;
+    max-height: 70vh;
+    overflow-y: auto;
+    display: none;
+    padding: 8px;
+}
+.dropdown.on {
+    display: block;
+}
+.dropdown .dd-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 10px 8px;
+}
+.dropdown .dd-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.dropdown .dd-item:hover {
+    background: #f0f0f0;
+}
+.dropdown .dd-item img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.dropdown .dd-item span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    text-transform: capitalize;
+}
+.legendbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 8px 16px;
+    margin-bottom: 8px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+.legend {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
+.legend .legend-sec {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.legend .legend-label {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+}
+.legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.legend .legend-item img.mini {
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+.legend .legend-item em {
+    font-style: normal;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+.legend .chip {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    position: relative;
+}
+.legend .chip.ok { background: #22c55e; }
+.legend .chip.no { background: #dc2626; }
+.legend .chip::after {
+    content: '✔';
+    color: #fff;
+    font-size: 15px;
+    font-weight: 900;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.legend .chip.no::after { content: '✕'; }
+.legend .legend-sep {
+    width: 1px;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .legendbar { background: #1a1a2e; }
+body.dark-mode .legend .legend-label { color: #94a3b8; }
+body.dark-mode .legend .legend-item em { color: #e8e8f0; }
+body.dark-mode .legend .legend-sep { background: rgba(255, 255, 255, 0.15); }
+
+#multiSkillBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 11px;
+    background: rgba(11, 168, 90, 0.14);
+    color: #0b7439;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+#multiSkillBtn:hover { background: rgba(11, 168, 90, 0.26); }
+body.dark-mode #multiSkillBtn {
+    background: rgba(34, 197, 94, 0.18);
+    color: #4ade80;
+}
+body.dark-mode #multiSkillBtn:hover { background: rgba(34, 197, 94, 0.32); }
+
+.ms-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 110;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+.ms-modal.on { display: flex; }
+.ms-box {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 94vw;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+.ms-box h3 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+}
+.ms-box .ms-note {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 8px;
+}
+.ms-scroll { overflow: auto; }
+.ms-table { border-collapse: collapse; font-size: 12px; }
+.ms-table th, .ms-table td {
+    border: 1px solid #e5e7eb;
+    padding: 4px 8px;
+    text-align: center;
+    white-space: nowrap;
+}
+.ms-table th { background: #f3f4f6; color: #374151; position: sticky; top: 0; }
+.ms-table .stick {
+    position: sticky;
+    left: 0;
+    background: #f9fafb;
+    font-weight: 700;
+    text-align: left;
+    z-index: 1;
+}
+.ms-table td.ok { background: rgba(34, 197, 94, 0.18); color: #166534; font-weight: 800; }
+.ms-table td.no { background: rgba(239, 68, 68, 0.18); color: #b91c1c; font-weight: 800; }
+.ms-table td.na { background: #fafafa; }
+.ms-table td.proc {
+    text-align: left;
+    min-width: 140px;
+    color: #374151;
+    font-weight: 600;
+}
+.ms-table .proc-input {
+    width: 140px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 12px;
+    color: #374151;
+    background: #fff;
+}
+body.dark-mode .ms-table td.proc { color: #e8e8f0; }
+body.dark-mode .ms-table .proc-input {
+    background: #1a1a2e;
+    color: #e8e8f0;
+    border-color: #4b5563;
+}
+.ms-box .ms-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+.ms-box .ms-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    background: #0ba85a;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+.ms-box .ms-btn.alt {
+    background: #d97706;
+}
+.ms-box .ms-btn.ghost {
+    background: #e5e7eb;
+    color: #374151;
+}
+.ms-box .ms-close {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    background: #111827;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+.ms-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 8px;
+    text-align: center;
+}
+.ms-foot {
+    font-size: 13px;
+    color: #b91c1c;
+    font-weight: 600;
+    margin-top: 8px;
+    text-align: center;
+}
+.ms-edit .ms-table td { cursor: pointer; user-select: none; }
+.ms-edit .ms-table td.ok:hover, .ms-edit .ms-table td.no:hover, .ms-edit .ms-table td.na:hover {
+    outline: 2px solid #d9930c;
+    outline-offset: -2px;
+}
+body.dark-mode .ms-box { background: #1a1a2e; }
+body.dark-mode .ms-box h3 { color: #e8e8f0; }
+body.dark-mode .ms-box .ms-note { color: #94a3b8; }
+body.dark-mode .ms-table th, body.dark-mode .ms-table td { border-color: #2d2d44; }
+body.dark-mode .ms-table th { background: #2d2d44; color: #e8e8f0; }
+body.dark-mode .ms-table .stick { background: #22223a; color: #e8e8f0; }
+body.dark-mode .ms-table td.na { background: #24243c; }
+body.dark-mode .ms-box .ms-close { background: #e8e8f0; color: #1a1a2e; }
+body.dark-mode .ms-box .ms-btn.ghost { background: #2d2d44; color: #e8e8f0; }
+body.dark-mode .ms-hint { color: #94a3b8; }
+body.dark-mode .ms-foot { color: #f87171; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="headerbar">
+        <div class="title-group">
+            <span class="title">Mapping Pekerjaan Core Making</span>
+            <span class="subtitle">Informasi penempatan member pada Pos, Leader Daily Focus Job, dan member tidak hadir.</span>
+        </div>
+        <div class="toolbar">
+            <a class="coreSwitch active" href="mapping-core-red.html">
+                <span class="dot" style="background:#c62828"></span>
+                <span>Mapping Core Red</span>
+            </a>
+            <a class="coreSwitch" href="mapping-core-white.html">
+                <span class="dot" style="background:#e0e0e0"></span>
+                <span>Mapping Core White</span>
+            </a>
+        </div>
+    </div>
+    <div class="legendbar">
+        <div class="legend">
+            <div class="legend-sec">
+                <span class="legend-label">Mood</span>
+                <span class="legend-item"><img class="mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png" alt="Happy" draggable="false"><em>Happy</em></span>
+                <span class="legend-item"><img class="mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Frowning%20face/3D/frowning_face_3d.png" alt="Bad Mood" draggable="false"><em>Bad Mood</em></span>
+                <span class="legend-item"><img class="mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Face%20with%20thermometer/3D/face_with_thermometer_3d.png" alt="Unfit" draggable="false"><em>Unfit</em></span>
+            </div>
+            <div class="legend-sep"></div>
+            <div class="legend-sec">
+                <span class="legend-label">Capability</span>
+                <span class="legend-item"><span class="chip ok"></span><em>Capable</em></span>
+                <span class="legend-item"><span class="chip no"></span><em>Incapable</em></span>
+                <button id="multiSkillBtn" title="Lihat tabel Multi Skill"><i class="fas fa-table"></i><span>Lihat Multi Skill</span></button>
+            </div>
+        </div>
+    </div>
+    <div class="stage" id="stage"></div>
+</div>
+
+<div class="ms-modal" id="msModal">
+    <div class="ms-box">
+        <h3>Tabel Multi Skill</h3>
+        <div class="ms-note">✔ Capable &nbsp;|&nbsp; ✕ Incapable &nbsp;|&nbsp; (kosong) belum didata</div>
+        <div id="msContent"></div>
+        <div class="ms-actions">
+            <button class="ms-btn" id="msEditBtn">Edit Capability</button>
+            <button class="ms-btn alt" id="msSaveBtn" style="display:none">Simpan</button>
+            <button class="ms-btn ghost" id="msResetBtn" style="display:none">Reset ke Bawaan</button>
+            <button class="ms-close" id="msClose">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<div class="dropdown" id="dropdown"></div>
+
+<div class="confirm-modal" id="confirmModal">
+    <div class="confirm-box">
+        <p id="confirmText">Hapus foto ini?</p>
+        <div class="confirm-actions">
+            <button class="btn-hapus" id="confirmYes">Hapus</button>
+            <button class="btn-batal" id="confirmNo">Batal</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="sync-core.js"></script>
+<script>
+const IMG_W = 6000;
+const IMG_H = 3375;
+
+const members = [
+    { id: 'andi', name: 'Andi', src: 'Foto Member/Foto Member Red/andi.png' },
+    { id: 'ayang', name: 'Ayang', src: 'Foto Member/Foto Member Red/ayang.png' },
+    { id: 'boby', name: 'Boby', src: 'Foto Member/Foto Member Red/boby.png' },
+    { id: 'darno', name: 'Darno', src: 'Foto Member/Foto Member Red/darno.png' },
+    { id: 'diman', name: 'Diman', src: 'Foto Member/Foto Member Red/diman.png' },
+    { id: 'dini', name: 'Dini', src: 'Foto Member/Foto Member Red/dini.png' },
+    { id: 'erwin', name: 'Erwin', src: 'Foto Member/Foto Member Red/erwin.png' },
+    { id: 'fadil', name: 'Fadil', src: 'Foto Member/Foto Member Red/fadil.png' },
+    { id: 'fatta', name: 'Fatta', src: 'Foto Member/Foto Member Red/fatta.png' },
+    { id: 'hari', name: 'Hari', src: 'Foto Member/Foto Member Red/hari.png' },
+    { id: 'irfan', name: 'Irfan', src: 'Foto Member/Foto Member Red/irfan.png' },
+    { id: 'jaelani', name: 'Jaelani', src: 'Foto Member/Foto Member Red/jaelani.png' },
+    { id: 'jalal', name: 'Jalal', src: 'Foto Member/Foto Member Red/jalal.png' },
+    { id: 'nofrizal', name: 'Nofrizal', src: 'Foto Member/Foto Member Red/nofrizal.png' },
+    { id: 'rizal', name: 'Rizal', src: 'Foto Member/Foto Member Red/rizal.png' },
+    { id: 'rohmanto', name: 'Rohmanto', src: 'Foto Member/Foto Member Red/rohmanto.png' },
+    { id: 'vakhry', name: 'Vakhry', src: 'Foto Member/Foto Member Red/vakhry.png' },
+];
+
+const DEFAULT_POSITIONS = [
+    { id: 1, name: 'Pos 1', x: 4210, y: 1335 },
+    { id: 2, name: 'Pos 2', x: 3570, y: 1338 },
+    { id: 3, name: 'Pos 3', x: 2959, y: 1338 },
+    { id: 4, name: 'Pos 4', x: 919, y: 1412 },
+    { id: 5, name: 'Pos 5', x: 912, y: 2174 },
+    { id: 6, name: 'Pos 6', x: 1418, y: 1795 },
+    { id: 7, name: 'Pos 7', x: 4211, y: 2043 },
+    { id: 8, name: 'Pos 8', x: 3571, y: 2043 },
+    { id: 9, name: 'Pos 9', x: 2960, y: 2043 },
+    { id: 10, name: 'Pos 10', x: 1766, y: 2612 },
+    { id: 11, name: 'Pos 11', x: 1689, y: 554 },
+    { id: 12, name: 'Pos 12', x: 2413, y: 1687 },
+    { id: 13, name: 'Pos 13', x: 910, y: 2742 },
+    { id: 14, name: 'Pos 14', x: 4685, y: 515 },
+    { id: 15, name: 'Pos 15', x: 4685, y: 974 },
+    { id: 16, name: 'Pos 16', x: 4685, y: 1434 },
+    { id: 17, name: 'Pos 17', x: 4685, y: 2218 },
+    { id: 18, name: 'Pos 18', x: 4757, y: 3045 },
+    { id: 19, name: 'Pos 19', x: 5218, y: 3045 },
+    { id: 20, name: 'Pos 20', x: 5682, y: 3045 }
+];
+
+let positions = DEFAULT_POSITIONS.slice();
+
+const state = {};
+let activePosId = null;
+let nextId = 21;
+
+const LS_KEY = 'mapping-core-red';
+const CORE = 'red';
+
+/* ── Sinkronisasi terpusat (sync-core.js) ── */
+let _saveTimer = null;
+let _pendingSave = false;
+let _lastServerTs = '';
+
+function saveState() {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+        positions,
+        state,
+        nextId: nextId
+    }));
+    scheduleServerSave();
+}
+
+function scheduleServerSave() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    _pendingSave = true;
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(syncSaveToServer, 800);
+}
+
+async function syncSaveToServer() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    try {
+        const res = await Sync.save('mapping', { core: CORE, action: 'save', data: { positions, state, nextId } });
+        if (res && res.updatedAt) _lastServerTs = res.updatedAt;
+        _pendingSave = false;
+    } catch (e) {
+        _pendingSave = false;
+    }
+}
+
+function applyData(data) {
+    if (!data) return;
+    if (Array.isArray(data.positions) && data.positions.length) {
+        positions = JSON.parse(JSON.stringify(data.positions));
+    }
+    if (data.state && typeof data.state === 'object') {
+        Object.keys(state).forEach(k => delete state[k]);
+        Object.assign(state, data.state);
+    }
+    if (data.nextId) nextId = data.nextId;
+    if (data.updatedAt) _lastServerTs = data.updatedAt;
+}
+
+async function syncFromServer() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    if (_pendingSave) return;
+    try {
+        const res = await Sync.get('mapping', { core: CORE, action: 'get' });
+        const data = (res && res.ok && res.data) ? res.data : null;
+        if (!data || !data.updatedAt) return;
+        if (data.updatedAt !== _lastServerTs) {
+            applyData(data);
+            localStorage.setItem(LS_KEY, JSON.stringify({ positions, state, nextId }));
+            render();
+        }
+    } catch (e) {}
+}
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return;
+        applyData(JSON.parse(raw));
+    } catch (e) {}
+}
+
+function pct(px, total) {
+    return (px / total * 100).toFixed(3) + '%';
+}
+
+/* ── Emoticon mood survey (happiness.html) ── */
+const MOOD_EMOJI = {
+    'Happy': 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png',
+    'Bad Mood': 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Frowning%20face/3D/frowning_face_3d.png',
+    'Unfit': 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Face%20with%20thermometer/3D/face_with_thermometer_3d.png'
+};
+const SB_URL = 'https://zvsgqmqyuxevvzyjadzv.supabase.co';
+const SB_KEY = 'sb_publishable_nFphtt4y1peWkqpqTn1Mcg_QWnM7RPf';
+const VB_URL = 'https://hkrdqeauhfloqguojggx.supabase.co';
+const VB_KEY = 'sb_publishable_pbazhs1vFq3ehg6s0Ue_zQ_5jcsvqff';
+let moodByName = {};
+let voiceByMember = {};
+let sbMood = null;
+let sbVoice = null;
+try {
+    if (window.supabase) {
+        sbMood = window.supabase.createClient(SB_URL, SB_KEY);
+        sbVoice = window.supabase.createClient(VB_URL, VB_KEY);
+    }
+} catch (e) {}
+
+/* ── Pencocokan nama foto ↔ nama source data ──
+   Nama yang sudah sama (huruf besar/kecil diabaikan) cocok otomatis.
+   Hanya yang BEDA perlu didaftarkan di sini.
+   Kunci = nama yang dipilih di dropdown foto (members[]),
+   Nilai = nama persis di log_mood / voice_members.
+   Contoh: 'Rizal': 'RIZAL MICOTUL AMRI' */
+const NAME_MAP = {
+    'Darno': 'DARNO',
+    'Erwin': 'ANTONIUS ERWIN MURTIJO',
+    'Andi': 'ANDI BUDIMAN',
+    'Fadil': 'IBTIDAM MUFADILAH',
+    'Fatta': 'MUHAMAD FATTA IZA YULIANTO',
+    'Jaelani': 'JAELANI',
+    'Rizal': 'RIZAL WAHYU LEKSONO',
+    'Rohmanto': 'ROHMANTO',
+    'Nofrizal': 'NOFRIZAL',
+    'Jalal': 'MUHAMMAD JALALUDDIN RABBANI',
+    'Hari': 'HARI KARTONO',
+    'Diman': 'DIMAN ARDIANSYAH',
+    'Ayang': 'AYANG MUNDIKA AZZAHRA',
+    'Dini': 'DINI HAERANI',
+    'Boby': 'BOBY SAPUTRA',
+    'Vakhry': 'M. VAKHRI NUROHMAN',
+    'Irfan': 'IRFAN PRASETYO'
+};
+
+/* ── Tabel Capability per posisi ──
+   id posisi: { capable: [member yang CAPABLE], not: [member yang TIDAK capable] }
+   Member lain yang belum tercantum → tidak tampil badge capability.
+   Acuan nama = nama di dropdown foto (members[]). */
+const CAPABILITY = {
+    9: { capable: [], not: ['Boby'] },
+    12: { capable: ['Fadil'], not: [] }
+};
+const LS_CAP = 'capability_core_red';
+function getCap() {
+    try {
+        const v = localStorage.getItem(LS_CAP);
+        if (v) return JSON.parse(v);
+    } catch (e) {}
+    return CAPABILITY;
+}
+function saveCap(data) {
+    try { localStorage.setItem(LS_CAP, JSON.stringify(data)); } catch (e) {}
+}
+const LS_PROC = 'processes_core_red';
+function getProc() {
+    try {
+        const v = localStorage.getItem(LS_PROC);
+        if (v) return JSON.parse(v);
+    } catch (e) {}
+    return {};
+}
+function saveProc(map) {
+    try { localStorage.setItem(LS_PROC, JSON.stringify(map)); } catch (e) {}
+}
+let _capTs = '';
+let _capPendingSave = false;
+let _capSaveTimer = null;
+function currentCapData() {
+    return { capability: getCap(), processes: getProc() };
+}
+function scheduleCapSave() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    _capPendingSave = true;
+    clearTimeout(_capSaveTimer);
+    const snapshot = currentCapData();
+    _capSaveTimer = setTimeout(() => syncCapSave(snapshot), 800);
+}
+async function syncCapSave(snapshot) {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    try {
+        const res = await Sync.save('corecap', { core: CORE, action: 'save', data: snapshot });
+        if (res && res.updatedAt) _capTs = res.updatedAt;
+        _capPendingSave = false;
+    } catch (e) {
+        _capPendingSave = false;
+    }
+}
+async function capSyncFromServer() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    if (_capPendingSave) return;
+    try {
+        const res = await Sync.get('corecap', { core: CORE, action: 'get' });
+        const data = (res && res.ok && res.data) ? res.data : null;
+        if (!data || !data.updatedAt) return;
+        if (data.updatedAt !== _capTs) {
+            _capTs = data.updatedAt;
+            if (data.capability && typeof data.capability === 'object') saveCap(data.capability);
+            if (data.processes && typeof data.processes === 'object') saveProc(data.processes);
+            render();
+            if (msModal.classList.contains('on') && !msEditMode) renderMultiSkill();
+        }
+    } catch (e) {}
+}
+const CAP_COL_ORDER = ['Darno', 'Erwin', 'Diman', 'Andi', 'Nofrizal', 'Hari', 'Jaelani', 'Fadil', 'Rizal', 'Fatta', 'Rohmanto', 'Jalal', 'Irfan', 'Boby', 'Vakhry', 'Dini', 'Ayang'];
+function capColumns() {
+    return CAP_COL_ORDER
+        .map(n => {
+            const key = moodKey(n);
+            return members.find(m => moodKey(m.name) === key);
+        })
+        .filter(Boolean);
+}
+
+function dataName(name) {
+    return NAME_MAP[name] || name;
+}
+
+function moodKey(s) {
+    return String(s || '').trim().toUpperCase();
+}
+const MOOD_VALID_MS = 13 * 60 * 60 * 1000;
+function moodAt(st) {
+    const rec = moodByName[moodKey(dataName(st && st.name))];
+    if (!rec) return '';
+    let t = NaN;
+    if (rec.tanggal && rec.jam) t = new Date(rec.tanggal + 'T' + rec.jam).getTime();
+    if (!isFinite(t) && rec.created_at) t = new Date(rec.created_at).getTime();
+    if (!isFinite(t)) return '';
+    if (Date.now() - t > MOOD_VALID_MS) return '';
+    return MOOD_EMOJI[rec.mood] ? rec.mood : '';
+}
+async function loadMood() {
+    if (!sbMood) return;
+    try {
+        const names = members.map(m => moodKey(dataName(m.name)));
+        if (!names.length) return;
+        const { data, error } = await sbMood.from('log_mood')
+            .select('nama,mood,tanggal,jam,created_at')
+            .in('nama', names)
+            .order('created_at', { ascending: false })
+            .order('id', { ascending: false });
+        if (error) return;
+        const m = {};
+        (data || []).forEach(r => {
+            const k = moodKey(r.nama);
+            if (k && MOOD_EMOJI[r.mood] && !(k in m)) m[k] = { mood: r.mood, tanggal: r.tanggal, jam: r.jam, created_at: r.created_at };
+        });
+        moodByName = m;
+        refreshMoodBadges();
+    } catch (e) {}
+}
+async function loadVoices() {
+    if (!sbVoice) return;
+    try {
+        const { data, error } = await sbVoice.from('voice_members')
+            .select('member_name,voice_text,created_at')
+            .order('created_at', { ascending: false })
+            .limit(2000);
+        if (error) return;
+        const m = {};
+        (data || []).forEach(r => {
+            const k = moodKey(r.member_name);
+            const txt = String(r.voice_text || '').trim();
+            if (k && txt && !(k in m)) m[k] = txt;
+        });
+        voiceByMember = m;
+        refreshMoodBadges();
+    } catch (e) {}
+}
+function buildMoodBadge(st, pos) {
+    if (!st) return null;
+    const mood = moodAt(st);
+    if (!mood) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'mood';
+    wrap.style.left = 'calc(50% + ' + (st.w / 2) + 'px)';
+    wrap.style.top = 'calc(50% - ' + (st.h / 2) + 'px)';
+    const isAlert = mood === 'Bad Mood' || mood === 'Unfit';
+    const circle = document.createElement('div');
+    circle.className = 'mood-circle' + (isAlert ? ' alert' : '') + (mood === 'Unfit' ? ' unfit' : '');
+    const face = document.createElement('div');
+    face.className = 'mood-face';
+    const bee = document.createElement('img');
+    bee.draggable = false;
+    bee.src = MOOD_EMOJI[mood];
+    face.appendChild(bee);
+    circle.appendChild(face);
+    wrap.appendChild(circle);
+    if (isAlert) circle.tabIndex = 0;
+    const isBad = mood === 'Bad Mood';
+    const isUnfit = mood === 'Unfit';
+    const voice = isBad ? (voiceByMember[moodKey(dataName(st.name))] || '') : '';
+    if (isBad || isUnfit) {
+        wrap.classList.add('has-callout');
+        const callout = document.createElement('div');
+        callout.className = 'mood-callout' + (isUnfit ? ' red' : '');
+        const px = (pos && pos.x) || IMG_W / 2;
+        const py = (pos && pos.y) || IMG_H / 2;
+        const dx = px - IMG_W / 2;
+        const dy = py - IMG_H / 2;
+        let vMode = 'C';
+        if (dy < -IMG_H * 0.3) vMode = 'D';
+        else if (dy > IMG_H * 0.3) vMode = 'U';
+        if (dx < 0) callout.style.left = '16px';
+        else callout.style.right = '16px';
+        if (vMode === 'C') {
+            callout.style.top = '50%';
+            callout.style.transform = 'translateY(-50%)';
+            callout.style.setProperty('--mood-ty', '-50%');
+        } else if (vMode === 'D') {
+            callout.style.top = '26px';
+        } else {
+            callout.style.bottom = '26px';
+        }
+        const cface = document.createElement('div');
+        cface.className = 'mood-face';
+        const fi = document.createElement('img');
+        fi.draggable = false;
+        fi.src = MOOD_EMOJI[mood];
+        cface.appendChild(fi);
+        const txt = document.createElement('div');
+        txt.className = 'mood-text';
+        txt.textContent = isUnfit ? 'UNFIT ! SEGERA FOLLOW UP' : (voice || 'Belum ada data voice member !');
+        if (!voice && !isUnfit) txt.classList.add('empty');
+        callout.appendChild(cface);
+        callout.appendChild(txt);
+        wrap.appendChild(callout);
+    }
+    return wrap;
+}
+function buildCapabilityBadge(st, p) {
+    if (!st || !st.name) return null;
+    const cap = getCap()[p.id];
+    if (!cap) return null;
+    const key = moodKey(st.name);
+    const no = (cap.not || []).some(n => moodKey(n) === key);
+    const ok = !no && (cap.capable || []).some(n => moodKey(n) === key);
+    if (!no && !ok) return null;
+    const el = document.createElement('div');
+    el.className = 'cap ' + (no ? 'no' : 'ok');
+    el.textContent = no ? '✕' : '✔';
+    el.title = no ? 'Not Capable' : 'Capable';
+    el.style.left = 'calc(50% - ' + (st.w / 2) + 'px)';
+    el.style.top = 'calc(50% + ' + (st.h / 2) + 'px)';
+    el.style.transform = 'translate(-50%, -50%)';
+    return el;
+}
+function refreshMoodBadges() {
+    document.querySelectorAll('.marker').forEach(md => {
+        const st = state[Number(md.dataset.pos)];
+        const pos = positions.find(pp => pp.id === Number(md.dataset.pos));
+        const old = md.querySelector('.mood');
+        if (old) old.remove();
+        const nb = buildMoodBadge(st, pos);
+        if (nb) {
+            md.appendChild(nb);
+            md.querySelector('.mood').addEventListener('mouseenter', () => md.classList.add('z-top'));
+            md.querySelector('.mood').addEventListener('mouseleave', () => md.classList.remove('z-top'));
+            md.querySelector('.mood').addEventListener('focusin', () => md.classList.add('z-top'));
+            md.querySelector('.mood').addEventListener('focusout', () => md.classList.remove('z-top'));
+        }
+    });
+}
+
+function render() {
+    const old = document.querySelectorAll('.marker');
+    old.forEach(m => m.remove());
+    positions.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'marker';
+        div.dataset.pos = p.id;
+        div.style.left = pct(p.x, IMG_W);
+        div.style.top = pct(p.y, IMG_H);
+
+        const plus = document.createElement('div');
+        plus.className = 'plus';
+        plus.textContent = '+';
+        plus.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openDropdown(e.clientX, e.clientY, p.id);
+        });
+
+        const img = document.createElement('img');
+        img.className = 'photo';
+        img.draggable = false;
+        if (state[p.id]) {
+            img.src = state[p.id].src;
+            img.style.width = state[p.id].w + 'px';
+            img.style.height = state[p.id].h + 'px';
+            img.classList.add('on');
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDropdown(e.clientX, e.clientY, p.id);
+            });
+            img.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deletePhoto(p.id);
+            });
+
+            const badge = buildMoodBadge(state[p.id], p);
+            if (badge) div.appendChild(badge);
+
+            const capBadge = buildCapabilityBadge(state[p.id], p);
+            if (capBadge) div.appendChild(capBadge);
+        }
+
+        div.appendChild(plus);
+        div.appendChild(img);
+
+        if (p.id >= 14 && p.id <= 17) {
+            const wrap = document.createElement('div');
+            wrap.className = 'note-wrap';
+            const note = document.createElement('textarea');
+            note.className = 'note-input';
+            note.placeholder = 'Input focus job hari ini';
+            note.dataset.pos = p.id;
+            if (state[p.id] && state[p.id].note) note.value = state[p.id].note;
+            note.addEventListener('input', () => {
+                if (!state[p.id]) state[p.id] = {};
+                state[p.id].note = note.value;
+                saveState();
+            });
+            const clearBtn = document.createElement('button');
+            clearBtn.className = 'note-clear';
+            clearBtn.type = 'button';
+            clearBtn.title = 'Hapus isi';
+            clearBtn.textContent = '×';
+            clearBtn.addEventListener('click', () => {
+                note.value = '';
+                if (!state[p.id]) state[p.id] = {};
+                state[p.id].note = '';
+                saveState();
+            });
+            wrap.appendChild(note);
+            wrap.appendChild(clearBtn);
+            div.appendChild(wrap);
+        }
+
+        stage.appendChild(div);
+    });
+}
+
+const dropdown = document.getElementById('dropdown');
+
+function openDropdown(x, y, posId) {
+    activePosId = posId;
+    let html = '<div class="dd-title">Pilih Foto Member</div>';
+    html += members.map(m => `
+        <div class="dd-item" data-member="${m.id}">
+            <img src="${m.src}" alt="${m.name}">
+            <span>${m.name}</span>
+        </div>
+    `).join('');
+    dropdown.innerHTML = html;
+    dropdown.classList.add('on');
+    dropdown.style.visibility = 'hidden';
+    const ddH = dropdown.offsetHeight;
+    const ddW = dropdown.offsetWidth;
+    let left = Math.min(x, window.innerWidth - ddW - 8);
+    let top = (y + ddH + 8 > window.innerHeight) ? Math.max(8, y - ddH - 8) : y;
+    dropdown.style.left = left + 'px';
+    dropdown.style.top = top + 'px';
+    dropdown.style.visibility = 'visible';
+
+    dropdown.querySelectorAll('.dd-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const member = members.find(m => m.id === item.dataset.member);
+            if (member) setPhoto(activePosId, member);
+            closeDropdown();
+        });
+    });
+}
+
+function setPhoto(posId, member) {
+    const img = new Image();
+    img.onload = () => {
+        const maxW = 104, maxH = 88;
+        let w = img.width, h = img.height;
+        const scale = Math.min(1, maxW / w, maxH / h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        state[posId] = { src: member.src, w, h, name: member.name };
+        saveState();
+        render();
+    };
+    img.src = member.src;
+}
+
+function deletePhoto(posId) {
+    const modal = document.getElementById('confirmModal');
+    modal.classList.add('on');
+    let resolved = false;
+    const done = (ok) => {
+        if (resolved) return;
+        resolved = true;
+        modal.classList.remove('on');
+        if (ok) {
+            delete state[posId];
+            saveState();
+            render();
+        }
+    };
+    document.getElementById('confirmYes').onclick = () => done(true);
+    document.getElementById('confirmNo').onclick = () => done(false);
+    modal.querySelector('.confirm-box').onclick = (e) => e.stopPropagation();
+    modal.onclick = () => done(false);
+}
+
+function closeDropdown() {
+    dropdown.classList.remove('on');
+    activePosId = null;
+}
+
+document.addEventListener('click', (e) => {
+    if (!dropdown.classList.contains('on')) return;
+    if (!e.target.closest('.dropdown')) closeDropdown();
+});
+
+loadState();
+render();
+syncFromServer();
+loadMood();
+loadVoices();
+if (window.Sync) setInterval(syncFromServer, Sync.pollMs);
+if (window.Sync) setInterval(capSyncFromServer, Sync.pollMs);
+setInterval(loadMood, 10000);
+setInterval(loadVoices, 60000);
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function renderMultiSkill() {
+    const box = document.getElementById('msContent');
+    const proc = getProc();
+    let thead = '<tr><th class="stick">Pos</th><th>Proses</th>';
+    capColumns().forEach(m => { thead += '<th>' + esc(m.name) + '</th>'; });
+    thead += '</tr>';
+    let rows = '';
+    positions.filter(p => p.id <= 16).forEach(p => {
+        const cap = getCap()[p.id];
+        let cells = '';
+        capColumns().forEach(m => {
+            const key = moodKey(m.name);
+            const no = cap && (cap.not || []).some(n => moodKey(n) === key);
+            const ok = cap && !no && (cap.capable || []).some(n => moodKey(n) === key);
+            cells += no ? '<td class="no">✕</td>' : ok ? '<td class="ok">✔</td>' : '<td class="na"></td>';
+        });
+        rows += '<tr><td class="stick">' + esc(p.name || ('Pos ' + p.id)) + '</td>' +
+            '<td class="proc">' + esc(proc[p.id] || '') + '</td>' + cells + '</tr>';
+    });
+    box.innerHTML = '<div class="ms-scroll"><table class="ms-table"><thead>' + thead + '</thead><tbody>' + rows + '</tbody></table></div>' +
+        '<div class="ms-foot">Capability Tabel ini dibuat berdasarkan Tanoko Multi Skill di Assign Board !</div>';
+}
+const multiSkillBtn = document.getElementById('multiSkillBtn');
+const msModal = document.getElementById('msModal');
+const msEditBtn = document.getElementById('msEditBtn');
+const msSaveBtn = document.getElementById('msSaveBtn');
+const msResetBtn = document.getElementById('msResetBtn');
+let msEditMode = false;
+let msDraft = null;
+let procDraft = {};
+function exitEditMode() {
+    msEditMode = false;
+    msEditBtn.style.display = '';
+    msSaveBtn.style.display = 'none';
+    msResetBtn.style.display = 'none';
+}
+function renderMultiSkillEdit() {
+    const box = document.getElementById('msContent');
+    let thead = '<tr><th class="stick">Pos</th><th>Proses</th>';
+    capColumns().forEach(m => { thead += '<th>' + esc(m.name) + '</th>'; });
+    thead += '</tr>';
+    let rows = '';
+    positions.filter(p => p.id <= 16).forEach(p => {
+        const cap = msDraft[p.id] || { capable: [], not: [] };
+        let cells = '';
+        capColumns().forEach(m => {
+            const key = moodKey(m.name);
+            const no = (cap.not || []).some(n => moodKey(n) === key);
+            const ok = !no && (cap.capable || []).some(n => moodKey(n) === key);
+            const cls = no ? 'no' : ok ? 'ok' : 'na';
+            const sym = no ? '✕' : ok ? '✔' : '';
+            cells += '<td class="' + cls + ' ce" data-p="' + p.id + '" data-m="' + esc(m.name) + '">' + sym + '</td>';
+        });
+        rows += '<tr><td class="stick">' + esc(p.name || ('Pos ' + p.id)) + '</td>' +
+            '<td class="proc"><input class="proc-input" data-p="' + p.id + '" value="' + esc(procDraft[p.id] || '') + '" placeholder="Nama proses"></td>' + cells + '</tr>';
+    });
+    box.innerHTML = '<div class="ms-scroll ms-edit"><table class="ms-table"><thead>' + thead + '</thead><tbody>' + rows + '</tbody></table></div>' +
+        '<div class="ms-hint">Klik sel: kosong ➜ Capable ➜ Incapable ➜ kosong</div>' +
+        '<div class="ms-foot">Capability Tabel ini dibuat berdasarkan Tanoko Multi Skill di Assign Board !</div>';
+    box.querySelectorAll('td.ce').forEach(td => {
+        td.addEventListener('click', () => {
+            const pid = Number(td.dataset.p);
+            const mname = td.dataset.m;
+            const key = moodKey(mname);
+            const cap = msDraft[pid] = msDraft[pid] || { capable: [], not: [] };
+            cap.capable = cap.capable || [];
+            cap.not = cap.not || [];
+            const no = cap.not.some(n => moodKey(n) === key);
+            const ok = !no && cap.capable.some(n => moodKey(n) === key);
+            if (no) {
+                cap.not = cap.not.filter(n => moodKey(n) !== key);
+            } else if (ok) {
+                cap.capable = cap.capable.filter(n => moodKey(n) !== key);
+                cap.not.push(mname);
+            } else {
+                cap.capable.push(mname);
+            }
+            if (!cap.capable.length) delete cap.capable;
+            if (!cap.not.length) delete cap.not;
+            renderMultiSkillEdit();
+        });
+    });
+    box.querySelectorAll('.proc-input').forEach(inp => {
+        inp.addEventListener('input', () => {
+            const pid = Number(inp.dataset.p);
+            const v = inp.value;
+            if (v.trim()) procDraft[pid] = v;
+            else delete procDraft[pid];
+        });
+    });
+}
+multiSkillBtn.addEventListener('click', () => {
+    renderMultiSkill();
+    exitEditMode();
+    msModal.classList.add('on');
+});
+msEditBtn.addEventListener('click', () => {
+    msDraft = JSON.parse(JSON.stringify(getCap()));
+    procDraft = JSON.parse(JSON.stringify(getProc()));
+    msEditMode = true;
+    msEditBtn.style.display = 'none';
+    msSaveBtn.style.display = '';
+    msResetBtn.style.display = '';
+    renderMultiSkillEdit();
+});
+msSaveBtn.addEventListener('click', () => {
+    saveCap(msDraft);
+    saveProc(procDraft);
+    scheduleCapSave();
+    exitEditMode();
+    renderMultiSkill();
+    render();
+});
+msResetBtn.addEventListener('click', () => {
+    msDraft = JSON.parse(JSON.stringify(CAPABILITY));
+    procDraft = {};
+    renderMultiSkillEdit();
+});
+function msCloseModal() {
+    msModal.classList.remove('on');
+    exitEditMode();
+    renderMultiSkill();
+}
+document.getElementById('msClose').addEventListener('click', msCloseModal);
+msModal.addEventListener('click', (e) => { if (e.target === msModal) msCloseModal(); });
+
+function applyTheme() {
+    const isDark = localStorage.getItem('theme') === 'dark';
+    document.body.classList.toggle('dark-mode', isDark);
+}
+if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+}
+window.addEventListener('storage', function (e) {
+    if (e.key === 'theme') applyTheme();
+});
+</script>
+</body>
+</html>

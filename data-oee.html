@@ -1,0 +1,1033 @@
+<!DOCTYPE html><html class="light" lang="id">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Data OEE Core Making</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="tailwind-cdn.js"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "var(--background)",
+                    "tertiary": "var(--tertiary)",
+                    "primary-fixed": "var(--primary-fixed)",
+                    "surface-bright": "var(--surface-bright)",
+                    "on-background": "var(--on-background)",
+                    "on-tertiary-container": "var(--on-tertiary-container)",
+                    "on-tertiary": "var(--on-tertiary)",
+                    "secondary-container": "var(--secondary-container)",
+                    "secondary-fixed": "var(--secondary-fixed)",
+                    "surface-container-highest": "var(--surface-container-highest)",
+                    "surface-variant": "var(--surface-variant)",
+                    "error": "var(--error)",
+                    "on-surface-variant": "var(--on-surface-variant)",
+                    "on-primary-fixed": "var(--on-primary-fixed)",
+                    "outline-variant": "var(--outline-variant)",
+                    "primary-fixed-dim": "var(--primary-fixed-dim)",
+                    "on-primary-container": "var(--on-primary-container)",
+                    "surface-container": "var(--surface-container)",
+                    "on-tertiary-fixed": "var(--on-tertiary-fixed)",
+                    "tertiary-fixed-dim": "var(--tertiary-fixed-dim)",
+                    "on-secondary-fixed-variant": "var(--on-secondary-fixed-variant)",
+                    "primary-container": "var(--primary-container)",
+                    "secondary-fixed-dim": "var(--secondary-fixed-dim)",
+                    "inverse-primary": "var(--inverse-primary)",
+                    "on-error": "var(--on-error)",
+                    "on-surface": "var(--on-surface)",
+                    "tertiary-container": "var(--tertiary-container)",
+                    "surface": "var(--surface)",
+                    "on-secondary": "var(--on-secondary)",
+                    "secondary": "var(--secondary)",
+                    "primary": "var(--primary)",
+                    "surface-container-high": "var(--surface-container-high)",
+                    "on-secondary-container": "var(--on-secondary-container)",
+                    "surface-container-lowest": "var(--surface-container-lowest)",
+                    "on-tertiary-fixed-variant": "var(--on-tertiary-fixed-variant)",
+                    "on-secondary-fixed": "var(--on-secondary-fixed)",
+                    "surface-container-low": "var(--surface-container-low)",
+                    "outline": "var(--outline)",
+                    "on-error-container": "var(--on-error-container)",
+                    "on-primary-fixed-variant": "var(--on-primary-fixed-variant)",
+                    "surface-dim": "var(--surface-dim)",
+                    "inverse-surface": "var(--inverse-surface)",
+                    "inverse-on-surface": "var(--inverse-on-surface)",
+                    "error-container": "var(--error-container)",
+                    "inverse-on-background": "var(--inverse-on-background)",
+                    "tertiary-fixed": "var(--tertiary-fixed)",
+                    "on-primary": "var(--on-primary)",
+                    "surface-tint": "var(--surface-tint)"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "md": "24px",
+                    "base": "8px",
+                    "sm": "12px",
+                    "lg": "48px",
+                    "xl": "80px",
+                    "gutter": "24px",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "display-lg-mobile": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-caps": ["JetBrains Mono"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "button-text": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "display-lg-mobile": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "button-text": ["16px", {"lineHeight": "1", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--outline-variant); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--outline); }
+    </style>
+<style>
+        :root {
+            --background: #f9f9f9;
+            --tertiary: #5c5d5f;
+            --primary-fixed: #ffdad6;
+            --surface-bright: #f9f9f9;
+            --on-background: #1a1c1c;
+            --on-tertiary-container: #ffffff;
+            --on-tertiary: #ffffff;
+            --secondary-container: #e2dfde;
+            --secondary-fixed: #e5e2e1;
+            --surface-container-highest: #e2e2e2;
+            --surface-variant: #e2e2e2;
+            --error: #ba1a1a;
+            --on-surface-variant: #5e3f3b;
+            --on-primary-fixed: #410002;
+            --outline-variant: #e9bcb7;
+            --primary-fixed-dim: #ffb4ab;
+            --on-primary-container: #fffeff;
+            --surface-container: #eeeeee;
+            --on-tertiary-fixed: #1a1c1d;
+            --tertiary-fixed-dim: #c6c6c8;
+            --on-secondary-fixed-variant: #474746;
+            --primary-container: #eb0a1e;
+            --secondary-fixed-dim: #c8c6c5;
+            --inverse-primary: #ffb4ab;
+            --on-error: #ffffff;
+            --on-surface: #1a1c1c;
+            --tertiary-container: #757678;
+            --surface: #f9f9f9;
+            --on-secondary: #ffffff;
+            --secondary: #5f5e5e;
+            --primary: #bd0014;
+            --surface-container-high: #e8e8e8;
+            --on-secondary-container: #636262;
+            --surface-container-lowest: #ffffff;
+            --on-tertiary-fixed-variant: #464749;
+            --on-secondary-fixed: #1b1c1c;
+            --surface-container-low: #f3f3f3;
+            --outline: #936e6a;
+            --on-error-container: #93000a;
+            --on-primary-fixed-variant: #93000d;
+            --surface-dim: #dadada;
+            --inverse-surface: #2f3131;
+            --inverse-on-surface: #f1f1f1;
+            --error-container: #ffdad6;
+            --tertiary-fixed: #e3e2e4;
+            --on-primary: #ffffff;
+            --surface-tint: #c00014;
+        }
+
+        html.dark {
+            --background: #0b0d14;
+            --tertiary: #c6c6c8;
+            --primary-fixed: #d9e2ff;
+            --surface-bright: #35374a;
+            --on-background: #e4e4ec;
+            --on-tertiary-container: #2f2f31;
+            --on-tertiary: #1a1c1c;
+            --secondary-container: #364251;
+            --secondary-fixed: #d8e3f1;
+            --surface-container-highest: #2d2f40;
+            --surface-variant: #282a3a;
+            --error: #ffb4ab;
+            --on-surface-variant: #c4c6d0;
+            --on-primary-fixed: #001945;
+            --outline-variant: #404354;
+            --primary-fixed-dim: #aac1ff;
+            --on-primary-container: #d9e2ff;
+            --surface-container: #171922;
+            --on-tertiary-fixed: #1a1c1d;
+            --tertiary-fixed-dim: #c6c6c8;
+            --on-secondary-fixed-variant: #d8e3f1;
+            --primary-container: #003d9e;
+            --secondary-fixed-dim: #bcc7d4;
+            --inverse-primary: #005cbb;
+            --on-error: #690005;
+            --on-surface: #e4e4ec;
+            --tertiary-container: #464749;
+            --surface: #101219;
+            --on-secondary: #26313e;
+            --secondary: #bcc7d4;
+            --primary: #4a8cff;
+            --surface-container-high: #222436;
+            --on-secondary-container: #d8e3f1;
+            --surface-container-lowest: #06080d;
+            --on-tertiary-fixed-variant: #464749;
+            --on-secondary-fixed: #101e2b;
+            --surface-container-low: #13151d;
+            --outline: #8e92a0;
+            --on-error-container: #ffdad6;
+            --on-primary-fixed-variant: #ffffff;
+            --surface-dim: #0b0d14;
+            --inverse-surface: #e4e4ec;
+            --inverse-on-surface: #0b0d14;
+            --error-container: #93000a;
+            --tertiary-fixed: #e3e2e4;
+            --on-primary: #ffffff;
+            --surface-tint: #4a8cff;
+        }
+        html.dark ::-webkit-scrollbar-track { background: #222436; }
+        html.dark ::-webkit-scrollbar-thumb { background: #4a8cff; }
+    </style>
+<style>
+        /* Barra grafik: Pagi mengikuti warna primary, Malam kontras (inverse-surface) */
+        .bar-pagi { background: var(--primary); border: 1px solid var(--outline); }
+        .bar-malam { background: var(--inverse-surface); border: 1px solid var(--outline); }
+        .bar-ghost { background: var(--outline-variant); }
+        .bar-empty { background: transparent; }
+        .section-card {
+            background-color: var(--surface-container-lowest);
+            border: 1px solid var(--outline-variant);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-md overflow-x-hidden">
+<!-- Main Content -->
+<main class="p-gutter flex flex-col gap-gutter min-h-screen w-full">
+<!-- Page Header -->
+<div class="flex items-center justify-between">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary leading-none mb-1">Data OEE Core Making</h1>
+<p class="font-body-md text-body-md text-secondary">Histori OEE &amp; problem line stop per shift / tanggal produksi.</p>
+</div>
+</div>
+<!-- Filters Section -->
+<section class="section-card p-sm flex flex-col md:flex-row gap-md items-end w-full shadow-none">
+<!-- Date Filter -->
+<div class="flex flex-col gap-xs w-full md:w-auto">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Bulan Produksi</label>
+<div class="relative flex items-center">
+<input type="hidden" id="fDate"/>
+<input type="text" id="fDateDisplay" readonly placeholder="MM-YYYY"
+class="w-full md:w-56 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
+<button type="button" id="fDateBtn" class="absolute right-1 p-2 text-secondary hover:text-primary cursor-pointer" aria-label="Pilih tanggal" title="Pilih tanggal">
+<span class="material-symbols-outlined">calendar_month</span>
+</button>
+<div id="fDatePicker" class="hidden absolute z-50 top-full mt-2 w-72 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl p-3"></div>
+</div>
+</div>
+<!-- Shift Filter -->
+<div class="flex flex-col gap-xs w-full md:w-auto">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Shift</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-secondary">schedule</span>
+<select id="fShift" class="w-full md:w-36 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
+<option value="all">Semua</option>
+<option value="pagi">Pagi</option>
+<option value="malam">Malam</option>
+</select>
+</div>
+</div>
+<!-- Line Stop Type Filter -->
+<div class="flex flex-col gap-xs w-full md:w-auto">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Tipe Line Stop</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-secondary">analytics</span>
+<select id="fType" class="w-full md:w-44 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
+<option value="ALL">Semua Tipe</option>
+<option value="AV">Availability (AV)</option>
+<option value="PE">Performance (PE)</option>
+<option value="RQ">Quality (RQ)</option>
+</select>
+</div>
+</div>
+<!-- Machine Filter -->
+<div class="flex flex-col gap-xs w-full md:w-auto">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Mesin</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-secondary">precision_manufacturing</span>
+<select id="fMachine" class="w-full md:w-48 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
+<option value="ALL">Semua Mesin</option>
+</select>
+</div>
+</div>
+<!-- Date Range Filter (List Up Problem) -->
+<div class="flex flex-col gap-xs w-full md:w-auto">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Dari Tanggal</label>
+<div class="relative flex items-center">
+<input type="hidden" id="fFrom"/>
+<input type="text" id="fFromDisplay" readonly placeholder="DD-MM-YYYY"
+class="w-full md:w-56 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
+<button type="button" id="fFromBtn" class="absolute right-1 p-2 text-secondary hover:text-primary cursor-pointer" aria-label="Pilih tanggal awal" title="Pilih tanggal awal">
+<span class="material-symbols-outlined">calendar_month</span>
+</button>
+<div id="fFromPicker" class="hidden absolute z-50 top-full mt-2 w-72 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl p-3"></div>
+</div>
+</div>
+<div class="flex flex-col gap-xs w-full md:w-auto">
+<label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Sampai Tanggal</label>
+<div class="relative flex items-center">
+<input type="hidden" id="fTo"/>
+<input type="text" id="fToDisplay" readonly placeholder="DD-MM-YYYY"
+class="w-full md:w-56 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
+<button type="button" id="fToBtn" class="absolute right-1 p-2 text-secondary hover:text-primary cursor-pointer" aria-label="Pilih tanggal akhir" title="Pilih tanggal akhir">
+<span class="material-symbols-outlined">calendar_month</span>
+</button>
+<div id="fToPicker" class="hidden absolute z-50 top-full mt-2 w-72 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl p-3"></div>
+</div>
+</div>
+<!-- Apply Button -->
+<button onclick="applyFilters()" class="w-full md:w-auto px-6 py-2 bg-transparent border border-primary text-primary font-label-caps text-label-caps font-bold hover:bg-primary hover:text-on-primary transition-colors active:scale-95 uppercase tracking-wider h-[38px]">
+                Terapkan
+            </button>
+</section>
+<!-- Top Section: OEE Bar Chart (per shift, bulanan) -->
+<section class="section-card p-sm relative">
+<!-- Accent Bar -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="pl-3 mb-6 flex justify-between items-center">
+<h2 class="font-headline-sm text-headline-sm text-on-background border-l-4 border-primary pl-3 -ml-3 leading-tight">Grafik OEE Bulanan <span id="chartMonthLabel" class="text-secondary"></span></h2>
+<!-- Chart Legend -->
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bar-pagi"></div>
+<span class="font-label-caps text-[10px] text-secondary uppercase tracking-wider">Pagi (OEE)</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bar-malam"></div>
+<span class="font-label-caps text-[10px] text-secondary uppercase tracking-wider">Malam (OEE)</span>
+</div>
+<div class="flex items-center gap-2">
+<div style="width:22px;border-top:2px dashed #dc2626"></div>
+<span class="font-label-caps text-[10px] text-secondary uppercase tracking-wider">Target 96%</span>
+</div>
+</div>
+</div>
+<!-- CSS Bar Chart -->
+<div id="chartArea" class="h-64 flex items-end gap-[2px] pl-12 pr-4 relative border-b border-l border-outline-variant pt-4">
+<!-- Y-Axis Labels -->
+<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between items-end pr-2 text-secondary font-data-mono text-[10px] w-10">
+<span>100%</span>
+<span>80%</span>
+<span>60%</span>
+<span>40%</span>
+<span>20%</span>
+<span>0%</span>
+</div>
+<!-- Grid Lines -->
+<div class="absolute left-10 right-0 top-4 bottom-0 flex flex-col justify-between pointer-events-none">
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+<div class="border-t border-outline-variant w-full h-0"></div>
+</div>
+<!-- Target Line: Section Target OEE 96% (garis merah putus-putus, seluruh tanggal 1-31) -->
+<div id="oeeTargetLine" class="absolute left-12 right-4 pointer-events-none z-20 hidden" style="top:25.6px">
+<div style="border-top:2px dashed #dc2626"></div>
+<span class="absolute -top-4 right-0 leading-none" style="color:#dc2626;font-size:10px;font-weight:700;white-space:nowrap">Target OEE 96%</span>
+</div>
+<!-- Bars injected here -->
+<div id="chartBars" class="flex-1 flex items-end h-full relative z-10 gap-[2px] pt-4"></div>
+</div>
+<!-- X-Axis labels -->
+<div id="chartAxis" class="flex gap-[2px] pl-12 pr-4 font-label-caps text-[10px] text-secondary uppercase tracking-wider mt-1"></div>
+<!-- Empty / loading state -->
+<div id="chartEmpty" class="hidden mt-4 py-6 text-center font-data-mono text-[12px] text-secondary"></div>
+</section>
+<!-- Bottom Section: Data Table -->
+<section class="section-card p-sm relative overflow-hidden">
+<!-- Accent Bar -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="pl-3 mb-4 flex justify-between items-center">
+<h2 class="font-headline-sm text-headline-sm text-on-background border-l-4 border-primary pl-3 -ml-3 leading-tight">List Up Problem Line Stop <span id="tableCount"></span></h2>
+<button onclick="exportCSV()" class="text-primary font-label-caps text-[10px] uppercase tracking-wider flex items-center gap-1 hover:text-on-background transition-colors">
+<span class="material-symbols-outlined text-[16px]">download</span> Export CSV
+                </button>
+</div>
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead id="tableHead">
+<tr>
+<th class="font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider w-12">No</th>
+<th data-sort="date" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider hover:text-primary">Date <span class="sort-ind" data-sort-target="date"></span></th>
+<th data-sort="shift" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider hover:text-primary">Shift <span class="sort-ind" data-sort-target="shift"></span></th>
+<th data-sort="slot" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider hover:text-primary">Jam <span class="sort-ind" data-sort-target="slot"></span></th>
+<th data-sort="mesin" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider hover:text-primary">Machine <span class="sort-ind" data-sort-target="mesin"></span></th>
+<th data-sort="type" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider text-center hover:text-primary">Type <span class="sort-ind" data-sort-target="type"></span></th>
+<th data-sort="problem" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider hover:text-primary">Problem <span class="sort-ind" data-sort-target="problem"></span></th>
+<th data-sort="pg" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider hover:text-primary">Penanggulangan <span class="sort-ind" data-sort-target="pg"></span></th>
+<th data-sort="minutes" class="cursor-pointer select-none font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider text-right hover:text-primary">Dur (Min) <span class="sort-ind" data-sort-target="minutes"></span></th>
+<th class="font-label-caps text-[11px] text-secondary border-b-2 border-outline-variant pb-2 px-3 uppercase tracking-wider w-20 text-center">Aksi</th>
+</tr>
+</thead>
+<tbody id="tableBody" class="font-data-mono text-data-mono"></tbody>
+</table>
+</div>
+<!-- Table Footer -->
+<div class="mt-4 flex items-center justify-between border-t border-outline-variant pt-4">
+<span id="tableFooter" class="font-data-mono text-[11px] text-secondary"></span>
+</div>
+</section>
+</main>
+<!-- Konfirmasi hapus (modal custom, agar tidak keluar dari fullscreen) -->
+<div id="oeeConfirmModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,.45)">
+  <div class="rounded-lg shadow-xl p-6 max-w-sm w-full mx-4" style="background:var(--surface-container-lowest);border:1px solid var(--outline-variant)">
+    <h3 class="font-headline-sm text-headline-sm text-on-background mb-2">Hapus Data OEE</h3>
+    <p id="oeeConfirmText" class="text-body-md text-secondary mb-6"></p>
+    <div class="flex justify-end gap-3">
+      <button type="button" id="oeeConfirmNo" class="px-4 py-2 rounded border border-outline text-on-background font-label-caps font-bold text-label-caps hover:bg-surface-container-low transition-colors">Batal</button>
+      <button type="button" id="oeeConfirmYes" class="px-4 py-2 rounded transition-opacity hover:opacity-80 text-white font-label-caps font-bold text-label-caps" style="background:var(--error)">Hapus</button>
+    </div>
+  </div>
+</div>
+<!-- sync-core.js: membaca URL Apps Script yang sama di semua halaman -->
+<script src="sync-core.js"></script>
+<script>
+'use strict';
+var OEE_STORE = {};
+var SORT_KEY = '';
+var SORT_DIR = 1;
+var TYPE_COLORS = {
+  AV: 'bg-[#8b5cf6] text-white border border-[#a78bfa]',
+  PE: 'bg-[#0284c7] text-white border border-[#7dd3fc]',
+  RQ: 'bg-[#D4A017] text-white border border-[#fcd34d]'
+};
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function getUrl() {
+  try {
+    var g = new URLSearchParams(window.location.search).get('gas');
+    if (g) return g;
+  } catch (e) {}
+  return (window.Sync && Sync.getUrl()) || '';
+}
+function allDates() { return Object.keys(OEE_STORE).sort(); }
+
+function getMonthKey(dateStr) { return (dateStr || '').slice(0, 7); }
+function monthName(ym) {
+  var names = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  var m = parseInt((ym || '').slice(5, 7), 10);
+  return (m >= 1 && m <= 12) ? names[m - 1] : ym;
+}
+
+var OEE_CACHE_KEY = 'oee-cache-v1';
+
+function applyStore(store, machines) {
+  OEE_STORE = store || {};
+  if (machines && machines.length) populateMachinesList(machines);
+  else populateMachines();
+  var dates = allDates();
+  var fd = document.getElementById('fDate');
+  if (dates.length && !fd.value) {
+    var ym = dates[dates.length - 1].slice(0, 7);
+    fd.value = ym;
+    var disp = document.getElementById('fDateDisplay');
+    if (disp) disp.value = ym && ym.length >= 7 ? ym.slice(5, 7) + '-' + ym.slice(0, 4) : '';
+  }
+  renderAll();
+}
+
+function populateMachinesList(list) {
+  var sel = document.getElementById('fMachine');
+  sel.innerHTML = '<option value="ALL">Semua Mesin</option>';
+  list.slice().sort().forEach(function (m) {
+    var opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  });
+}
+
+function init() {
+  var url = getUrl();
+  if (!url) {
+    document.getElementById('chartEmpty').classList.remove('hidden');
+    document.getElementById('chartEmpty').textContent = 'URL Apps Script belum diatur. Buka halaman Visualisasi WIP Core terlebih dahulu.';
+    return;
+  }
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(OEE_CACHE_KEY) || 'null'); } catch (e1) {}
+  if (cached && cached.store) {
+    applyStore(cached.store, cached.machines || []);
+  } else {
+    document.getElementById('chartEmpty').classList.remove('hidden');
+    document.getElementById('chartEmpty').textContent = 'Memuat data...';
+  }
+  fetch(url + '?app=oeedata&action=list', { redirect: 'follow' })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j || !j.ok) throw new Error((j && j.error) || 'Server menolak');
+      applyStore(j.store || {}, j.machines || []);
+      try {
+        localStorage.setItem(OEE_CACHE_KEY, JSON.stringify({ t: Date.now(), store: j.store || {}, machines: j.machines || [] }));
+      } catch (e2) {}
+    })
+    .catch(function (e) {
+      if (cached && cached.store) return;
+      document.getElementById('chartEmpty').classList.remove('hidden');
+      document.getElementById('chartEmpty').textContent = 'Gagal memuat data: ' + esc(e.message);
+    });
+}
+
+function populateMachines() {
+  var set = {};
+  Object.keys(OEE_STORE).forEach(function (d) {
+    ['pagi', 'malam'].forEach(function (sh) {
+      var rec = OEE_STORE[d][sh];
+      (rec && rec.machines || []).forEach(function (m) {
+        if (m && m.name) set[m.name] = 1;
+      });
+      (rec && rec.problems || []).forEach(function (p) {
+        if (p && p.mesin) set[p.mesin] = 1;
+      });
+    });
+  });
+  var sel = document.getElementById('fMachine');
+  sel.innerHTML = '<option value="ALL">Semua Mesin</option>';
+  Object.keys(set).sort().forEach(function (m) {
+    var opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  });
+}
+
+function currentFilters() {
+  var t = document.getElementById('fType').value;
+  return {
+    date: document.getElementById('fDate').value || '',
+    from: document.getElementById('fFrom').value || '',
+    to: document.getElementById('fTo').value || '',
+    shift: document.getElementById('fShift').value,
+    type: t === 'ALL' ? '' : t,
+    machine: document.getElementById('fMachine').value === 'ALL' ? '' : document.getElementById('fMachine').value
+  };
+}
+
+function renderAll() {
+  renderChart();
+  renderTable();
+}
+
+function renderChart() {
+  var f = currentFilters();
+  var barBox = document.getElementById('chartBars');
+  var axisBox = document.getElementById('chartAxis');
+  var monthLabel = document.getElementById('chartMonthLabel');
+  var empty = document.getElementById('chartEmpty');
+  var tline = document.getElementById('oeeTargetLine');
+  var month = f.date ? getMonthKey(f.date) : '';
+  if (!month) {
+    var ds = allDates();
+    if (ds.length) month = getMonthKey(ds[ds.length - 1]);
+  }
+  if (!month) {
+    empty.classList.remove('hidden');
+    empty.textContent = 'Belum ada data OEE untuk ditampilkan.';
+    barBox.innerHTML = '';
+    axisBox.innerHTML = '';
+    monthLabel.textContent = '';
+    if (tline) tline.classList.add('hidden');
+    return;
+  }
+  var monthDates = Object.keys(OEE_STORE).filter(function (d) { return getMonthKey(d) === month; }).sort();
+    monthLabel.textContent = '(' + monthName(month) + ') ' + month.slice(0, 4);
+  var showPagi = f.shift === 'all' || f.shift === 'pagi';
+  var showMalam = f.shift === 'all' || f.shift === 'malam';
+  var hasAny = false;
+  monthDates.forEach(function (d) {
+    if (showPagi && OEE_STORE[d].pagi) hasAny = true;
+    if (showMalam && OEE_STORE[d].malam) hasAny = true;
+  });
+  if (!hasAny) {
+    empty.classList.remove('hidden');
+    empty.textContent = 'Tidak ada data OEE pada bulan ini sesuai filter.';
+    barBox.innerHTML = '';
+    axisBox.innerHTML = '';
+    if (tline) tline.classList.add('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  if (tline) tline.classList.remove('hidden');
+  var bars = '';
+  var axis = [];
+  for (var i = 1; i <= 31; i++) {
+    var dd = month + '-' + ('0' + i).slice(-2);
+    var day = String(i);
+    var hasDate = monthDates.indexOf(dd) !== -1;
+    var group = '<div class="flex-1 flex items-end gap-[2px] min-w-[10px]" title="' + esc(dd) + '">';
+    if (showPagi && hasDate && OEE_STORE[dd].pagi) {
+      var v = Math.max(0, Math.min(100, OEE_STORE[dd].pagi.oee || 0));
+      group += '<div class="bar-pagi hover:brightness-110 transition-all" style="flex:1;min-width:2px;height:' + (v / 100 * 240) + 'px;min-height:2px" title="' + esc(dd) + ' Pagi ' + Math.round(v) + '%"></div>';
+    } else if (showPagi && hasDate) {
+      group += '<div class="bar-ghost" style="height:2px;width:9px" title="' + esc(dd) + ' Pagi — tidak ada data"></div>';
+    } else if (showPagi) {
+      group += '<div class="bar-empty" style="height:2px;flex:1" title="' + esc(dd) + '"></div>';
+    }
+    if (showMalam && hasDate && OEE_STORE[dd].malam) {
+      var vm = Math.max(0, Math.min(100, OEE_STORE[dd].malam.oee || 0));
+      group += '<div class="bar-malam hover:brightness-110 transition-all" style="flex:1;min-width:2px;height:' + (vm / 100 * 240) + 'px;min-height:2px" title="' + esc(dd) + ' Malam ' + Math.round(vm) + '%"></div>';
+    } else if (showMalam && hasDate) {
+      group += '<div class="bar-ghost" style="height:2px;width:9px" title="' + esc(dd) + ' Malam — tidak ada data"></div>';
+    } else if (showMalam) {
+      group += '<div class="bar-empty" style="height:2px;flex:1" title="' + esc(dd) + '"></div>';
+    }
+    group += '</div>';
+    bars += group;
+    var pm = '';
+    if (showPagi) pm += '<span class="flex-1 text-center text-[8px] leading-none">P</span>';
+    if (showMalam) pm += '<span class="flex-1 text-center text-[8px] leading-none">M</span>';
+    axis.push('<div class="flex-1 min-w-[10px]"><div class="flex gap-[2px]">' + (pm || '<span class="flex-1"></span>') + '</div><div class="text-center text-[10px]">' + day + '</div></div>');
+  }
+  barBox.innerHTML = bars;
+  axisBox.innerHTML = axis.join('');
+}
+
+function fmtDate(d) {
+  d = String(d || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+  return d.slice(8, 10) + '-' + d.slice(5, 7) + '-' + d.slice(0, 4);
+}
+
+function fmtSlot(s) {
+  s = String(s || '');
+  var m = s.match(/^(\d{2}):?(\d{2})\s*[-–]\s*(\d{2}):?(\d{2})$/);
+  if (m) return m[1] + '-' + m[3];
+  var m2 = s.match(/^(\d{2})-(\d{2})$/);
+  if (m2) return m2[1] + '-' + m2[2];
+  var m3 = s.match(/^\d+$/);
+  if (m3) {
+    var h = parseInt(s, 10) % 24;
+    return ('0' + h).slice(-2) + '-' + ('0' + (h + 1) % 24).slice(-2);
+  }
+  return s;
+}
+
+function renderTable() {
+  var f = currentFilters();
+  var rows = [];
+  var useRange = !!(f.from || f.to);
+  allDates().sort().reverse().forEach(function (d) {
+    if (useRange) {
+      if (f.from && d < f.from) return;
+      if (f.to && d > f.to) return;
+    } else if (f.date && getMonthKey(d) !== f.date) {
+      return;
+    }
+    ['pagi', 'malam'].forEach(function (sh) {
+      if (f.shift !== 'all' && f.shift !== sh) return;
+      var rec = OEE_STORE[d][sh];
+      if (!rec) return;
+      (rec.problems || []).forEach(function (p) {
+        if (f.type && (p.type || 'AV') !== f.type) return;
+        if (f.machine && (p.mesin || '') !== f.machine) return;
+        rows.push({ date: d, shift: sh, slot: p.slot, type: p.type || 'AV', mesin: p.mesin || '', problem: p.problem || '', minutes: p.minutes || 0, pg: p.pg || '' });
+      });
+    });
+  });
+  if (SORT_KEY) {
+    var numKeys = { minutes: 1 };
+    rows.sort(function (a, b) {
+      var va = a[SORT_KEY], vb = b[SORT_KEY];
+      if (numKeys[SORT_KEY]) {
+        va = va == null ? 0 : Number(va);
+        vb = vb == null ? 0 : Number(vb);
+        return (va - vb) * SORT_DIR;
+      }
+      va = String(va == null ? '' : va);
+      vb = String(vb == null ? '' : vb);
+      return va.localeCompare(vb) * SORT_DIR;
+    });
+  }
+  var body = document.getElementById('tableBody');
+  var countEl = document.getElementById('tableCount');
+  countEl.textContent = rows.length ? '(' + rows.length + ')' : '';
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="10" class="px-3 py-8 text-center text-secondary">Tidak ada data problem yang cocok dengan filter.</td></tr>';
+    document.getElementById('tableFooter').textContent = '0 records';
+    return;
+  }
+  body.innerHTML = rows.map(function (r, i) {
+    var tcol = TYPE_COLORS[r.type] || 'bg-surface-variant text-on-surface border border-outline';
+    var durCls = r.minutes >= 60 ? 'text-error font-bold' : (r.minutes >= 30 ? 'text-warning-amber font-bold' : 'text-on-background');
+    return '<tr class="hover:bg-surface-container-low border-b border-outline-variant transition-colors cursor-default">'
+      + '<td class="px-3 py-3 text-secondary">' + ('0' + (i + 1)).slice(-2) + '</td>'
+      + '<td class="px-3 py-3 text-on-background whitespace-nowrap">' + esc(fmtDate(r.date)) + '</td>'
+      + '<td class="px-3 py-3 text-on-background whitespace-nowrap">' + (r.shift === 'malam' ? 'Malam' : 'Pagi') + '</td>'
+      + '<td class="px-3 py-3 text-secondary whitespace-nowrap">' + esc(fmtSlot(r.slot)) + '</td>'
+      + '<td class="px-3 py-3 text-primary font-bold">' + esc(r.mesin || '-') + '</td>'
+      + '<td class="px-3 py-3 text-center"><span class="' + tcol + ' px-2 py-1 font-label-caps text-[10px] inline-block w-8 text-center">' + esc(r.type) + '</span></td>'
+      + '<td class="px-3 py-3 text-on-background truncate max-w-xs" title="' + esc(r.problem) + '">' + esc(r.problem || '-') + '</td>'
+      + '<td class="px-3 py-3 text-on-background truncate max-w-xs" title="' + esc(r.pg) + '">' + esc(r.pg || '-') + '</td>'
+      + '<td class="px-3 py-3 ' + durCls + ' text-right">' + r.minutes + '</td>'
+      + '<td class="px-3 py-3 text-center whitespace-nowrap"><button type="button" class="oee-del-btn text-error hover:bg-error/10 rounded px-2 py-1 transition-colors" data-del-date="' + esc(r.date) + '" data-del-shift="' + esc(r.shift) + '" title="Hapus data OEE ' + esc(r.date) + ' (' + (r.shift === 'malam' ? 'Malam' : 'Pagi') + ')"><span class="material-symbols-outlined text-base">delete</span></button></td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('tableFooter').textContent = 'Showing ' + rows.length + ' records';
+}
+
+function applyFilters() {
+  renderAll();
+}
+
+function exportCSV() {
+  var f = currentFilters();
+  var rows = [];
+  var useRange = !!(f.from || f.to);
+  allDates().sort().reverse().forEach(function (d) {
+    if (useRange) {
+      if (f.from && d < f.from) return;
+      if (f.to && d > f.to) return;
+    } else if (f.date && getMonthKey(d) !== f.date) {
+      return;
+    }
+    ['pagi', 'malam'].forEach(function (sh) {
+      if (f.shift !== 'all' && f.shift !== sh) return;
+      var rec = OEE_STORE[d][sh];
+      if (!rec) return;
+      (rec.problems || []).forEach(function (p) {
+        if (f.type && (p.type || 'AV') !== f.type) return;
+        if (f.machine && (p.mesin || '') !== f.machine) return;
+        rows.push([fmtDate(d), sh === 'malam' ? 'Malam' : 'Pagi', fmtSlot(p.slot), p.mesin, p.type, p.problem, p.pg || '', p.minutes]);
+      });
+    });
+  });
+  if (!rows.length) alert('Tidak ada data untuk diekspor.');
+  var head = 'Date,Shift,Jam,Mesin,Type,Problem,Penanggulangan,DurMin\n';
+  var csv = head + rows.map(function (r) {
+    return r.map(function (c) { return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'data-oee-' + (f.date || 'all') + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Sinkronkan tema dengan index.html (light/dark) ── */
+function applyTheme() {
+  var saved = 'light';
+  try { saved = localStorage.getItem('theme') || 'light'; } catch (e) {}
+  var dark = saved === 'dark';
+  document.documentElement.classList.toggle('dark', dark);
+  document.documentElement.classList.toggle('light', !dark);
+}
+applyTheme();
+
+/* Ikuti perubahan tema dari index.html (iframe) saat localStorage berubah */
+window.addEventListener('storage', function (e) {
+  if (e.key === 'theme') applyTheme();
+});
+
+/* Month picker custom (MM-YYYY) — andal di dalam iframe, tak bergantung popup native browser */
+(function () {
+  var hidden = document.getElementById('fDate');
+  var display = document.getElementById('fDateDisplay');
+  var btn = document.getElementById('fDateBtn');
+  var box = document.getElementById('fDatePicker');
+  var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  var viewY;
+
+  function pad(n) { return ('0' + n).slice(-2); }
+  function fmtDisp(ym) {
+    if (!ym || ym.length < 7) return '';
+    return ym.slice(5, 7) + '-' + ym.slice(0, 4);
+  }
+  function ymKey(y, m) { return y + '-' + pad(m + 1); }
+  function apply(ym) {
+    hidden.value = ym;
+    if (display) display.value = fmtDisp(ym);
+    close();
+    applyFilters();
+  }
+  function close() { if (box) box.classList.add('hidden'); }
+  function open() {
+    if (!box) return;
+    var cur = hidden.value;
+    var now = new Date();
+    viewY = (cur && cur.length >= 7) ? parseInt(cur.slice(0, 4), 10) : now.getFullYear();
+    render();
+    box.classList.remove('hidden');
+  }
+  function render() {
+    if (!box) return;
+    var sel = hidden.value;
+    var selM = (sel && sel.length >= 7) ? parseInt(sel.slice(5, 7), 10) : -1;
+    var html = '';
+    html += '<div class="flex items-center justify-between mb-2">'
+      + '<button type="button" data-dp-nav="-1" class="px-2 py-1 text-secondary hover:text-primary text-lg leading-none">\u2039</button>'
+      + '<span class="font-label-caps text-[13px] text-on-background font-bold uppercase tracking-wider">' + viewY + '</span>'
+      + '<button type="button" data-dp-nav="1" class="px-2 py-1 text-secondary hover:text-primary text-lg leading-none">\u203A</button>'
+      + '</div>';
+    html += '<div class="grid grid-cols-3 gap-1.5">';
+    for (var m = 0; m < 12; m++) {
+      var isSel = (m + 1) === selM;
+      html += '<button type="button" data-dp-month="' + m + '" class="py-2 text-center text-[12px] rounded cursor-pointer '
+        + (isSel ? 'bg-primary text-on-primary font-bold' : 'text-on-background hover:bg-surface-container-high') + '">'
+        + monthNames[m] + '</button>';
+    }
+    html += '</div>';
+    box.innerHTML = html;
+  }
+  function onBoxClick(e) {
+    e.stopPropagation();
+    var nav = e.target.closest ? e.target.closest('[data-dp-nav]') : null;
+    var month = e.target.closest ? e.target.closest('[data-dp-month]') : null;
+    if (nav) {
+      viewY += parseInt(nav.getAttribute('data-dp-nav'), 10);
+      render();
+    } else if (month) {
+      apply(ymKey(viewY, parseInt(month.getAttribute('data-dp-month'), 10)));
+    }
+  }
+  if (btn) btn.addEventListener('click', function (e) { e.stopPropagation(); open(); });
+  if (display) display.addEventListener('click', function (e) { e.stopPropagation(); open(); });
+  if (box) box.addEventListener('click', onBoxClick);
+  document.addEventListener('click', function () { close(); });
+})();
+
+/* Date range picker custom (DD-MM-YYYY) — gaya sama seperti month picker Bulan Produksi */
+(function () {
+  var SPECS = [
+    { hidden: 'fFrom', display: 'fFromDisplay', btn: 'fFromBtn', box: 'fFromPicker' },
+    { hidden: 'fTo', display: 'fToDisplay', btn: 'fToBtn', box: 'fToPicker' }
+  ];
+  var dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  var cfg = [];
+  var viewY = [];
+  var viewM = [];
+  var now = new Date();
+
+  function pad(n) { return ('0' + n).slice(-2); }
+  function fmtDisp(d) {
+    if (!d || d.length < 10) return '';
+    return d.slice(8, 10) + '-' + d.slice(5, 7) + '-' + d.slice(0, 4);
+  }
+
+  SPECS.forEach(function (s, i) {
+    cfg[i] = {
+      hidden: document.getElementById(s.hidden),
+      display: document.getElementById(s.display),
+      btn: document.getElementById(s.btn),
+      box: document.getElementById(s.box)
+    };
+    viewY[i] = now.getFullYear();
+    viewM[i] = now.getMonth();
+  });
+
+  function closeAll() {
+    SPECS.forEach(function (s, i) { if (cfg[i].box) cfg[i].box.classList.add('hidden'); });
+  }
+  function open(i) {
+    var cur = cfg[i].hidden.value;
+    if (cur && cur.length >= 10) {
+      viewY[i] = parseInt(cur.slice(0, 4), 10);
+      viewM[i] = parseInt(cur.slice(5, 7), 10) - 1;
+    } else {
+      viewY[i] = now.getFullYear();
+      viewM[i] = now.getMonth();
+    }
+    render(i);
+    cfg[i].box.classList.remove('hidden');
+  }
+  function apply(i, key) {
+    cfg[i].hidden.value = key;
+    cfg[i].display.value = fmtDisp(key);
+    closeAll();
+    applyFilters();
+  }
+  function render(i) {
+    var b = cfg[i].box;
+    if (!b) return;
+    var y = viewY[i], m = viewM[i];
+    var first = new Date(y, m, 1).getDay();
+    var dim = new Date(y, m + 1, 0).getDate();
+    var sel = cfg[i].hidden.value;
+    var html = '';
+    html += '<div class="flex items-center justify-between mb-2">'
+      + '<button type="button" data-rng-nav="-1" class="px-2 py-1 text-secondary hover:text-primary text-lg leading-none">\u2039</button>'
+      + '<span class="font-label-caps text-[13px] text-on-background font-bold uppercase tracking-wider">' + monthNames[m] + ' ' + y + '</span>'
+      + '<button type="button" data-rng-nav="1" class="px-2 py-1 text-secondary hover:text-primary text-lg leading-none">\u203A</button>'
+      + '</div>';
+    html += '<div class="grid grid-cols-7 gap-0.5 mb-1">';
+    for (var dw = 0; dw < 7; dw++) html += '<div class="text-center text-[10px] text-secondary font-label-caps uppercase">' + dayNames[dw] + '</div>';
+    html += '</div>';
+    html += '<div class="grid grid-cols-7 gap-0.5">';
+    for (var g = 0; g < first; g++) html += '<div></div>';
+    for (var d = 1; d <= dim; d++) {
+      var key = y + '-' + pad(m + 1) + '-' + pad(d);
+      var isSel = sel === key;
+      html += '<button type="button" data-rng-day="' + d + '" class="py-1.5 text-center text-[12px] rounded cursor-pointer '
+        + (isSel ? 'bg-primary text-on-primary font-bold' : 'text-on-background hover:bg-surface-container-high') + '">' + d + '</button>';
+    }
+    html += '</div>';
+    html += '<div class="mt-2 pt-2 border-t border-outline-variant flex justify-between items-center">'
+      + '<button type="button" data-rng-clear class="text-secondary hover:text-error font-label-caps text-[10px] uppercase tracking-wider px-2 py-1">Bersihkan</button>'
+      + '<span class="font-data-mono text-[10px] text-secondary">' + fmtDisp(sel) + '</span>'
+      + '</div>';
+    b.innerHTML = html;
+  }
+  function onBoxClick(i, e) {
+    e.stopPropagation();
+    var nav = e.target.closest ? e.target.closest('[data-rng-nav]') : null;
+    if (nav) {
+      viewM[i] += parseInt(nav.getAttribute('data-rng-nav'), 10);
+      if (viewM[i] < 0) { viewM[i] = 11; viewY[i]--; }
+      if (viewM[i] > 11) { viewM[i] = 0; viewY[i]++; }
+      render(i);
+      return;
+    }
+    if (e.target.closest && e.target.closest('[data-rng-clear]')) {
+      cfg[i].hidden.value = '';
+      cfg[i].display.value = '';
+      closeAll();
+      applyFilters();
+      return;
+    }
+    var day = e.target.closest ? e.target.closest('[data-rng-day]') : null;
+    if (day) {
+      var d = parseInt(day.getAttribute('data-rng-day'), 10);
+      if (d >= 1 && d <= new Date(viewY[i], viewM[i] + 1, 0).getDate()) {
+        apply(i, viewY[i] + '-' + pad(viewM[i] + 1) + '-' + pad(d));
+      }
+    }
+  }
+  SPECS.forEach(function (s, i) {
+    if (cfg[i].btn) cfg[i].btn.addEventListener('click', function (e) { e.stopPropagation(); open(i); });
+    if (cfg[i].display) cfg[i].display.addEventListener('click', function (e) { e.stopPropagation(); open(i); });
+    if (cfg[i].box) cfg[i].box.addEventListener('click', function (e) { onBoxClick(i, e); });
+  });
+  document.addEventListener('click', function () { closeAll(); });
+})();
+
+/* Sort tabel List Up Problem Line Stop (klik header) */
+(function () {
+  var head = document.getElementById('tableHead');
+  if (!head) return;
+  function syncInds() {
+    document.querySelectorAll('.sort-ind').forEach(function (el) {
+      el.textContent = el.getAttribute('data-sort-target') === SORT_KEY
+        ? (SORT_DIR === 1 ? ' \u25B2' : ' \u25BC') : '';
+    });
+  }
+  head.addEventListener('click', function (e) {
+    var th = e.target.closest ? e.target.closest('[data-sort]') : null;
+    if (!th) return;
+    var key = th.getAttribute('data-sort');
+    if (SORT_KEY === key) { SORT_DIR = -SORT_DIR; }
+    else { SORT_KEY = key; SORT_DIR = 1; }
+    syncInds();
+    renderTable();
+  });
+})();
+
+/* Hapus data OEE per tanggal+shift (modal custom agar tidak keluar fullscreen) */
+function deleteOeeRecord(date, shift) {
+  var url = getUrl();
+  if (!url) { return; }
+  var labelShift = shift === 'malam' ? 'Malam' : 'Pagi';
+  var modal = document.getElementById('oeeConfirmModal');
+  document.getElementById('oeeConfirmText').textContent =
+    'Yakin ingin menghapus seluruh data OEE ' + date + ' (Shift ' + labelShift + ')? Tindakan ini tidak dapat dibatalkan.';
+  modal.classList.remove('hidden');
+  var done = false;
+  function close() {
+    modal.classList.add('hidden');
+    yesBtn.onclick = null;
+    noBtn.onclick = null;
+  }
+  var yesBtn = document.getElementById('oeeConfirmYes');
+  var noBtn = document.getElementById('oeeConfirmNo');
+  yesBtn.onclick = function () {
+    if (done) return;
+    done = true;
+    close();
+    fetch(url + '?app=oeedata&action=delete&date=' + encodeURIComponent(date) + '&shift=' + encodeURIComponent(shift), { redirect: 'follow' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error((j && j.error) || 'Gagal menghapus');
+        if (OEE_STORE[date]) {
+          delete OEE_STORE[date][shift];
+          if (!OEE_STORE[date].pagi && !OEE_STORE[date].malam) delete OEE_STORE[date];
+        }
+        renderAll();
+        toast('Data OEE ' + date + ' (' + labelShift + ') berhasil dihapus.');
+      })
+      .catch(function (e) { toast('Gagal menghapus: ' + e.message); });
+  };
+  noBtn.onclick = close;
+}
+
+function toast(msg) {
+  var el = document.getElementById('oeeToast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'oeeToast';
+    el.setAttribute('aria-live', 'polite');
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--inverse-surface);color:var(--on-inverse-surface);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(function () { el.style.opacity = '0'; setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 320); }, 2600);
+}
+
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest ? e.target.closest('.oee-del-btn') : null;
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  deleteOeeRecord(btn.getAttribute('data-del-date'), btn.getAttribute('data-del-shift'));
+});
+
+init();
+</script>
+</body></html>

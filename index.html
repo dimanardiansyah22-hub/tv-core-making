@@ -1,0 +1,704 @@
+<!DOCTYPE html><html class="light" lang="id" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>TV BOARD CORE MAKING</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="tailwind-cdn.js"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "var(--background)",
+                    "tertiary": "var(--tertiary)",
+                    "primary-fixed": "var(--primary-fixed)",
+                    "surface-bright": "var(--surface-bright)",
+                    "on-background": "var(--on-background)",
+                    "on-tertiary-container": "var(--on-tertiary-container)",
+                    "on-tertiary": "var(--on-tertiary)",
+                    "secondary-container": "var(--secondary-container)",
+                    "secondary-fixed": "var(--secondary-fixed)",
+                    "surface-container-highest": "var(--surface-container-highest)",
+                    "surface-variant": "var(--surface-variant)",
+                    "error": "var(--error)",
+                    "on-surface-variant": "var(--on-surface-variant)",
+                    "on-primary-fixed": "var(--on-primary-fixed)",
+                    "outline-variant": "var(--outline-variant)",
+                    "primary-fixed-dim": "var(--primary-fixed-dim)",
+                    "on-primary-container": "var(--on-primary-container)",
+                    "surface-container": "var(--surface-container)",
+                    "on-tertiary-fixed": "var(--on-tertiary-fixed)",
+                    "tertiary-fixed-dim": "var(--tertiary-fixed-dim)",
+                    "on-secondary-fixed-variant": "var(--on-secondary-fixed-variant)",
+                    "primary-container": "var(--primary-container)",
+                    "secondary-fixed-dim": "var(--secondary-fixed-dim)",
+                    "inverse-primary": "var(--inverse-primary)",
+                    "on-error": "var(--on-error)",
+                    "on-surface": "var(--on-surface)",
+                    "tertiary-container": "var(--tertiary-container)",
+                    "surface": "var(--surface)",
+                    "on-secondary": "var(--on-secondary)",
+                    "secondary": "var(--secondary)",
+                    "primary": "var(--primary)",
+                    "surface-container-high": "var(--surface-container-high)",
+                    "on-secondary-container": "var(--on-secondary-container)",
+                    "surface-container-lowest": "var(--surface-container-lowest)",
+                    "on-tertiary-fixed-variant": "var(--on-tertiary-fixed-variant)",
+                    "on-secondary-fixed": "var(--on-secondary-fixed)",
+                    "surface-container-low": "var(--surface-container-low)",
+                    "outline": "var(--outline)",
+                    "on-error-container": "var(--on-error-container)",
+                    "on-primary-fixed-variant": "var(--on-primary-fixed-variant)",
+                    "surface-dim": "var(--surface-dim)",
+                    "inverse-surface": "var(--inverse-surface)",
+                    "error-container": "var(--error-container)",
+                    "inverse-on-surface": "var(--inverse-on-surface)",
+                    "tertiary-fixed": "var(--tertiary-fixed)",
+                    "on-primary": "var(--on-primary)",
+                    "surface-tint": "var(--surface-tint)"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "md": "24px",
+                    "base": "8px",
+                    "sm": "12px",
+                    "lg": "48px",
+                    "xl": "80px",
+                    "gutter": "24px",
+                    "container-max": "1280px"
+            },
+            "fontFamily": {
+                    "display-lg-mobile": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "label-caps": ["JetBrains Mono"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "button-text": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "display-lg-mobile": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "button-text": ["16px", {"lineHeight": "1", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-link .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-auto-rows: minmax(100px, auto);
+            gap: 24px;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #bd0014;
+            border-radius: 4px;
+        }
+    </style>
+    <style>
+        :root {
+            --background: #f9f9f9;
+            --tertiary: #5c5d5f;
+            --primary-fixed: #ffdad6;
+            --surface-bright: #f9f9f9;
+            --on-background: #1a1c1c;
+            --on-tertiary-container: #ffffff;
+            --on-tertiary: #ffffff;
+            --secondary-container: #e2dfde;
+            --secondary-fixed: #e5e2e1;
+            --surface-container-highest: #e2e2e2;
+            --surface-variant: #e2e2e2;
+            --error: #ba1a1a;
+            --on-surface-variant: #5e3f3b;
+            --on-primary-fixed: #410002;
+            --outline-variant: #e9bcb7;
+            --primary-fixed-dim: #ffb4ab;
+            --on-primary-container: #fffeff;
+            --surface-container: #eeeeee;
+            --on-tertiary-fixed: #1a1c1d;
+            --tertiary-fixed-dim: #c6c6c8;
+            --on-secondary-fixed-variant: #474746;
+            --primary-container: #eb0a1e;
+            --secondary-fixed-dim: #c8c6c5;
+            --inverse-primary: #ffb4ab;
+            --on-error: #ffffff;
+            --on-surface: #1a1c1c;
+            --tertiary-container: #757678;
+            --surface: #f9f9f9;
+            --on-secondary: #ffffff;
+            --secondary: #5f5e5e;
+            --primary: #bd0014;
+            --surface-container-high: #e8e8e8;
+            --on-secondary-container: #636262;
+            --surface-container-lowest: #ffffff;
+            --on-tertiary-fixed-variant: #464749;
+            --on-secondary-fixed: #1b1c1c;
+            --surface-container-low: #f3f3f3;
+            --outline: #936e6a;
+            --on-error-container: #93000a;
+            --on-primary-fixed-variant: #93000d;
+            --surface-dim: #dadada;
+            --inverse-surface: #2f3131;
+            --error-container: #ffdad6;
+            --inverse-on-surface: #f1f1f1;
+            --tertiary-fixed: #e3e2e4;
+            --on-primary: #ffffff;
+            --surface-tint: #c00014;
+        }
+
+        html.dark {
+            --background: #0b0d14;
+            --tertiary: #c6c6c8;
+            --primary-fixed: #d9e2ff;
+            --surface-bright: #35374a;
+            --on-background: #e4e4ec;
+            --on-tertiary-container: #2f2f31;
+            --on-tertiary: #1a1c1c;
+            --secondary-container: #364251;
+            --secondary-fixed: #d8e3f1;
+            --surface-container-highest: #2d2f40;
+            --surface-variant: #282a3a;
+            --error: #ffb4ab;
+            --on-surface-variant: #c4c6d0;
+            --on-primary-fixed: #001945;
+            --outline-variant: #404354;
+            --primary-fixed-dim: #aac1ff;
+            --on-primary-container: #d9e2ff;
+            --surface-container: #171922;
+            --on-tertiary-fixed: #1a1c1d;
+            --tertiary-fixed-dim: #c6c6c8;
+            --on-secondary-fixed-variant: #d8e3f1;
+            --primary-container: #003d9e;
+            --secondary-fixed-dim: #bcc7d4;
+            --inverse-primary: #005cbb;
+            --on-error: #690005;
+            --on-surface: #e4e4ec;
+            --tertiary-container: #464749;
+            --surface: #101219;
+            --on-secondary: #26313e;
+            --secondary: #bcc7d4;
+            --primary: #4a8cff;
+            --surface-container-high: #222436;
+            --on-secondary-container: #d8e3f1;
+            --surface-container-lowest: #06080d;
+            --on-tertiary-fixed-variant: #464749;
+            --on-secondary-fixed: #101e2b;
+            --surface-container-low: #13151d;
+            --outline: #8e92a0;
+            --on-error-container: #ffdad6;
+            --on-primary-fixed-variant: #ffffff;
+            --surface-dim: #0b0d14;
+            --inverse-surface: #e4e4ec;
+            --error-container: #93000a;
+            --inverse-on-surface: #0b0d14;
+            --tertiary-fixed: #e3e2e4;
+            --on-primary: #ffffff;
+            --surface-tint: #4a8cff;
+        }
+
+        html.dark ::-webkit-scrollbar-track {
+            background: #222436;
+        }
+
+html.dark ::-webkit-scrollbar-thumb {
+            background: #4a8cff;
+        }
+
+        html.dark #dark-mode-toggle .material-symbols-outlined {
+            color: #4a8cff;
+        }
+
+        /* Support modal */
+        .support-veil {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .support-veil.on {
+            display: flex;
+        }
+        .support-box {
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface-container-lowest);
+            border: 1px solid var(--outline-variant);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .support-box h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--on-surface);
+            margin-bottom: 4px;
+        }
+        .support-box h3 .material-symbols-outlined {
+            color: var(--primary);
+            font-size: 22px;
+        }
+        .support-sub {
+            color: var(--secondary);
+            font-size: 13px;
+            margin-bottom: 18px;
+        }
+        .support-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: var(--surface-container-low);
+            border: 1px solid var(--outline-variant);
+            margin-bottom: 10px;
+        }
+        .support-item .material-symbols-outlined {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .support-item .icon-developer { color: var(--primary); }
+        .support-item .icon-whatsapp { color: #25D366; }
+        .support-item .icon-email { color: #EA4335; }
+        .support-item .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--secondary);
+        }
+        .support-item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--on-surface);
+            word-break: break-all;
+        }
+        .support-close {
+            width: 100%;
+            margin-top: 14px;
+            padding: 11px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            background: none;
+            border: 1px solid var(--outline-variant);
+            color: var(--secondary);
+            transition: all 0.2s;
+        }
+        .support-close:hover {
+            color: var(--on-surface);
+            border-color: var(--outline);
+        }
+
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant h-16">
+<div class="flex justify-between items-center h-full px-gutter">
+<div class="flex items-center gap-4"><div class="flex flex-col items-center">
+  <span class="font-display-lg text-[24px] md:text-display-lg font-extrabold text-primary leading-none">TOYOTA</span>
+  <span class="font-bold uppercase tracking-tighter text-[7.8px] md:text-[10.4px] w-full text-center text-secondary -mt-[8px]" style="letter-spacing: -0.02em; transform: scaleX(0.9); transform-origin: center center;">Toyota Motor Manufacturing Indonesia</span>
+</div></div>
+<div class="flex items-center gap-[31.2px]">
+<div class="hidden md:flex flex-col items-end text-right" id="real-time-widget">
+<span class="font-label-caps text-[20px] text-secondary uppercase tracking-widest pt-0" id="current-date">Sabtu, 25 Juli 2026</span>
+<span class="font-headline-sm font-bold text-[20px] text-secondary" id="current-time">03:45 WIB</span>
+</div>
+<button id="dark-mode-toggle" class="flex items-center gap-[10.4px] cursor-pointer hover:bg-surface-container-low p-[10.4px] rounded transition-colors duration-200 text-primary" aria-label="Toggle Dark Mode">
+  <span class="material-symbols-outlined" style="font-size: 31.2px;">light_mode</span>
+</button>
+<button onclick="window.Sync && Sync.settings('TV Core Making')" class="flex items-center gap-[10.4px] cursor-pointer hover:bg-surface-container-low p-[10.4px] rounded transition-colors duration-200 text-primary" aria-label="Sinkronisasi Data" title="Sinkronisasi data antar device (URL Apps Script)">
+  <span class="material-symbols-outlined" style="font-size: 31.2px;">settings_ethernet</span>
+</button>
+<button onclick="toggleDashboardFullscreen()" class="flex items-center gap-[10.4px] cursor-pointer hover:bg-surface-container-low p-[10.4px] rounded transition-colors duration-200 text-primary" aria-label="Toggle Fullscreen">
+  <span class="material-symbols-outlined" id="dashboardFullscreenIcon" style="font-size: 31.2px;">fullscreen</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex pt-16 min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-surface-container-low border-r border-outline-variant flex flex-col hidden md:flex">
+<div class="p-[31.2px] border-b border-outline-variant relative">
+<div class="flex items-center justify-between cursor-pointer hover:bg-surface-container-high p-[10.4px] -m-[10.4px] rounded transition-colors duration-200" id="profile-dropdown-trigger">
+<div class="flex items-center gap-[15.6px]" id="profile-main"></div>
+<span class="material-symbols-outlined text-secondary transition-transform duration-200" style="font-size: 31.2px;" id="profile-dropdown-icon">chevron_right</span>
+</div>
+<div class="hidden mt-[10.4px] bg-surface-container-high rounded-lg overflow-hidden" id="profile-dropdown-menu"></div>
+</div>
+<nav class="flex-1 py-md space-y-1 px-3 overflow-y-auto">
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="mapping-core-red.html" id="mapping-pekerjaan-link" onclick="event.preventDefault(); loadMappingPage(this); return false;">
+    <span class="material-symbols-outlined">assignment_turned_in</span>
+    <span class="font-button-text">Mapping Pekerjaan</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-2 hover:bg-surface-container-high rounded-lg transition-all text-sm" href="visualisasi-wip-core.html" onclick="loadPage('visualisasi-wip-core.html', this); return false;">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-button-text">Visualisasi WIP Core</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('data-oee.html', this); return false;">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-button-text">Data OEE Core Making</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('laporan-antar-shift.html', this); return false;">
+<span class="material-symbols-outlined">handshake</span>
+<span class="font-button-text">Laporan Antar Shift</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" id="planning-cuti-link">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-button-text">Planning Cuti</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://parameter-monitoring.vercel.app', this); return false;">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-button-text">Parameter Core Making</span>
+</a>
+<div class="my-3 border-t border-outline-variant"></div>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('happiness.html', this); return false;">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+<span class="font-button-text">Happiness Tracking</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://qc-gate-production.vercel.app', this); return false;">
+<span class="material-symbols-outlined">database</span>
+<span class="font-button-text">Dashboard Finishing</span>
+</a>
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://bnf-info.vercel.app', this); return false;">
+<span class="material-symbols-outlined">block</span>
+            <span class="font-button-text">Form BNF</span>
+</a><a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://voice-member-app.vercel.app', this); return false;">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-button-text">Member Voice</span>
+</a><a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://problem-produksi.insforge.site', this); return false;">
+<span class="material-symbols-outlined">report_problem</span>
+<span class="font-button-text">Problem Produksi</span>
+ </a><a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://e-henkaten.vercel.app', this); return false;">
+<span class="material-symbols-outlined">swap_horiz</span>
+                            <span class="font-button-text">E-Henkaten</span>
+</a><a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://kaizen-order-sheet.vercel.app', this); return false;">
+<span class="material-symbols-outlined">auto_fix_high</span>
+<span class="font-button-text">Kaizen Order Sheet</span>
+</a><a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" onclick="event.preventDefault(); loadPage('https://recap-report.vercel.app', this); return false;">
+<span class="material-symbols-outlined">archive</span>
+<span class="font-button-text">Rekap Laporan 5W</span>
+</a></nav>
+<div class="p-3 space-y-1 border-t border-outline-variant">
+<a class="text-secondary flex items-center gap-3 px-4 py-3 hover:bg-surface-container-high rounded-lg transition-all" href="#" id="support-link">
+<span class="material-symbols-outlined">help</span>
+<span class="font-button-text">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 md:ml-64 bg-background p-gutter" id="main-content"></main>
+</div>
+
+<!-- Support Modal -->
+<div class="support-veil" id="support-modal">
+<div class="support-box" role="dialog" aria-modal="true" aria-labelledby="support-title">
+<h3 id="support-title"><span class="material-symbols-outlined">support_agent</span> Developer Information</h3>
+<div class="support-sub">Kontak developer aplikasi ini</div>
+<div class="support-item">
+<span class="material-symbols-outlined icon-developer">person</span>
+<div>
+<div class="label">Developer</div>
+<div class="value">Diman Ardiansyah</div>
+</div>
+</div>
+<div class="support-item">
+<span class="material-symbols-outlined icon-whatsapp">call</span>
+<div>
+<div class="label">WhatsApp</div>
+<div class="value">08567050802</div>
+</div>
+</div>
+<div class="support-item">
+<span class="material-symbols-outlined icon-email">email</span>
+<div>
+<div class="label">Email</div>
+<div class="value">diman.ardiansyah@toyota.co.id</div>
+</div>
+</div>
+<button class="support-close" onclick="closeSupportModal()">Tutup</button>
+</div>
+</div>
+
+<!-- Keep-Warm: iframe tak terlihat mem-ping backend tiap 10 menit agar
+     Apps Script tidak cold start. Ukuran 1x1 px & non-interaktif. -->
+<iframe src="keep-warm.html" style="position:fixed;left:0;top:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;" aria-hidden="true"></iframe>
+<script src="sync-core.js"></script>
+<script>
+        function updateClock() {
+            const now = new Date();
+            
+            // Format Hari dan Tanggal
+            const optionsDate = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            const formattedDate = now.toLocaleDateString('id-ID', optionsDate);
+            
+            // Format Jam
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const formattedTime = `${hours}:${minutes}:${seconds} WIB`;
+            
+            document.getElementById('current-date').textContent = formattedDate;
+            document.getElementById('current-time').textContent = formattedTime;
+        }
+
+        // Jalankan setiap detik
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const darkModeIcon = darkModeToggle.querySelector('.material-symbols-outlined');
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const isDark = html.classList.toggle('dark');
+            html.classList.toggle('light', !isDark);
+            darkModeIcon.textContent = isDark ? 'dark_mode' : 'light_mode';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+            darkModeIcon.textContent = 'dark_mode';
+        }
+
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        // Dashboard Fullscreen
+        function toggleDashboardFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        document.addEventListener('fullscreenchange', function() {
+            const icon = document.getElementById('dashboardFullscreenIcon');
+            icon.textContent = document.fullscreenElement ? 'fullscreen_exit' : 'fullscreen';
+        });
+
+        // Page loader
+        function loadPage(url, el) {
+            const main = document.getElementById('main-content');
+            const u = new URL(url, window.location.href);
+            const gas = (window.Sync && Sync.getUrl()) || '';
+            if (gas) u.searchParams.set('gas', gas);
+            main.innerHTML = `<iframe src="${u.href}" class="w-full h-full border-none" style="min-height: calc(100vh - 112px);"></iframe>`;
+            if (url.indexOf('planning-cuti-') === 0) {
+                localStorage.setItem('planning-cuti-last', url);
+            }
+            if (url.indexOf('mapping-core-') === 0) {
+                localStorage.setItem('mapping-pekerjaan-last', url);
+            }
+            if (!el) return;
+            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active-link', 'bg-primary', 'text-on-primary'));
+            document.querySelectorAll('nav a').forEach(a => a.classList.add('text-secondary'));
+            const link = el.closest('a');
+            if (link) {
+                link.classList.remove('text-secondary');
+                link.classList.add('active-link', 'bg-primary', 'text-on-primary');
+            }
+        }
+
+        // Planning Cuti - buka halaman terakhir dibuka
+        document.getElementById('planning-cuti-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            const last = localStorage.getItem('planning-cuti-last') || 'planning-cuti-red.html';
+            loadPage(last, this);
+        });
+
+        // Mapping Pekerjaan - buka halaman terakhir dibuka
+        function loadMappingPage(el) {
+            const last = localStorage.getItem('mapping-pekerjaan-last') || 'mapping-core-red.html';
+            loadPage(last, el || document.getElementById('mapping-pekerjaan-link'));
+        }
+
+        // Support modal
+        document.getElementById('support-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('support-modal').classList.add('on');
+        });
+
+        function closeSupportModal() {
+            document.getElementById('support-modal').classList.remove('on');
+        }
+
+        document.getElementById('support-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSupportModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('support-modal').classList.contains('on')) {
+                closeSupportModal();
+            }
+        });
+
+
+
+        // Officer data & selector
+        const officers = [
+            { id: 'sutarto', name: 'Sutarto', position: 'Group Leader', shift: 'White Shift', photo: 'Foto Member/sutarto1.jpg', borderColor: '#ffffff' },
+            { id: 'darno', name: 'Darno', position: 'Group Leader', shift: 'Red Shift', photo: 'Foto Member/darno1.jpg', borderColor: '#bd0014' },
+        ];
+
+        let currentOfficerId = 'darno';
+
+        function updateMenuByOfficer(officerId) {
+            const officer = officers.find(o => o.id === officerId);
+            const core = officer.shift === 'Red Shift' ? 'red' : 'white';
+            localStorage.setItem('mapping-pekerjaan-last', core === 'red' ? 'mapping-core-red.html' : 'mapping-core-white.html');
+            localStorage.setItem('planning-cuti-last', core === 'red' ? 'planning-cuti-red.html' : 'planning-cuti-white.html');
+            const target = core === 'red' ? 'mapping-core-red.html' : 'mapping-core-white.html';
+            document.querySelectorAll('a[href="mapping-core-red.html"], a[href="mapping-core-white.html"]').forEach(a => {
+                a.classList.remove('active-link', 'bg-primary', 'text-on-primary');
+                a.classList.add('text-secondary');
+                if (a.getAttribute('href') === target) {
+                    a.classList.remove('text-secondary');
+                    a.classList.add('active-link', 'bg-primary', 'text-on-primary');
+                }
+            });
+        }
+
+        function renderOfficerAvatar(officer, size = '93.6px', fontSize = '') {
+            if (officer.photo) {
+                const borderColor = officer.borderColor || '#ffffff';
+                return `<div class="w-[${size}] h-[${size}] overflow-hidden bg-surface-container-high flex items-center justify-center rounded-full">
+                    <img src="${officer.photo}" alt="${officer.name}" class="w-full h-full object-cover rounded-full" style="border: 2px solid ${borderColor};">
+                </div>`;
+            }
+            const initial = officer.avatar || officer.name.charAt(0);
+            const textSize = fontSize || (size === '93.6px' ? 'text-[31.2px]' : 'text-sm');
+            return `<div class="w-[${size}] h-[${size}] rounded-full bg-primary flex items-center justify-center text-on-primary font-bold ${textSize}">${initial}</div>`;
+        }
+
+        function renderMainProfile() {
+            const officer = officers.find(o => o.id === currentOfficerId);
+            const container = document.getElementById('profile-main');
+            container.innerHTML = `
+                ${renderOfficerAvatar(officer)}
+                <div>
+                    <p class="font-button-text text-[20.8px] text-on-surface leading-tight">${officer.name}</p>
+                    <p class="text-[15.6px] text-secondary leading-tight">${officer.position}</p>
+                    <p class="text-[15.6px] text-secondary leading-tight">${officer.shift}</p>
+                </div>
+            `;
+        }
+
+        function renderDropdown() {
+            const menu = document.getElementById('profile-dropdown-menu');
+            const others = officers.filter(o => o.id !== currentOfficerId);
+            menu.innerHTML = others.map(o => `
+                <a href="#" class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-highest transition-colors duration-200" data-officer-id="${o.id}">
+                    ${renderOfficerAvatar(o, '31.2px', 'text-sm')}
+                    <div>
+                        <p class="font-button-text text-on-surface leading-tight text-sm">${o.name}</p>
+                        <p class="text-xs text-secondary leading-tight">${o.position} - ${o.shift}</p>
+                    </div>
+                </a>
+            `).join('');
+            menu.querySelectorAll('[data-officer-id]').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = this.dataset.officerId;
+                    if (id !== currentOfficerId) {
+                        currentOfficerId = id;
+                        renderMainProfile();
+                        renderDropdown();
+                        updateMenuByOfficer(id);
+                        profileMenu.classList.add('hidden');
+                        profileIcon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+        }
+
+        renderMainProfile();
+        renderDropdown();
+        updateMenuByOfficer(currentOfficerId);
+        loadMappingPage(document.getElementById('mapping-pekerjaan-link'));
+
+        // Profile dropdown toggle
+        const profileTrigger = document.getElementById('profile-dropdown-trigger');
+        const profileMenu = document.getElementById('profile-dropdown-menu');
+        const profileIcon = document.getElementById('profile-dropdown-icon');
+
+        profileTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            profileMenu.classList.toggle('hidden');
+            profileIcon.style.transform = profileMenu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(90deg)';
+        });
+
+        document.addEventListener('click', function() {
+            if (!profileMenu.classList.contains('hidden')) {
+                profileMenu.classList.add('hidden');
+                profileIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        profileMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Simple interactive effect for status cards
+        const cards = document.querySelectorAll('.bg-surface-container-lowest');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.transition = 'all 0.2s ease-out';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    </script>
+
+
+
+
+</body></html>

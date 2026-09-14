@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Laporan Antar Shift — Readiness Supply Core Making</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+.mat {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    vertical-align: middle;
+}
+body {
+    font-family: 'Hanken Grotesk', sans-serif;
+    background: #f8fdff;
+    color: #111827;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    border-left: 8px solid #eb0a1e;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    flex-wrap: wrap;
+    z-index: 20;
+}
+.header .title-group { display: flex; flex-direction: column; }
+.header h1 {
+    font-size: 22px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: -0.02em; line-height: 1.1;
+}
+.header p { font-size: 13px; color: #6b7280; font-weight: 600; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 14px; border: 1.5px solid transparent; border-radius: 9px;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    cursor: pointer; color: #374151; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    transition: background 0.15s, transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+}
+.btn .mat { font-size: 18px; }
+.btn:hover { background: #f3f4f6; }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: #0a2d5e; color: #fff; border-color: #0a2d5e; }
+.btn.primary:hover { background: #0f3a78; }
+.btn.green { background: #15803d; color: #fff; border-color: #15803d; }
+.btn.green:hover { background: #166534; }
+.btn.amber { background: #facc15; color: #111827; border-color: #facc15; }
+.btn.amber:hover { background: #eab308; }
+.btn.danger { background: #dc2626; color: #fff; border-color: #dc2626; }
+.btn.danger:hover { background: #b91c1c; }
+.btn.ghost { background: #fff; color: #374151; border-color: #d1d5db; }
+.btn.ghost:hover { background: #f3f4f6; }
+.btn.sm { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+.btn.sm .mat { font-size: 16px; }
+.btn .mat { vertical-align: middle; }
+
+/* Pencil toolbar */
+.toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px; background: #fff;
+    border-bottom: 1px solid #e5e7eb; flex-wrap: wrap; z-index: 15;
+}
+.tool-group { display: flex; align-items: center; gap: 6px; }
+.tool-label { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+.color-swatch {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid #d1d5db;
+    cursor: pointer; transition: transform 0.1s, border-color 0.1s; flex-shrink: 0;
+}
+.color-swatch.active { border-color: #0a2d5e; transform: scale(1.15); box-shadow: 0 0 0 2px rgba(10,45,94,0.3); }
+.size-dot {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 32px; border-radius: 6px; background: #f3f4f6;
+    cursor: pointer; font-weight: 700; font-size: 12px; color: #374151;
+    border: 2px solid transparent;
+}
+.size-dot.active { border-color: #0a2d5e; background: #e0f2fe; }
+.size-dot .dot {
+    display: inline-block; width: var(--d); height: var(--d);
+    border-radius: 50%; background: #111827; transition: background 0.15s, border-color 0.15s;
+    box-sizing: content-box;
+}
+#toolbar.eraser-mode .size-dot .dot { background: #fff; border: 2px solid #374151; }
+.mode-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-radius: 9px; background: #fff;
+    cursor: pointer; font-size: 12px; font-weight: 700; color: #374151;
+    border: 1.5px solid #d1d5db; transition: background 0.15s, border-color 0.15s;
+}
+.mode-pill:hover { background: #f3f4f6; }
+.mode-pill.active { background: #0a2d5e; color: #fff; border-color: #0a2d5e; }
+.mode-pill .mat { font-size: 17px; }
+
+/* Canvas area */
+#canvasArea {
+    position: relative;
+    flex: 1;
+    overflow: auto;
+    background: #e5e7eb;
+    -webkit-touch-callout: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+#canvasArea::-webkit-scrollbar { display: none; }
+.pdf-page {
+    position: relative;
+    margin: 20px auto;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    touch-action: none;
+}
+.pdf-page canvas { position: absolute; top: 0; left: 0; }
+.pdf-page canvas.draw { z-index: 5; }
+.pdf-page canvas.pdf { z-index: 1; }
+.empty-hint {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #6b7280; font-size: 15px; font-weight: 600; text-align: center;
+    padding: 20px; z-index: 0;
+}
+.empty-hint .btn { margin-top: 14px; }
+.spinner {
+    display: inline-block; width: 22px; height: 22px;
+    border: 3px solid #d1d5db; border-top-color: #0a2d5e;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Modal */
+.modal-veil {
+    position: fixed; inset: 0; z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.55);
+}
+.modal-veil.on { display: flex; }
+.modal-box {
+    background: #fff; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    padding: 20px 22px; width: min(560px, 92vw); max-height: 88vh;
+    display: flex; flex-direction: column;
+}
+.modal-box h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: #111827; }
+.modal-box .modal-sub { font-size: 13px; color: #6b7280; margin-bottom: 14px; }
+.modal-box .modal-body { overflow-y: auto; flex: 1; }
+.modal-box .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 11px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+.field input, .field select, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #d1d5db; border-radius: 8px;
+    font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: #0a2d5e; }
+.field textarea { resize: vertical; min-height: 60px; }
+
+/* Archive list */
+.report-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 8px;
+    background: #fafafa; cursor: pointer; transition: background 0.15s;
+}
+.report-card:hover { background: #f0f4fb; }
+.report-card .thumb {
+    width: 52px; height: 52px; border-radius: 6px;
+    background: #e5e7eb; flex-shrink: 0;
+    border: 1px solid #d1d5db;
+    display: flex; align-items: center; justify-content: center;
+    color: #9ca3af;
+}
+.report-card .thumb .mat { font-size: 26px; }
+.report-card .info { flex: 1; min-width: 0; }
+.report-card .info .t { font-weight: 700; font-size: 14px; color: #111827; }
+.report-card .info .d { font-size: 12px; color: #6b7280; }
+.report-card .actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* View modal - full image */
+#viewModal { padding: 0; }
+#viewModal .modal-box { width: 100vw; max-width: 100vw; height: 100vh; max-height: 100vh; border-radius: 0; padding: 14px 18px; }
+#viewModal h3 { display: none; }
+#viewImgWrap { text-align: center; display: flex; align-items: center; justify-content: center; overflow: auto; }
+#viewImgWrap img { max-width: 100%; max-height: 100%; object-fit: contain; box-shadow: 0 4px 20px rgba(0,0,0,0.3); border-radius: 6px; }
+
+/* Toast */
+#toastBox { position: fixed; top: 16px; right: 16px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+    background: #111827; color: #fff; padding: 11px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    animation: slideIn 0.2s ease;
+}
+.toast.out { opacity: 0; transition: opacity 0.3s; }
+@keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+#printArea { display: none; }
+@page {
+    size: A4 portrait;
+    margin: 0;
+}
+@media print {
+    body * { visibility: hidden; }
+    #printArea { display: block; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { position: absolute; left: 0; top: 0; width: 210mm; margin: 0; padding: 0; }
+    #printArea img { width: 100%; height: auto; display: block; }
+    .header, .toolbar, #toastBox, .modal-veil { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <div class="title-group">
+        <h1>Laporan Antar Shift</h1>
+        <p>Input informasi antar shift Core Making Line by DX</p>
+    </div>
+    <div class="btn-row">
+        <button class="btn green" id="btnSave"><span class="mat">save</span> Save</button>
+        <span style="width:1px;height:26px;background:#e5e7eb"></span>
+        <button class="btn ghost" id="btnArchive"><span class="mat">inventory_2</span> Arsip</button>
+        <button class="btn ghost" id="btnSettings"><span class="mat">tune</span> Pengaturan</button>
+        <button class="btn ghost" id="btnFullscreen" title="Layar penuh"><span class="mat">fullscreen</span></button>
+        <button class="btn danger" id="btnClear"><span class="mat">delete_sweep</span> Bersihkan</button>
+    </div>
+</div>
+
+<div class="toolbar" id="toolbar">
+    <div class="tool-group">
+        <span class="tool-label">Warna</span>
+        <span class="color-swatch active" data-color="#111827" style="background:#111827"></span>
+        <span class="color-swatch" data-color="#1d4ed8" style="background:#1d4ed8"></span>
+        <span class="color-swatch" data-color="#dc2626" style="background:#dc2626"></span>
+        <span class="color-swatch" data-color="#15803d" style="background:#15803d"></span>
+    </div>
+    <div class="tool-group">
+        <span class="tool-label">Ukuran</span>
+        <span class="size-dot active" data-size="5" title="Halus"><i class="dot" style="--d:11px"></i></span>
+        <span class="size-dot" data-size="8" title="Sedang"><i class="dot" style="--d:15px"></i></span>
+        <span class="size-dot" data-size="10" title="Tebal"><i class="dot" style="--d:19px"></i></span>
+        <span class="size-dot" data-size="15" title="Sangat tebal"><i class="dot" style="--d:26px"></i></span>
+    </div>
+    <div class="tool-group">
+        <span class="mode-pill active" data-mode="pen"><span class="mat">edit</span> Pencil</span>
+        <span class="mode-pill" data-mode="eraser"><span class="mat">ink_eraser</span> Penghapus</span>
+    </div>
+    <div class="tool-group">
+        <button class="btn ghost sm" id="btnUndo"><span class="mat">undo</span> Undo</button>
+        <button class="btn ghost sm" id="btnRestoreCanvas"><span class="mat">restore</span> Pulihkan Canvas</button>
+    </div>
+</div>
+
+<div id="canvasArea">
+    <div class="empty-hint" id="emptyHint">
+        Memuat form info-antar-shift.pdf...<br>
+        <span class="spinner" style="margin-top:10px"></span>
+    </div>
+</div>
+<input type="file" id="pdfPicker" accept="application/pdf" style="display:none">
+
+<div id="printArea"></div>
+<div id="toastBox"></div>
+
+<!-- Settings modal -->
+<div class="modal-veil" id="settingsModal">
+    <div class="modal-box">
+        <h3>Pengaturan Koneksi</h3>
+        <div class="modal-sub">Masukkan URL Google Apps Script yang menangani penyimpanan &amp; arsip laporan.</div>
+        <div class="modal-body">
+            <div class="field">
+                <label>Apps Script URL</label>
+                <input type="text" id="inputGasUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="field">
+                <label>Form PDF (File ID di Google Drive)</label>
+                <input type="text" id="inputFormId" placeholder="contoh: 1bPT6Mr3QeYHv3dCZGRoseVqu5xKKYoY-" autocomplete="off" spellcheck="false">
+            </div>
+            <div class="field">
+                <label>Status</label>
+                <div id="modalStatus" style="font-size:13px;font-weight:600;color:#15803d">Belum dicek.</div>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn ghost" id="btnModalCancel">Tutup</button>
+            <button class="btn primary" id="btnModalSave"><span class="mat">link</span> Simpan &amp; Tes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Save form modal -->
+<div class="modal-veil" id="saveModal">
+    <div class="modal-box">
+        <h3 id="saveModalTitle">Simpan Laporan</h3>
+        <div class="modal-sub" id="saveModalSub">Lengkapi informasi laporan antar shift sebelum disimpan.</div>
+        <div class="modal-body">
+            <div class="field">
+                <label>Tanggal</label>
+                <input type="date" id="inputDate">
+            </div>
+            <div class="field">
+                <label>Shift</label>
+                <select id="inputShift">
+                    <option value="">Pilih shift</option>
+                    <option value="Red">Shift Red</option>
+                    <option value="White">Shift White</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Nama Penulis Laporan</label>
+                <select id="inputAuthor">
+                    <option value="">— Pilih nama —</option>
+                    <option>Darno</option>
+                    <option>Erwin</option>
+                    <option>Diman</option>
+                    <option>Sutarto</option>
+                    <option>Wawan</option>
+                    <option>Taufiq</option>
+                    <option>Syaiful Bahri</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn ghost" id="btnSaveCancel">Batal</button>
+            <button class="btn green" id="btnSaveConfirm"><span class="mat">check</span> Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Archive modal -->
+<div class="modal-veil" id="archiveModal">
+    <div class="modal-box">
+        <h3>Arsip Laporan Antar Shift</h3>
+        <div class="modal-sub">Klik laporan untuk melihat. Gunakan tombol untuk meninjau ulang.</div>
+        <div class="modal-body" id="archiveList"></div>
+        <div class="modal-actions">
+            <button class="btn ghost" id="btnArchiveClose">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- View modal -->
+<div class="modal-veil" id="viewModal">
+    <div class="modal-box">
+        <h3>Lihat Laporan</h3>
+        <div class="modal-body" id="viewImgWrap"></div>
+        <div class="modal-actions">
+            <button class="btn primary" id="btnViewPrint"><span class="mat">print</span> Cetak</button>
+            <button class="btn ghost" id="btnViewClose">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-veil" id="confirmModal">
+    <div class="modal-box" style="max-width:360px">
+        <h3>Konfirmasi</h3>
+        <p id="confirmText" style="font-size:14px;color:#374151;margin:0 0 16px">Yakin?</p>
+        <div class="modal-actions">
+            <button class="btn danger" id="btnConfirmYes"><span class="mat">delete_sweep</span> Bersihkan</button>
+            <button class="btn ghost" id="btnConfirmNo">Batal</button>
+        </div>
+    </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* Deployment resmi (akun yang benar). Dipakai sebagai default dan
+   untuk migrasi sekali pakai agar device dengan URL lama otomatis
+   beralih. Data di Drive tidak disentuh sama sekali. */
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwhz_ltIGdXeJZ0qq44u8vamXR0X008SEQJO52K_qmZBY3JqJfFiMR4ohvHO51VfDgOlw/exec';
+const LS_KEY_GAS = 'antar-shift-gas-url';
+const LS_KEY_MIGRATE = 'gas-url-migrated-v3';
+const LS_KEY_FORM_ID = 'antar-shift-form-id';
+let GAS_URL = localStorage.getItem(LS_KEY_GAS) || DEFAULT_GAS_URL;
+try {
+    if (!localStorage.getItem(LS_KEY_MIGRATE)) {
+        GAS_URL = DEFAULT_GAS_URL;
+        localStorage.setItem(LS_KEY_GAS, GAS_URL);
+        try { localStorage.setItem('tvcore-gas-url', GAS_URL); } catch (e) {}
+        localStorage.setItem(LS_KEY_MIGRATE, '1');
+    }
+} catch (e) {}
+let FORM_ID = localStorage.getItem(LS_KEY_FORM_ID) || '';
+
+const PDF_PATH = 'info-antar-shift.pdf';
+
+const state = {
+    pdf: null,
+    pages: [],
+    color: '#111827',
+    size: 5,
+    mode: 'pen',
+    drawing: false,
+    penCount: 0,
+    lastX: 0, lastY: 0,
+    curStroke: null,
+    zoom: 1,
+    pointers: new Map(),
+    pinchDist: 0,
+    pan: null,
+    editingId: null,
+    editingMeta: null,
+    currentBuffer: null
+};
+
+/* ── Toast ── */
+function toast(msg, color) {
+    const c = document.getElementById('toastBox');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.style.borderLeft = '4px solid ' + (color || '#4a8cff');
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 350); }, 2000);
+}
+
+/* ── PDF loading & rendering ── */
+const PDF_CACHE_KEY = 'antar-shift-pdf-cache';
+const RENDER_SCALE = 3;
+const isFileProtocol = () => location.protocol === 'file:';
+
+function bufToB64(buf) {
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+}
+function b64ToBuf(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes.buffer;
+}
+function getCachedPdf() {
+    const c = localStorage.getItem(PDF_CACHE_KEY);
+    return c ? b64ToBuf(c) : null;
+}
+function cachePdf(buf) {
+    try { localStorage.setItem(PDF_CACHE_KEY, bufToB64(buf)); } catch (e) { /* cache penuh — abaikan */ }
+}
+function openPdfPicker() {
+    document.getElementById('pdfPicker').click();
+}
+
+async function loadPdfFromServer() {
+    if (!GAS_URL) return false;
+    const hint = document.getElementById('emptyHint');
+    hint.style.display = 'flex';
+    hint.innerHTML = 'Memuat form dari server...<br><span class="spinner" style="margin-top:10px"></span>';
+    try {
+        const params = FORM_ID ? { id: FORM_ID } : {};
+        const res = await fetchApiGet('pdf', params);
+        if (!res || !res.ok || !res.b64) throw new Error((res && res.error) || 'respon tidak dikenali');
+        const buf = b64ToBuf(res.b64);
+        cachePdf(buf);
+        hint.style.display = 'none';
+        loadPdf(buf);
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
+async function restoreCanvas() {
+    if (!state.pages.length) { loadFormPdf(); return; }
+    if (!GAS_URL) { toast('Atur URL Apps Script dulu.', '#facc15'); return; }
+    const hint = document.getElementById('emptyHint');
+    hint.style.display = 'flex';
+    hint.innerHTML = 'Memuat ulang form dari server...<br><span class="spinner" style="margin-top:10px"></span>';
+    try {
+        const params = FORM_ID ? { id: FORM_ID } : {};
+        const res = await fetchApiGet('pdf', params);
+        if (!res || !res.ok || !res.b64) throw new Error((res && res.error) || 'respon tidak dikenali');
+        const buf = b64ToBuf(res.b64);
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        for (let i = 0; i < state.pages.length; i++) {
+            const p = state.pages[i];
+            const page = await pdf.getPage(i + 1);
+            const baseScale = Math.min(1.5, 1000 / page.getViewport({ scale: 1 }).width);
+            const viewport = page.getViewport({ scale: baseScale });
+            const R = RENDER_SCALE;
+            p.pdfCanvas.width = viewport.width * R;
+            p.pdfCanvas.height = viewport.height * R;
+            p.pdfCanvas.style.width = viewport.width + 'px';
+            p.pdfCanvas.style.height = viewport.height + 'px';
+            p.wrap.style.width = viewport.width + 'px';
+            p.wrap.style.height = viewport.height + 'px';
+            const renderVp = page.getViewport({ scale: baseScale * R });
+            await page.render({ canvasContext: p.pdfCanvas.getContext('2d'), viewport: renderVp }).promise;
+            redrawPage(p);
+        }
+        state.currentBuffer = buf;
+        cachePdf(buf);
+        hint.style.display = 'none';
+        applyZoom();
+        toast('Canvas dipulihkan');
+    } catch (err) {
+        hint.style.display = 'none';
+        toast('Gagal memuat ulang PDF: ' + err.message, '#dc2626');
+    }
+}
+
+function showPdfPicker() {
+    const hint = document.getElementById('emptyHint');
+    hint.style.display = 'flex';
+    hint.innerHTML =
+        'Silakan memilih file PDF yang akan di input dengan klik tombol di bawah ini' +
+        '<button class="btn primary" id="btnPickPdf" style="margin-top:14px"><span class="mat">folder_open</span> Pilih File PDF</button>';
+    document.getElementById('btnPickPdf').addEventListener('click', openPdfPicker);
+}
+
+function loadFormPdf() {
+    const cached = getCachedPdf();
+    if (cached) { loadPdf(cached); return; }
+    if (GAS_URL) {
+        loadPdfFromServer().then(ok => { if (!ok) showPdfPicker(); });
+        return;
+    }
+    if (isFileProtocol()) {
+        showPdfPicker();
+    } else {
+        loadPdf();
+    }
+}
+
+async function loadPdf(buffer) {
+    const area = document.getElementById('canvasArea');
+    area.querySelectorAll('.pdf-page').forEach(el => el.remove());
+    document.getElementById('emptyHint').style.display = 'none';
+    try {
+        let buf = buffer;
+        if (!buf) {
+            const res = await fetch(PDF_PATH);
+            if (!res.ok) throw new Error('PDF tidak ditemukan');
+            buf = await res.arrayBuffer();
+        }
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        state.pdf = pdf;
+        state.pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const baseScale = Math.min(1.5, 1000 / page.getViewport({ scale: 1 }).width);
+            const viewport = page.getViewport({ scale: baseScale });
+            const logW = viewport.width, logH = viewport.height;
+            const R = RENDER_SCALE;
+            const wrap = document.createElement('div');
+            wrap.className = 'pdf-page';
+            wrap.style.width = logW + 'px';
+            wrap.style.height = logH + 'px';
+
+            const pdfCanvas = document.createElement('canvas');
+            pdfCanvas.className = 'pdf';
+            pdfCanvas.width = logW * R;
+            pdfCanvas.height = logH * R;
+            pdfCanvas.style.width = logW + 'px';
+            pdfCanvas.style.height = logH + 'px';
+            const ctx = pdfCanvas.getContext('2d');
+            const renderVp = page.getViewport({ scale: baseScale * R });
+            await page.render({ canvasContext: ctx, viewport: renderVp }).promise;
+            wrap.appendChild(pdfCanvas);
+
+            const drawCanvas = document.createElement('canvas');
+            drawCanvas.className = 'draw';
+            drawCanvas.width = logW * R;
+            drawCanvas.height = logH * R;
+            drawCanvas.style.width = logW + 'px';
+            drawCanvas.style.height = logH + 'px';
+            wrap.appendChild(drawCanvas);
+
+            area.appendChild(wrap);
+            state.pages.push({ wrap, pdfCanvas, drawCanvas, page, viewport, logW, logH, drawCtx: drawCanvas.getContext('2d'), strokes: [] });
+        }
+        bindDrawEvents();
+        state.currentBuffer = buf;
+        zoomFit();
+        applyZoom();
+        restoreDraft();
+    } catch (e) {
+        if (!buffer) {
+            const hint = document.getElementById('emptyHint');
+            hint.innerHTML =
+                'Gagal memuat PDF (' + e.message + ').<br>Pilih file info-antar-shift.pdf untuk memuatnya.<br><br>' +
+                '<button class="btn primary" id="btnPickPdf"><span class="mat">folder_open</span> Pilih File PDF</button>';
+            hint.style.display = 'flex';
+            document.getElementById('btnPickPdf').addEventListener('click', () => document.getElementById('pdfPicker').click());
+        } else {
+            document.getElementById('emptyHint').innerHTML = 'Gagal memuat PDF: ' + e.message;
+            document.getElementById('emptyHint').style.display = 'flex';
+        }
+    }
+}
+
+/* ── Drawing (pointer events: stylus/touch/mouse) ── */
+const DRAFT_KEY = 'antar-shift-draft';
+
+function pdfSig(buf) {
+    const bytes = new Uint8Array(buf);
+    let h = 5381;
+    for (let i = 0; i < bytes.length; i += 16) {
+        h = ((h * 33) ^ bytes[i]) >>> 0;
+    }
+    return h + '-' + bytes.length;
+}
+
+function saveDraft() {
+    if (state.editingId) return;
+    if (!state.pages.length || !state.currentBuffer) return;
+    const data = { sig: pdfSig(state.currentBuffer), pages: state.pages.map(p => p.strokes || []) };
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch (e) { /* kuota penuh — abaikan */ }
+}
+
+function loadDraft() {
+    try {
+        const raw = localStorage.getItem(DRAFT_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!data || !data.sig || !Array.isArray(data.pages)) return null;
+        if (state.currentBuffer && data.sig !== pdfSig(state.currentBuffer)) return null;
+        return data;
+    } catch (e) { return null; }
+}
+
+function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+}
+
+function redrawPage(page) {
+    const ctx = page.drawCtx;
+    ctx.clearRect(0, 0, page.drawCanvas.width, page.drawCanvas.height);
+    ctx.globalCompositeOperation = 'source-over';
+    (page.strokes || []).forEach(st => {
+        if (!st.points || !st.points.length) return;
+        ctx.beginPath();
+        ctx.moveTo(st.points[0][0], st.points[0][1]);
+        for (let i = 1; i < st.points.length; i++) {
+            const pt = st.points[i];
+            ctx.lineTo(pt[0], pt[1]);
+            if (st.mode === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = st.size * 2;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.lineWidth = st.size * (0.4 + 0.6 * (pt[2] || 0.5));
+                ctx.strokeStyle = st.color;
+            }
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+    });
+    ctx.globalCompositeOperation = 'source-over';
+}
+
+function restoreDraft() {
+    if (state.editingId) return;
+    const draft = loadDraft();
+    if (!draft) return;
+    draft.pages.forEach((strokes, i) => {
+        if (state.pages[i]) {
+            state.pages[i].strokes = Array.isArray(strokes) ? strokes : [];
+            redrawPage(state.pages[i]);
+        }
+    });
+}
+
+function bindDrawEvents() {
+    state.pages.forEach(p => {
+        p.drawCanvas.addEventListener('pointerdown', onDown);
+        p.drawCanvas.addEventListener('pointermove', onMove);
+        p.drawCanvas.addEventListener('pointerup', onUp);
+        p.drawCanvas.addEventListener('pointercancel', onUp);
+        p.drawCanvas.addEventListener('pointerleave', onLeave);
+    });
+}
+
+function getEventPos(canvas, e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+
+function pointerDist(a, b) {
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+
+let diagShown = false;
+function isPenAllowed(e) {
+    if (e.pointerType !== 'pen') return false;
+    const size = Math.max(e.width || 0, e.height || 0);
+    return size === 0 || size <= 12;
+}
+function isPalm(e) {
+    if (e.pointerType !== 'touch') return false;
+    const w = e.width || 0, h = e.height || 0;
+    const size = Math.max(w, h);
+    return size > 30;
+}
+function diagPointer(e) {
+    if (diagShown) return;
+    diagShown = true;
+    const size = Math.round(Math.max(e.width || 0, e.height || 0));
+    const info = document.createElement('div');
+    info.textContent = 'Deteksi sentuhan: ' + e.pointerType + ', area ' + size + 'px — ' +
+        (isPalm(e) ? 'TELAPAK TANGAN (diabaikan, tidak drag/zoom)' : (isPenAllowed(e) ? 'dianggap pena (bisa menulis)' : 'bukan pena (tidak menulis)')) +
+        '. Jika tablet masih bisa menulis dgn jari, file di tablet adalah versi LAMA — salin ulang file ini.';
+    info.style.cssText = 'position:fixed;left:14px;bottom:60px;z-index:200;background:#0a2d5e;color:#fff;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.35);max-width:300px;';
+    document.body.appendChild(info);
+    setTimeout(() => info.remove(), 7000);
+}
+
+function onDown(e) {
+    e.preventDefault();
+    if (isPalm(e)) return;
+    const canvas = e.currentTarget;
+    state.pointers.set(e.pointerId, e);
+    diagPointer(e);
+    const penAllowed = isPenAllowed(e);
+    if (penAllowed) state.penCount++;
+    if (state.penCount > 0) {
+        if (!penAllowed) return;
+        canvas.setPointerCapture(e.pointerId);
+        const pos = getEventPos(canvas, e);
+        state.drawing = true;
+        state.lastX = pos.x; state.lastY = pos.y;
+        const pressure = e.pressure > 0 ? e.pressure : 0.5;
+        state.curStroke = { mode: state.mode, color: state.color, size: state.size, points: [[pos.x, pos.y, pressure]] };
+        const ctx = canvas.getContext('2d');
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        if (state.mode === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.lineWidth = state.size * 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        } else {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.lineWidth = state.size * (0.4 + 0.6 * pressure);
+            ctx.strokeStyle = state.color;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+        return;
+    }
+    if (state.pointers.size >= 2) {
+        const pts = [...state.pointers.values()];
+        state.pinchDist = pointerDist(pts[0], pts[1]);
+        state.drawing = false;
+        state.pan = null;
+        return;
+    }
+    if (e.pointerType === 'touch') {
+        canvas.setPointerCapture(e.pointerId);
+        state.pan = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    }
+}
+
+function onMove(e) {
+    e.preventDefault();
+    if (isPalm(e)) return;
+    state.pointers.set(e.pointerId, e);
+    if (state.penCount > 0) {
+        if (!state.drawing) return;
+        const canvas = e.currentTarget;
+        const pos = getEventPos(canvas, e);
+        const ctx = canvas.getContext('2d');
+        ctx.lineTo(pos.x, pos.y);
+        if (state.curStroke) {
+            state.curStroke.points.push([pos.x, pos.y, e.pressure > 0 ? e.pressure : 0.5]);
+        }
+        if (state.mode !== 'eraser' && e.pressure > 0) {
+            const pressure = e.pressure;
+            ctx.lineWidth = state.size * (0.4 + 0.6 * pressure);
+        }
+        ctx.stroke();
+        state.lastX = pos.x; state.lastY = pos.y;
+        return;
+    }
+    if (state.pointers.size >= 2) {
+        const pts = [...state.pointers.values()];
+        const d = pointerDist(pts[0], pts[1]);
+        if (state.pinchDist > 0 && d > 0) {
+            const midX = (pts[0].clientX + pts[1].clientX) / 2;
+            const midY = (pts[0].clientY + pts[1].clientY) / 2;
+            zoomTo(state.zoom * (d / state.pinchDist), midX, midY);
+        }
+        state.pinchDist = d;
+        state.pan = null;
+        return;
+    }
+    if (state.pan && state.pan.id === e.pointerId) {
+        const dx = e.clientX - state.pan.x;
+        const dy = e.clientY - state.pan.y;
+        state.pan.x = e.clientX;
+        state.pan.y = e.clientY;
+        const area = document.getElementById('canvasArea');
+        area.scrollLeft -= dx;
+        area.scrollTop -= dy;
+        return;
+    }
+    if (!state.drawing) return;
+    const canvas = e.currentTarget;
+    const pos = getEventPos(canvas, e);
+    const ctx = canvas.getContext('2d');
+    ctx.lineTo(pos.x, pos.y);
+    if (state.curStroke) {
+        state.curStroke.points.push([pos.x, pos.y, e.pressure > 0 ? e.pressure : 0.5]);
+    }
+    if (state.mode !== 'eraser' && e.pressure > 0) {
+        const pressure = e.pressure;
+        ctx.lineWidth = state.size * (0.4 + 0.6 * pressure);
+    }
+    ctx.stroke();
+    state.lastX = pos.x; state.lastY = pos.y;
+}
+
+function onUp(e) {
+    if (isPenAllowed(e) && state.penCount > 0) state.penCount--;
+    state.pointers.delete(e.pointerId);
+    if (state.penCount > 0) return;
+    if (state.pointers.size >= 2) {
+        const pts = [...state.pointers.values()];
+        state.pinchDist = pointerDist(pts[0], pts[1]);
+        return;
+    }
+    if (state.pan) {
+        if (state.pan.id === e.pointerId) state.pan = null;
+        return;
+    }
+    if (!state.drawing) return;
+    finishStroke(e.currentTarget);
+}
+
+function finishStroke(canvas) {
+    state.drawing = false;
+    const ctx = canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    const page = state.pages.find(p => p.drawCanvas === canvas);
+    if (page && state.curStroke) {
+        page.strokes.push(state.curStroke);
+        state.curStroke = null;
+    }
+    saveDraft();
+}
+
+function onLeave(e) {
+    if (isPenAllowed(e) && state.penCount > 0) state.penCount--;
+    state.pointers.delete(e.pointerId);
+    if (state.penCount > 0) return;
+    if (state.pointers.size >= 2) return;
+    if (state.pan && state.pan.id === e.pointerId) { state.pan = null; return; }
+    if (!state.drawing) return;
+    finishStroke(e.currentTarget);
+}
+
+function undo() {
+    let page = null;
+    for (let i = state.pages.length - 1; i >= 0; i--) {
+        if (state.pages[i].strokes.length) { page = state.pages[i]; break; }
+    }
+    if (!page) { toast('Tidak ada coretan untuk di-undo.'); return; }
+    page.strokes.pop();
+    redrawPage(page);
+    saveDraft();
+    toast('Undo: coretan terakhir dihapus.');
+}
+
+function hexToRgba(hex, a) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${a})`;
+}
+
+function clearAllDraw() {
+    confirmAction('Bersihkan semua coretan?', () => {
+        state.pages.forEach(p => {
+            p.strokes = [];
+            redrawPage(p);
+        });
+        saveDraft();
+    });
+}
+
+function confirmAction(message, onConfirm) {
+    document.getElementById('confirmText').textContent = message;
+    document.getElementById('confirmModal').classList.add('on');
+    document.getElementById('btnConfirmYes').onclick = () => {
+        document.getElementById('confirmModal').classList.remove('on');
+        onConfirm();
+    };
+    document.getElementById('btnConfirmNo').onclick = () => document.getElementById('confirmModal').classList.remove('on');
+    document.getElementById('confirmModal').onclick = (e) => {
+        if (e.target === e.currentTarget) document.getElementById('confirmModal').classList.remove('on');
+    };
+}
+
+/* ── Zoom ── */
+const ZOOM_MIN = 0.2, ZOOM_MAX = 5;
+function applyZoom() {
+    const z = state.zoom;
+    state.pages.forEach(p => {
+        p.wrap.style.width = (p.logW * z) + 'px';
+        p.wrap.style.height = (p.logH * z) + 'px';
+        p.pdfCanvas.style.width = (p.logW * z) + 'px';
+        p.pdfCanvas.style.height = (p.logH * z) + 'px';
+        p.drawCanvas.style.width = (p.logW * z) + 'px';
+        p.drawCanvas.style.height = (p.logH * z) + 'px';
+    });
+}
+function zoomTo(newZoom, anchorX, anchorY) {
+    if (!state.pages.length) return;
+    const area = document.getElementById('canvasArea');
+    const z0 = state.zoom;
+    const z1 = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, newZoom));
+    if (z1 === z0) return;
+    const rect = state.pages[0].wrap.getBoundingClientRect();
+    const areaRect = area.getBoundingClientRect();
+    const ax = anchorX != null ? anchorX : areaRect.left + areaRect.width / 2;
+    const ay = anchorY != null ? anchorY : areaRect.top + areaRect.height / 2;
+    const contentX = (ax - rect.left) / z0;
+    const contentY = (ay - rect.top) / z0;
+    state.zoom = z1;
+    applyZoom();
+    const rect2 = state.pages[0].wrap.getBoundingClientRect();
+    const newScrollLeft = area.scrollLeft + (rect2.left + contentX * z1) - ax;
+    const newScrollTop = area.scrollTop + (rect2.top + contentY * z1) - ay;
+    area.scrollLeft = newScrollLeft;
+    area.scrollTop = newScrollTop;
+}
+function zoomFit() {
+    if (!state.pages.length) return;
+    const area = document.getElementById('canvasArea');
+    const pad = 48;
+    const avail = area.clientWidth - pad;
+    const baseW = state.pages[0].logW;
+    zoomTo(avail / baseW);
+}
+
+function updateBrushUI() {
+    const tb = document.getElementById('toolbar');
+    tb.classList.toggle('eraser-mode', state.mode === 'eraser');
+    const dots = document.querySelectorAll('.size-dot .dot');
+    dots.forEach(d => {
+        d.style.background = state.mode === 'eraser' ? '#fff' : state.color;
+    });
+}
+
+/* ── Composite for save/print ── */
+function buildComposite() {
+    if (!state.pages.length) return null;
+    const totalH = state.pages.reduce((s, p) => s + p.pdfCanvas.height, 0);
+    const maxW = Math.max(...state.pages.map(p => p.pdfCanvas.width));
+    const canvas = document.createElement('canvas');
+    canvas.width = maxW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    let y = 0;
+    state.pages.forEach(p => {
+        ctx.drawImage(p.pdfCanvas, 0, y);
+        ctx.drawImage(p.drawCanvas, 0, y);
+        y += p.pdfCanvas.height;
+    });
+    return canvas;
+}
+
+/* ── Save to Apps Script ── */
+function compositeDataUrl() {
+    const canvas = buildComposite();
+    return canvas ? canvas.toDataURL('image/png') : null;
+}
+
+async function saveReport() {
+    if (!GAS_URL) { openSettings(); toast('Atur URL Apps Script dulu.', '#facc15'); return; }
+    let date, shift, author;
+    if (state.editingId) {
+        date = state.editingMeta ? state.editingMeta.date : '';
+        shift = state.editingMeta ? state.editingMeta.shift : '';
+        author = state.editingMeta ? state.editingMeta.author : '';
+    } else {
+        date = document.getElementById('inputDate').value;
+        shift = document.getElementById('inputShift').value;
+        author = document.getElementById('inputAuthor').value;
+    }
+    if (!date) { toast('Tanggal wajib diisi.', '#dc2626'); return; }
+    if (!shift) { toast('Pilih shift terlebih dahulu.', '#dc2626'); return; }
+    if (!author) { toast('Nama penulis laporan wajib dipilih.', '#dc2626'); return; }
+
+    document.getElementById('btnSaveConfirm').disabled = true;
+    document.getElementById('btnSaveConfirm').textContent = 'Menyimpan...';
+
+    const imageDataUrl = compositeDataUrl();
+    const payload = {
+        date, shift, author,
+        image: imageDataUrl
+    };
+    if (state.editingId) payload.id = state.editingId;
+
+    try {
+        const res = await fetchApiPost(state.editingId ? 'update' : 'save', payload);
+        if (res && res.ok) {
+            if (!state.editingId && res.id) {
+                state.editingId = res.id;
+                state.editingMeta = { date, shift, author };
+            }
+            toast(state.editingId ? 'Perubahan laporan disimpan!' : 'Laporan berhasil disimpan!');
+            document.getElementById('saveModal').classList.remove('on');
+        } else {
+            toast('Gagal menyimpan: ' + ((res && res.error) || 'respon tidak dikenali'), '#dc2626');
+        }
+    } catch (err) {
+        toast('Gagal menyimpan: ' + err.message, '#dc2626');
+    } finally {
+        document.getElementById('btnSaveConfirm').disabled = false;
+        document.getElementById('btnSaveConfirm').textContent = 'Simpan';
+    }
+}
+
+/* ── Apps Script GET (fetch) ── */
+async function fetchApiGet(action, params) {
+    const p = Object.assign({ action }, params);
+    const qs = Object.keys(p).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(p[k])).join('&');
+    const url = GAS_URL + '?' + qs;
+    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
+    const text = await res.text();
+    if (res.status !== 200) {
+        throw new Error('HTTP ' + res.status + ' dari server. Cek URL Apps Script di Pengaturan.');
+    }
+    try {
+        return JSON.parse(text);
+    } catch (err) {
+        throw new Error('Respon bukan JSON (backend mungkin belum di-deploy ulang). Status ' + res.status + '. Awalan: "' + text.slice(0, 80) + '"');
+    }
+}
+
+/* ── Apps Script POST (fetch) — aman untuk gambar besar ── */
+async function fetchApiPost(action, payload) {
+    const body = Object.assign({ action }, payload);
+    const res = await fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow'
+    });
+    return res.json();
+}
+
+/* ── Archive ── */
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatDateDisplay(iso) {
+    if (!iso) return '';
+    const parts = String(iso).split('-');
+    const y = parts[0], m = parseInt(parts[1], 10), d = parts[2];
+    if (!y || !m || !d) return iso;
+    return String(d).padStart(2, '0') + '-' + (MONTHS_SHORT[m - 1] || m) + '-' + y;
+}
+
+/* ── Tampilkan error fetch dengan tombol buka Pengaturan saat URL GAS bermasalah ── */
+function fetchErrorHtml(msg) {
+    const isUrlIssue = /404|URL Apps Script/i.test(msg);
+    return '<div style="color:#dc2626">' + msg +
+        (isUrlIssue ? '<br><button class="btn primary" id="btnErrorSettings" style="margin-top:12px"><span class="mat">settings</span> Buka Pengaturan</button>' : '') +
+        '</div>';
+}
+function wireErrorSettingsBtn() {
+    const b = document.getElementById('btnErrorSettings');
+    if (b) b.addEventListener('click', openSettings);
+}
+
+async function openArchive() {
+    if (!GAS_URL) { openSettings(); toast('Atur URL Apps Script dulu.', '#facc15'); return; }
+    const list = document.getElementById('archiveList');
+    list.innerHTML = '<div style="padding:20px;text-align:center"><span class="spinner"></span></div>';
+    document.getElementById('archiveModal').classList.add('on');
+    try {
+        const res = await fetchApiGet('list');
+        list.innerHTML = '';
+        if (!res || !res.reports || !res.reports.length) {
+            list.innerHTML = '<div style="padding:20px;text-align:center;color:#6b7280">Belum ada laporan tersimpan.</div>';
+            return;
+        }
+        res.reports.sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
+        res.reports.forEach(r => {
+            const card = document.createElement('div');
+            card.className = 'report-card';
+            card.innerHTML = `
+                <div class="thumb"><span class="mat">picture_as_pdf</span></div>
+                <div class="info">
+                    <div class="t">${formatDateDisplay(r.date)} • Shift ${r.shift}</div>
+                    <div class="d">${r.author}${r.note ? ' — ' + r.note : ''}</div>
+                </div>
+                <div class="actions">
+                    <button class="btn ghost sm" data-edit="${r.id}" title="Edit"><span class="mat">edit</span></button>
+                    <button class="btn ghost sm" data-print="${r.id}" title="Cetak"><span class="mat">print</span></button>
+                </div>`;
+            list.appendChild(card);
+
+            card.addEventListener('click', () => viewReport(r.id));
+            card.querySelector('[data-edit]').addEventListener('click', e => { e.stopPropagation(); editReport(r.id, { date: r.date, shift: r.shift, author: r.author, note: r.note || '' }); });
+            card.querySelector('[data-print]').addEventListener('click', e => { e.stopPropagation(); printReport(r.id); });
+        });
+    } catch (err) {
+        list.innerHTML = fetchErrorHtml('Gagal memuat arsip: ' + err.message);
+        wireErrorSettingsBtn();
+    }
+}
+
+async function viewReport(id) {
+    const wrap = document.getElementById('viewImgWrap');
+    wrap.innerHTML = '<div style="padding:20px;text-align:center"><span class="spinner"></span></div>';
+    document.getElementById('viewModal').classList.add('on');
+    try {
+        const res = await fetchApiGet('get', { id });
+        if (!res || !res.image) { wrap.innerHTML = '<div style="color:#dc2626">Laporan tidak ditemukan.</div>'; return; }
+        const img = document.createElement('img');
+        img.src = res.image;
+        wrap.innerHTML = '';
+        wrap.appendChild(img);
+    } catch (err) {
+        wrap.innerHTML = fetchErrorHtml('Gagal memuat: ' + err.message);
+        wireErrorSettingsBtn();
+    }
+}
+
+function printReport(id) {
+    fetchApiGet('get', { id }).then(res => {
+        if (!res || !res.image) return;
+        const area = document.getElementById('printArea');
+        area.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = res.image;
+        area.appendChild(img);
+        setTimeout(() => window.print(), 150);
+    }).catch(err => toast('Gagal: ' + err.message, '#dc2626'));
+}
+
+window.addEventListener('afterprint', () => {
+    const area = document.getElementById('printArea');
+    if (area) area.innerHTML = '';
+});
+
+async function editReport(id, meta) {
+    document.getElementById('archiveModal').classList.remove('on');
+    try {
+        const res = await fetchApiGet('get', { id });
+        if (!res || !res.image) { toast('Laporan tidak ditemukan.', '#dc2626'); return; }
+        state.editingMeta = meta || null;
+        const img = new Image();
+        img.onload = () => loadEditableImage(img, id);
+        img.onerror = () => toast('Gagal memuat gambar laporan.', '#dc2626');
+        img.src = res.image;
+    } catch (err) {
+        toast('Gagal memuat: ' + err.message, '#dc2626');
+    }
+}
+
+function loadEditableImage(img, id) {
+    const area = document.getElementById('canvasArea');
+    area.querySelectorAll('.pdf-page').forEach(el => el.remove());
+    document.getElementById('emptyHint').style.display = 'none';
+    state.pages = [];
+    state.pdf = null;
+    state.editingId = id;
+
+    const logW = img.naturalWidth, logH = img.naturalHeight;
+    const wrap = document.createElement('div');
+    wrap.className = 'pdf-page';
+    wrap.style.width = logW + 'px';
+    wrap.style.height = logH + 'px';
+
+    const baseCanvas = document.createElement('canvas');
+    baseCanvas.className = 'pdf';
+    baseCanvas.width = logW;
+    baseCanvas.height = logH;
+    baseCanvas.getContext('2d').drawImage(img, 0, 0);
+    wrap.appendChild(baseCanvas);
+
+    const drawCanvas = document.createElement('canvas');
+    drawCanvas.className = 'draw';
+    drawCanvas.width = logW;
+    drawCanvas.height = logH;
+    wrap.appendChild(drawCanvas);
+
+    area.appendChild(wrap);
+    state.pages.push({ wrap, pdfCanvas: baseCanvas, drawCanvas, page: null, viewport: { width: logW, height: logH }, logW, logH, drawCtx: drawCanvas.getContext('2d'), strokes: [] });
+    bindDrawEvents();
+    zoomFit();
+    applyZoom();
+    toast('Mode Edit: tambahkan coretan lalu Simpan untuk memperbarui.', '#4a8cff');
+}
+
+/* ── Settings ── */
+function openSettings() {
+    ['saveModal', 'archiveModal', 'viewModal', 'confirmModal'].forEach(id => document.getElementById(id).classList.remove('on'));
+    document.getElementById('inputGasUrl').value = GAS_URL;
+    document.getElementById('inputFormId').value = FORM_ID;
+    document.getElementById('modalStatus').textContent = 'Masukkan URL lalu tekan Simpan & Tes.';
+    document.getElementById('modalStatus').style.color = '#15803d';
+    document.getElementById('settingsModal').classList.add('on');
+}
+function closeSettings() { document.getElementById('settingsModal').classList.remove('on'); }
+
+document.getElementById('btnSettings').addEventListener('click', openSettings);
+document.getElementById('btnModalCancel').addEventListener('click', closeSettings);
+document.getElementById('settingsModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
+document.getElementById('btnModalSave').addEventListener('click', async () => {
+    const url = document.getElementById('inputGasUrl').value.trim();
+    const formId = document.getElementById('inputFormId').value.trim();
+    const st = document.getElementById('modalStatus');
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(url)) {
+        st.style.color = '#dc2626';
+        st.textContent = 'Format URL tidak sesuai (harus diakhiri /exec).';
+        return;
+    }
+    st.style.color = '#15803d';
+    st.textContent = 'Menguji koneksi...';
+    const prev = GAS_URL;
+    GAS_URL = url;
+    FORM_ID = formId;
+    try {
+        const res = await fetchApiGet('ping');
+        localStorage.setItem(LS_KEY_GAS, url);
+        try { localStorage.setItem('tvcore-gas-url', url); } catch (e) {} // samakan dengan header utama
+        if (formId) localStorage.setItem(LS_KEY_FORM_ID, formId);
+        else localStorage.removeItem(LS_KEY_FORM_ID);
+        st.textContent = 'Berhasil terhubung!';
+        toast('Koneksi Apps Script tersimpan.');
+        setTimeout(closeSettings, 600);
+    } catch (err) {
+        GAS_URL = prev;
+        st.style.color = '#dc2626';
+        st.textContent = 'Gagal: ' + err.message;
+    }
+});
+
+/* ── Zoom wiring ── */
+const canvasArea = document.getElementById('canvasArea');
+canvasArea.addEventListener('wheel', e => {
+    if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+        zoomTo(state.zoom * factor, e.clientX, e.clientY);
+    }
+}, { passive: false });
+
+/* ── UI wiring ── */
+document.getElementById('btnSave').addEventListener('click', () => {
+    if (state.editingId) {
+        saveReport();
+        return;
+    }
+    document.getElementById('saveModalTitle').textContent = 'Simpan Laporan';
+    document.getElementById('saveModalSub').textContent = 'Lengkapi informasi laporan antar shift sebelum disimpan.';
+    document.getElementById('inputDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('saveModal').classList.add('on');
+});
+document.getElementById('btnSaveCancel').addEventListener('click', () => document.getElementById('saveModal').classList.remove('on'));
+document.getElementById('btnSaveConfirm').addEventListener('click', saveReport);
+document.getElementById('saveModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('saveModal').classList.remove('on'); });
+document.getElementById('btnArchive').addEventListener('click', openArchive);
+document.getElementById('btnArchiveClose').addEventListener('click', () => document.getElementById('archiveModal').classList.remove('on'));
+document.getElementById('archiveModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('archiveModal').classList.remove('on'); });
+document.getElementById('btnClear').addEventListener('click', clearAllDraw);
+document.getElementById('btnFullscreen').addEventListener('click', () => {
+    const el = document.documentElement;
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    } else {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    }
+});
+document.getElementById('btnUndo').addEventListener('click', undo);
+document.getElementById('btnRestoreCanvas').addEventListener('click', restoreCanvas);
+document.getElementById('btnViewClose').addEventListener('click', () => document.getElementById('viewModal').classList.remove('on'));
+document.getElementById('viewModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('viewModal').classList.remove('on'); });
+document.getElementById('btnViewPrint').addEventListener('click', () => {
+    const img = document.querySelector('#viewImgWrap img');
+    if (!img) return;
+    const area = document.getElementById('printArea');
+    area.innerHTML = '';
+    const c = document.createElement('img');
+    c.src = img.src;
+    area.appendChild(c);
+    setTimeout(() => window.print(), 150);
+});
+
+document.querySelectorAll('.color-swatch').forEach(s => s.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    state.color = s.dataset.color;
+    updateBrushUI();
+}));
+document.querySelectorAll('.size-dot').forEach(s => s.addEventListener('click', () => {
+    document.querySelectorAll('.size-dot').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    state.size = parseFloat(s.dataset.size);
+    updateBrushUI();
+}));
+document.querySelectorAll('.mode-pill').forEach(s => s.addEventListener('click', () => {
+    document.querySelectorAll('.mode-pill').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    state.mode = s.dataset.mode;
+    updateBrushUI();
+}));
+updateBrushUI();
+
+document.getElementById('pdfPicker').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    f.arrayBuffer().then(buf => {
+        cachePdf(buf);
+        document.getElementById('emptyHint').style.display = 'none';
+        loadPdf(buf);
+    }).catch(err => toast('Gagal membaca file: ' + err.message, '#dc2626'));
+    e.target.value = '';
+});
+
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        [document.getElementById('settingsModal'), document.getElementById('saveModal'), document.getElementById('archiveModal'), document.getElementById('viewModal'), document.getElementById('confirmModal')].forEach(m => m.classList.remove('on'));
+    }
+});
+
+/* ── Mode handwriting tablet ── */
+function requestHandwritingPermission() {
+    try {
+        if (navigator.permissions && navigator.permissions.request) {
+            navigator.permissions.request({ name: 'handwriting-recognition' })
+                .then(() => console.log('Handwriting recognition izin diberikan.'))
+                .catch(() => {});
+        }
+    } catch (e) {}
+}
+requestHandwritingPermission();
+
+const isWritingDevice = () => {
+    if (window.matchMedia && matchMedia('(pointer: coarse)').matches) return true;
+    if (typeof navigator.maxTouchPoints === 'number' && navigator.maxTouchPoints > 0) return true;
+    return false;
+};
+
+if (!isWritingDevice()) {
+    const hint = document.getElementById('emptyHint');
+    hint.style.display = 'flex';
+    hint.innerHTML =
+        'Mode komputer: canvas hanya untuk tablet (menulis dengan stylus).<br>' +
+        'Di komputer ini gunakan menu <b>Arsip</b> untuk melihat laporan.';
+} else {
+    const cached = getCachedPdf();
+    if (cached) {
+        loadPdf(cached);
+    } else {
+        loadFormPdf();
+    }
+}
+</script>
+</body>
+</html>

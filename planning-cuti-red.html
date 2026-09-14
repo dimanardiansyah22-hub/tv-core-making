@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Toyota Operations - Planning Cuti</title>
+<script src="tailwind-cdn.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "var(--on-error-container)",
+                        "surface-container-highest": "var(--surface-container-highest)",
+                        "on-secondary-fixed-variant": "var(--on-secondary-fixed-variant)",
+                        "surface-bright": "var(--surface-bright)",
+                        "primary": "var(--primary)",
+                        "on-tertiary-fixed-variant": "var(--on-tertiary-fixed-variant)",
+                        "on-surface-variant": "var(--on-surface-variant)",
+                        "on-primary": "var(--on-primary)",
+                        "inverse-surface": "var(--inverse-surface)",
+                        "error-container": "var(--error-container)",
+                        "primary-fixed-dim": "var(--primary-fixed-dim)",
+                        "secondary-fixed": "var(--secondary-fixed)",
+                        "surface-container-high": "var(--surface-container-high)",
+                        "on-surface": "var(--on-surface)",
+                        "on-primary-fixed-variant": "var(--on-primary-fixed-variant)",
+                        "surface-container-low": "var(--surface-container-low)",
+                        "on-secondary": "var(--on-secondary)",
+                        "surface-container": "var(--surface-container)",
+                        "on-primary-container": "var(--on-primary-container)",
+                        "secondary": "var(--secondary)",
+                        "tertiary": "var(--tertiary)",
+                        "secondary-container": "var(--secondary-container)",
+                        "outline-variant": "var(--outline-variant)",
+                        "error": "var(--error)",
+                        "on-tertiary-container": "var(--on-tertiary-container)",
+                        "outline": "var(--outline)",
+                        "on-background": "var(--on-background)",
+                        "primary-container": "var(--primary-container)",
+                        "on-tertiary-fixed": "var(--on-tertiary-fixed)",
+                        "on-secondary-fixed": "var(--on-secondary-fixed)",
+                        "tertiary-fixed": "var(--tertiary-fixed)",
+                        "tertiary-container": "var(--tertiary-container)",
+                        "surface-tint": "var(--surface-tint)",
+                        "on-error": "var(--on-error)",
+                        "inverse-primary": "var(--inverse-primary)",
+                        "on-primary-fixed": "var(--on-primary-fixed)",
+                        "background": "var(--background)",
+                        "inverse-on-surface": "var(--inverse-on-surface)",
+                        "surface-dim": "var(--surface-dim)",
+                        "on-tertiary": "var(--on-tertiary)",
+                        "on-secondary-container": "var(--on-secondary-container)",
+                        "tertiary-fixed-dim": "var(--tertiary-fixed-dim)",
+                        "surface": "var(--surface)",
+                        "surface-variant": "var(--surface-variant)",
+                        "secondary-fixed-dim": "var(--secondary-fixed-dim)",
+                        "primary-fixed": "var(--primary-fixed)",
+                        "surface-container-lowest": "var(--surface-container-lowest)"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "xs": "4px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "md": "24px",
+                        "container-max": "1280px",
+                        "xl": "80px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "button-text": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "headline-md": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-lg-mobile": ["36px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-sm": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "button-text": ["16px", {"lineHeight": "1", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        :root {
+            --background: #f9f9f9;
+            --tertiary: #5c5d5f;
+            --primary-fixed: #ffdad6;
+            --surface-bright: #f9f9f9;
+            --on-background: #1a1c1c;
+            --on-tertiary-container: #ffffff;
+            --on-tertiary: #ffffff;
+            --secondary-container: #e2dfde;
+            --secondary-fixed: #e5e2e1;
+            --surface-container-highest: #e2e2e2;
+            --surface-variant: #e2e2e2;
+            --error: #ba1a1a;
+            --on-surface-variant: #5e3f3b;
+            --on-primary-fixed: #410002;
+            --outline-variant: #e9bcb7;
+            --primary-fixed-dim: #ffb4ab;
+            --on-primary-container: #fffeff;
+            --surface-container: #eeeeee;
+            --on-tertiary-fixed: #1a1c1d;
+            --tertiary-fixed-dim: #c6c6c8;
+            --on-secondary-fixed-variant: #474746;
+            --primary-container: #eb0a1e;
+            --secondary-fixed-dim: #c8c6c5;
+            --inverse-primary: #ffb4ab;
+            --on-error: #ffffff;
+            --on-surface: #1a1c1c;
+            --tertiary-container: #757678;
+            --surface: #f9f9f9;
+            --on-secondary: #ffffff;
+            --secondary: #5f5e5e;
+            --primary: #bd0014;
+            --surface-container-high: #e8e8e8;
+            --on-secondary-container: #636262;
+            --surface-container-lowest: #ffffff;
+            --on-tertiary-fixed-variant: #464749;
+            --on-secondary-fixed: #1b1c1c;
+            --surface-container-low: #f3f3f3;
+            --outline: #936e6a;
+            --on-error-container: #93000a;
+            --on-primary-fixed-variant: #93000d;
+            --surface-dim: #dadada;
+            --inverse-surface: #2f3131;
+            --error-container: #ffdad6;
+            --inverse-on-surface: #f1f1f1;
+            --tertiary-fixed: #e3e2e4;
+            --surface-tint: #c00014;
+        }
+
+        html.dark {
+            --background: #0b0d14;
+            --tertiary: #c6c6c8;
+            --primary-fixed: #d9e2ff;
+            --surface-bright: #35374a;
+            --on-background: #e4e4ec;
+            --on-tertiary-container: #2f2f31;
+            --on-tertiary: #1a1c1c;
+            --secondary-container: #364251;
+            --secondary-fixed: #d8e3f1;
+            --surface-container-highest: #2d2f40;
+            --surface-variant: #282a3a;
+            --error: #ffb4ab;
+            --on-surface-variant: #c4c6d0;
+            --on-primary-fixed: #001945;
+            --outline-variant: #404354;
+            --primary-fixed-dim: #aac1ff;
+            --on-primary-container: #d9e2ff;
+            --surface-container: #171922;
+            --on-tertiary-fixed: #1a1c1d;
+            --tertiary-fixed-dim: #c6c6c8;
+            --on-secondary-fixed-variant: #d8e3f1;
+            --primary-container: #003d9e;
+            --secondary-fixed-dim: #bcc7d4;
+            --inverse-primary: #005cbb;
+            --on-error: #690005;
+            --on-surface: #e4e4ec;
+            --tertiary-container: #464749;
+            --surface: #101219;
+            --on-secondary: #26313e;
+            --secondary: #bcc7d4;
+            --primary: #4a8cff;
+            --surface-container-high: #222436;
+            --on-secondary-container: #d8e3f1;
+            --surface-container-lowest: #06080d;
+            --on-tertiary-fixed-variant: #464749;
+            --on-secondary-fixed: #101e2b;
+            --surface-container-low: #13151d;
+            --outline: #8e92a0;
+            --on-error-container: #ffdad6;
+            --on-primary-fixed-variant: #ffffff;
+            --surface-dim: #0b0d14;
+            --inverse-surface: #e4e4ec;
+            --error-container: #93000a;
+            --inverse-on-surface: #0b0d14;
+            --tertiary-fixed: #e3e2e4;
+            --on-primary: #ffffff;
+            --surface-tint: #4a8cff;
+        }
+
+        html.dark .bg-white { background-color: var(--surface); }
+        html.dark .text-white { color: var(--on-surface); }
+        html.dark .bg-green-100 { background-color: #064e3b; }
+        html.dark .text-green-700 { color: #6ee7b7; }
+        html.dark body { background-color: var(--background); color: var(--on-background); }
+        html.dark input, html.dark select, html.dark textarea { background-color: var(--surface-container-low); color: var(--on-surface); }
+html.dark #leave-form button[type="submit"]:hover { background-color: #003d9e; }
+
+        body { background-color: #f9f9f9; color: #1a1c1c; -webkit-font-smoothing: antialiased; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 10px; }
+        html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #4a8cff; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .core-switch {
+            display: inline-flex; align-items: center; gap: 9px;
+            padding: 12px 18px; border-radius: 10px; text-decoration: none;
+            background: #fff; color: #374151; font-weight: 700; font-size: 13px;
+            font-family: 'Hanken Grotesk', sans-serif; white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: background 0.15s;
+        }
+        .core-switch:hover { background: #f5f5f5; }
+        .core-switch.active {
+            background: #f3f4f6; color: #111827;
+            box-shadow: 0 0 0 2px #facc15, 0 4px 12px rgba(250,204,21,0.5);
+        }
+        html.dark .core-switch { background: #2d2f40; color: #e8e8f0; }
+        html.dark .core-switch:hover { background: #36384c; }
+        html.dark .core-switch.active { background: #3a3c50; color: #f0f0f0; }
+    </style>
+</head>
+<body class="font-body-md">
+<main class="min-h-screen">
+<div class="max-w-container-max mx-auto p-gutter lg:p-lg">
+<div class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-md border-l-4 border-primary pl-gutter">
+<div>
+<h1 class="font-display-lg text-headline-md lg:text-display-lg text-on-surface uppercase tracking-tight">Planning Cuti</h1>
+<p class="font-body-lg text-secondary mt-2">Data Planning Cuti Member Core Making EPSD Sunter 2</p>
+</div>
+<div class="flex items-center gap-2 md:mb-1">
+<a class="core-switch active" href="planning-cuti-red.html" data-core="red">
+<span class="h-2.5 w-2.5 rounded-full" style="background:#c62828"></span>
+<span>Cuti Core Red</span>
+</a>
+<a class="core-switch" href="planning-cuti-white.html" data-core="white">
+<span class="h-2.5 w-2.5 rounded-full" style="background:#b0b0b0"></span>
+<span>Cuti Core White</span>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<div class="col-span-12 xl:col-span-4 bg-white border border-outline-variant rounded-lg p-md relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-[2px] bg-primary"></div>
+<div class="flex items-center gap-3 mb-md">
+<span class="material-symbols-outlined text-primary">edit_note</span>
+<h2 class="font-headline-sm text-on-surface">Form Input Planning Cuti</h2>
+</div>
+<form class="space-y-md" id="leave-form">
+<div>
+<label class="block font-label-caps text-[11px] text-secondary mb-xs">MEMBER NAME / ID</label>
+<input id="leave-name" class="w-full h-12 border border-outline bg-white text-on-surface px-md focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="Nama anggota" type="text"/>
+</div>
+<div>
+<label class="block font-label-caps text-[11px] text-secondary mb-xs">LEAVE TYPE</label>
+<select id="leave-type" class="w-full h-12 border border-outline bg-white text-on-surface px-md focus:ring-2 focus:ring-primary outline-none transition-all">
+<option value="07 - Cuti Tahunan">07 - Cuti Tahunan</option>
+<option value="08 - Cuti Besar">08 - Cuti Besar</option>
+<option value="11 - Sakit">11 - Sakit</option>
+<option value="13 - Opname">13 - Opname</option>
+<option value="15 - Ijin Menikahkan Anak">15 - Ijin Menikahkan Anak</option>
+<option value="16 - Ijin Khitan/Baptis Anak">16 - Ijin Khitan/Baptis Anak</option>
+<option value="17 - Ijin Tugas Negara">17 - Ijin Tugas Negara</option>
+<option value="18 - Ijin Kewajiban Ibadah">18 - Ijin Kewajiban Ibadah</option>
+<option value="19 - Ijin Orang Tua/Mertua Opname">19 - Ijin Orang Tua/Mertua Opname</option>
+<option value="20 - Istri Melahirkan">20 - Istri Melahirkan</option>
+<option value="21 - Istri/Suami/Anak Opname">21 - Istri/Suami/Anak Opname</option>
+<option value="32 - Training">32 - Training</option>
+<option value="33 - Dinas Luar">33 - Dinas Luar</option>
+<option value="40 - Tidak masuk kerja karena banjir">40 - Tidak masuk kerja karena banjir</option>
+<option value="45 - MPP">45 - MPP</option>
+<option value="48 - Kerja Dari Rumah">48 - Kerja Dari Rumah</option>
+</select>
+</div>
+<div>
+<label class="block font-label-caps text-[11px] text-secondary mb-xs">DATE RANGE</label>
+<div class="flex gap-2 items-center">
+<div class="flex-1 relative" data-date-field>
+<input id="leave-from" class="w-full h-12 border border-outline bg-white px-md pr-10 outline-none cursor-pointer" type="text" placeholder="dd/mm/yyyy" autocomplete="off">
+<div class="absolute right-0 top-0 h-12 w-10 border-l border-outline bg-white flex items-center justify-center pointer-events-none">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+</div>
+</div>
+<div class="flex items-center text-secondary px-1">to</div>
+<div class="flex-1 relative" data-date-field>
+<input id="leave-to" class="w-full h-12 border border-outline bg-white px-md pr-10 outline-none cursor-pointer" type="text" placeholder="dd/mm/yyyy" autocomplete="off">
+<div class="absolute right-0 top-0 h-12 w-10 border-l border-outline bg-white flex items-center justify-center pointer-events-none">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<label class="block font-label-caps text-[11px] text-secondary mb-xs">REASON</label>
+<textarea id="leave-reason" class="w-full border border-outline bg-white p-md focus:ring-2 focus:ring-primary outline-none transition-all" placeholder="Berikan alasan cuti..." rows="3"></textarea>
+</div>
+<button class="w-full bg-primary text-white font-button-text py-4 rounded-lg hover:bg-on-primary-fixed-variant active:scale-[0.98] transition-all flex justify-center items-center gap-2" type="submit">
+<span class="material-symbols-outlined">send</span>
+                            SUBMIT PLANNING
+                        </button>
+</form>
+</div>
+<div class="col-span-12 xl:col-span-8 bg-white border border-outline-variant rounded-lg p-md">
+<div class="flex items-center justify-between mb-md">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+<h2 class="font-headline-sm text-on-surface">Kalender Cuti</h2>
+</div>
+<div class="flex items-center gap-sm">
+<button id="cal-prev" class="p-2 border border-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_left</span></button>
+<span class="font-button-text" id="cal-month-label">October 2023</span>
+<button id="cal-next" class="p-2 border border-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_right</span></button>
+<button id="cal-refresh" class="p-2 border border-outline-variant hover:bg-surface-container-low text-primary" title="Sync calendar from draft data"><span class="material-symbols-outlined">refresh</span></button>
+</div>
+</div>
+<div class="border border-outline-variant">
+<div class="calendar-grid bg-surface-container-low border-b border-outline-variant">
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary">MON</div>
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary">TUE</div>
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary">WED</div>
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary">THU</div>
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary">FRI</div>
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary text-primary">SAT</div>
+<div class="p-2 text-center font-label-caps text-[10px] text-secondary text-primary">SUN</div>
+</div>
+<div class="calendar-grid bg-white min-h-[400px]" id="cal-days"></div>
+<div id="cal-tooltip" class="fixed hidden bg-surface-container-high text-on-surface text-xs font-label-caps px-3 py-2 rounded-lg shadow-lg border border-outline-variant z-50 pointer-events-none" style="max-width: 250px;"></div>
+</div>
+<div class="mt-md flex gap-md">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-primary rounded-sm"></div>
+<span class="text-xs font-label-caps">Approved Leave</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 bg-green-500 rounded-sm"></div>
+<span class="text-xs font-label-caps">Finished Leave</span>
+</div>
+</div>
+</div>
+<div class="col-span-12 bg-white border border-outline-variant rounded-lg overflow-hidden">
+<div class="p-md border-b border-outline-variant bg-surface flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">list_alt</span>
+<h2 class="font-headline-sm text-on-surface">Draft List Up Cuti</h2>
+</div>
+<button class="text-primary hover:underline font-button-text flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">history</span>
+                            View History
+                        </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-md py-4 font-label-caps text-[11px] text-secondary border-b border-outline-variant">MEMBER NAME</th>
+<th class="px-md py-4 font-label-caps text-[11px] text-secondary border-b border-outline-variant">LEAVE TYPE</th>
+<th class="px-md py-4 font-label-caps text-[11px] text-secondary border-b border-outline-variant">PERIOD</th>
+<th class="px-md py-4 font-label-caps text-[11px] text-secondary border-b border-outline-variant">DAYS</th>
+<th class="px-md py-4 font-label-caps text-[11px] text-secondary border-b border-outline-variant">STATUS</th>
+<th class="px-md py-4 font-label-caps text-[11px] text-secondary border-b border-outline-variant">ACTION</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant" id="draft-table-body">
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-md py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center font-bold text-secondary">AM</div>
+<div>
+<p class="font-bold text-on-surface">Agus Mulyadi</p>
+<p class="text-xs text-secondary">T-22091</p>
+</div>
+</div>
+</td>
+<td class="px-md py-4 font-label-caps text-xs">ANNUAL</td>
+<td class="px-md py-4 text-sm">12 Oct 2023 - 15 Oct 2023</td>
+<td class="px-md py-4 font-bold">4</td>
+<td class="px-md py-4">
+<span class="px-2 py-1 bg-secondary-container text-secondary text-[10px] font-label-caps rounded-full">DRAFT</span>
+</td>
+<td class="px-md py-4">
+<div class="flex gap-2">
+<button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg">check_circle</span></button>
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-lg">cancel</span></button>
+<button class="p-1 hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-md py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center font-bold text-secondary">SP</div>
+<div>
+<p class="font-bold text-on-surface">Slamet Purwanto</p>
+<p class="text-xs text-secondary">T-22105</p>
+</div>
+</div>
+</td>
+<td class="px-md py-4 font-label-caps text-xs">MEDICAL</td>
+<td class="px-md py-4 text-sm">05 Oct 2023 - 05 Oct 2023</td>
+<td class="px-md py-4 font-bold">1</td>
+<td class="px-md py-4">
+<span class="px-2 py-1 bg-primary text-white text-[10px] font-label-caps rounded-full">REVIEW</span>
+</td>
+<td class="px-md py-4">
+<div class="flex gap-2">
+<button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-lg">check_circle</span></button>
+<button class="p-1 hover:text-error transition-colors"><span class="material-symbols-outlined text-lg">cancel</span></button>
+<button class="p-1 hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="px-md py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center font-bold text-secondary">BS</div>
+<div>
+<p class="font-bold text-on-surface">Bambang Susanto</p>
+<p class="text-xs text-secondary">T-21980</p>
+</div>
+</div>
+</td>
+<td class="px-md py-4 font-label-caps text-xs">ANNUAL</td>
+<td class="px-md py-4 text-sm">03 Oct 2023 - 04 Oct 2023</td>
+<td class="px-md py-4 font-bold">2</td>
+<td class="px-md py-4">
+<span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-label-caps rounded-full">APPROVED</span>
+</td>
+<td class="px-md py-4">
+<div class="flex gap-2">
+<button class="p-1 text-secondary cursor-not-allowed"><span class="material-symbols-outlined text-lg">print</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div id="date-picker-popup" class="hidden fixed bg-white border border-outline shadow-xl rounded-lg p-2 select-none" style="width:340px; z-index:1000;">
+<div class="flex items-center justify-between mb-2">
+<button type="button" id="dp-prev" class="p-2 border border-outline-variant hover:bg-surface-container-low rounded" title="Bulan sebelumnya"><span class="material-symbols-outlined text-lg">chevron_left</span></button>
+<div class="font-button-text text-on-surface" id="dp-month-label">Oktober 2026</div>
+<button type="button" id="dp-next" class="p-2 border border-outline-variant hover:bg-surface-container-low rounded" title="Bulan berikutnya"><span class="material-symbols-outlined text-lg">chevron_right</span></button>
+</div>
+<div class="grid grid-cols-7 gap-1 mb-1 text-center">
+<div class="text-[10px] font-bold text-secondary py-1">MON</div>
+<div class="text-[10px] font-bold text-secondary py-1">TUE</div>
+<div class="text-[10px] font-bold text-secondary py-1">WED</div>
+<div class="text-[10px] font-bold text-secondary py-1">THU</div>
+<div class="text-[10px] font-bold text-secondary py-1">FRI</div>
+<div class="text-[10px] font-bold text-secondary py-1 text-primary">SAT</div>
+<div class="text-[10px] font-bold text-secondary py-1 text-primary">SUN</div>
+</div>
+<div id="dp-days" class="grid grid-cols-7 gap-1 text-center"></div>
+<div class="mt-2 flex justify-end">
+<button type="button" id="dp-close" class="px-3 py-1.5 text-sm border border-outline-variant hover:bg-surface-container-low rounded">Tutup</button>
+<button type="button" id="dp-today" class="px-3 py-1.5 text-sm bg-primary text-white rounded ml-2">Hari Ini</button>
+</div>
+</div>
+<script src="sync-core.js"></script>
+<script>
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.remove('light');
+            document.documentElement.classList.add('dark');
+        }
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                const isDark = e.newValue === 'dark';
+                document.documentElement.classList.toggle('dark', isDark);
+                document.documentElement.classList.toggle('light', !isDark);
+            }
+        });
+
+        // Calendar
+        const calMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        let calDate = new Date();
+        calDate.setDate(1);
+
+        const savedLeaves = localStorage.getItem('planningCutiRedLeaves');
+        let calLeaves = savedLeaves ? JSON.parse(savedLeaves) : {
+            '2023-9': { 3: [{ name: 'Bambang S.', type: 'approved', reason: 'Cuti Tahunan' }], 4: [{ name: 'Bambang S.', type: 'approved', reason: 'Cuti Tahunan' }, { name: 'Siti A.', type: 'draft', reason: 'Cuti Sakit' }] },
+        };
+
+        const savedRows = localStorage.getItem('planningCutiRedRows');
+        let draftRows = savedRows ? JSON.parse(savedRows) : [
+            { id: 'sample1', name: 'Bambang S.', type: 'Tahunan (Annual)', fromStr: '2023-10-03', toStr: '2023-10-04', fromDisplay: '03/10/2023', toDisplay: '04/10/2023', dayDiff: 2, initials: 'BS', reason: 'Cuti Tahunan' },
+            { id: 'sample2', name: 'Siti A.', type: 'Sakit (Medical)', fromStr: '2023-10-04', toStr: '2023-10-04', fromDisplay: '04/10/2023', toDisplay: '04/10/2023', dayDiff: 1, initials: 'SA', reason: 'Cuti Sakit' },
+        ];
+        draftRows = draftRows.map(r => ({ id: r.id || Date.now().toString() + Math.random(), fromStr: r.fromStr || '', reason: r.reason || '', ...r }));
+
+        function leaveStatusForDate(date) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return date < today ? 'finished' : 'approved';
+        }
+
+        /* ── Sinkronisasi terpusat (sync-core.js) ── */
+        const CORE = 'red';
+        let _cutiSaveTimer = null;
+        let _cutiPendingSave = false;
+        let _cutiLastTs = '';
+
+        function saveData() {
+            localStorage.setItem('planningCutiRedLeaves', JSON.stringify(calLeaves));
+            localStorage.setItem('planningCutiRedRows', JSON.stringify(draftRows));
+            scheduleCutiSave();
+        }
+
+        function scheduleCutiSave() {
+            if (!window.Sync || !Sync.hasUrl()) return;
+            _cutiPendingSave = true;
+            clearTimeout(_cutiSaveTimer);
+            _cutiSaveTimer = setTimeout(syncCutiSave, 800);
+        }
+
+        async function syncCutiSave() {
+            if (!window.Sync || !Sync.hasUrl()) return;
+            try {
+                const res = await Sync.save('planning-cuti', { core: CORE, action: 'save', data: { calLeaves, draftRows } });
+                if (res && res.updatedAt) _cutiLastTs = res.updatedAt;
+                _cutiPendingSave = false;
+            } catch (e) {
+                _cutiPendingSave = false;
+            }
+        }
+
+        function applyCutiData(data) {
+            if (!data) return;
+            if (data.calLeaves && typeof data.calLeaves === 'object') calLeaves = data.calLeaves;
+            if (Array.isArray(data.draftRows)) draftRows = data.draftRows;
+            if (data.updatedAt) _cutiLastTs = data.updatedAt;
+        }
+
+        async function cutiSyncFromServer() {
+            if (!window.Sync || !Sync.hasUrl()) return;
+            if (_cutiPendingSave) return;
+            try {
+                const res = await Sync.get('planning-cuti', { core: CORE, action: 'get' });
+                const data = (res && res.ok && res.data) ? res.data : null;
+                if (!data || !data.updatedAt) return;
+                if (data.updatedAt !== _cutiLastTs) {
+                    applyCutiData(data);
+                    localStorage.setItem('planningCutiRedLeaves', JSON.stringify(calLeaves));
+                    localStorage.setItem('planningCutiRedRows', JSON.stringify(draftRows));
+                    renderSavedRows();
+                    renderCalendar();
+                }
+            } catch (e) {}
+        }
+
+        function renderCalendar() {
+            const year = calDate.getFullYear();
+            const month = calDate.getMonth();
+            document.getElementById('cal-month-label').textContent = calMonthNames[month] + ' ' + year;
+
+            const calKey = year + '-' + month;
+            const monthLeaves = calLeaves[calKey] || {};
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrev = new Date(year, month, 0).getDate();
+
+            const container = document.getElementById('cal-days');
+            container.innerHTML = '';
+
+            const firstDayIndex = firstDay === 0 ? 6 : firstDay - 1;
+
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const d = document.createElement('div');
+                d.className = 'border-r border-b border-outline-variant p-2 opacity-30 bg-surface-container-low';
+                d.textContent = daysInPrev - i;
+                container.appendChild(d);
+            }
+
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const d = document.createElement('div');
+                const dateObj = new Date(year, month, day);
+                const dow = dateObj.getDay();
+                const isWeekend = (dow === 6 || dow === 0);
+                const isToday = isCurrentMonth && today.getDate() === day;
+
+                let classes = 'border-r border-b border-outline-variant p-2 relative';
+                if (isWeekend) classes += ' text-primary font-bold';
+                if (isToday) classes += ' text-primary text-headline-sm font-black';
+                if (monthLeaves[day]) classes += ' group cursor-pointer hover:bg-surface-container-low';
+                d.className = classes;
+                d.textContent = day;
+
+                if (monthLeaves[day]) {
+                    monthLeaves[day].forEach((leave, idx) => {
+                        const badge = document.createElement('div');
+                        const dayType = leaveStatusForDate(dateObj);
+                        let badgeBg = 'bg-secondary';
+                        if (dayType === 'approved') badgeBg = 'bg-primary';
+                        else if (dayType === 'finished') badgeBg = 'bg-green-500';
+                        badge.className = `absolute ${idx === 0 ? 'bottom-2' : 'bottom-6'} left-2 right-2 text-white text-[10px] font-bold px-1 py-0.5 rounded truncate ${badgeBg}`;
+                        badge.textContent = leave.name;
+                        d.appendChild(badge);
+                    });
+
+                    d.addEventListener('mouseenter', function(e) {
+                        const tooltip = document.getElementById('cal-tooltip');
+                        let html = '';
+                        monthLeaves[day].forEach(l => {
+                            html += `<div class="mb-1 last:mb-0"><strong>${l.name}</strong>${l.reason ? '<br><span class="text-secondary">' + l.reason + '</span>' : ''}</div>`;
+                        });
+                        tooltip.innerHTML = html;
+                        tooltip.classList.remove('hidden');
+                        const rect = this.getBoundingClientRect();
+                        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                        tooltip.style.top = (rect.top - 8) + 'px';
+                        tooltip.style.transform = 'translate(-50%, -100%)';
+                    });
+
+                    d.addEventListener('mouseleave', function() {
+                        document.getElementById('cal-tooltip').classList.add('hidden');
+                    });
+                }
+
+                container.appendChild(d);
+            }
+
+            const totalCells = firstDayIndex + daysInMonth;
+            const remaining = 42 - totalCells;
+            for (let i = 1; i <= remaining; i++) {
+                const d = document.createElement('div');
+                d.className = 'border-r border-b border-outline-variant p-2 opacity-30 bg-surface-container-low';
+                d.textContent = i;
+                container.appendChild(d);
+            }
+        }
+
+        document.getElementById('cal-prev').addEventListener('click', function(e) {
+            e.preventDefault();
+            calDate.setMonth(calDate.getMonth() - 1);
+            renderCalendar();
+        });
+
+        document.getElementById('cal-next').addEventListener('click', function(e) {
+            e.preventDefault();
+            calDate.setMonth(calDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        document.getElementById('cal-refresh').addEventListener('click', function(e) {
+            e.preventDefault();
+            for (const key in calLeaves) {
+                calLeaves[key] = {};
+            }
+            draftRows.forEach(r => {
+                const fromDate = new Date(r.fromStr);
+                const toDate = new Date(r.toStr);
+                for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+                    const key = d.getFullYear() + '-' + d.getMonth();
+                    const dayNum = d.getDate();
+                    if (!calLeaves[key]) calLeaves[key] = {};
+                    if (!calLeaves[key][dayNum]) calLeaves[key][dayNum] = [];
+                    if (!calLeaves[key][dayNum].some(l => l.name === r.name)) {
+                        calLeaves[key][dayNum].push({ name: r.name, type: leaveStatusForDate(d), reason: r.reason || '' });
+                    }
+                }
+            });
+            saveData();
+            renderCalendar();
+        });
+
+        // ── Date picker popup (klik kolom tanggal → kalender) ──
+        const dpPopup = document.getElementById('date-picker-popup');
+        const dpDays = document.getElementById('dp-days');
+        const dpLabel = document.getElementById('dp-month-label');
+        let dpTarget = null;
+        let dpYear = 0, dpMonth = 0, dpSelected = null;
+
+        function dpValid(value) {
+            return typeof value === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(value);
+        }
+
+        function openDateField(input) {
+            dpTarget = input;
+            const existing = input.value;
+            const base = dpValid(existing) ? parseDate(existing) : new Date();
+            dpYear = base.getFullYear();
+            dpMonth = base.getMonth();
+            dpSelected = dpValid(existing) ? existing : null;
+            dpRender();
+            dpPopup.classList.remove('hidden');
+            dpPopup.style.visibility = 'hidden';
+            const popupW = dpPopup.offsetWidth || 340;
+            const popupH = dpPopup.offsetHeight;
+            const r = input.getBoundingClientRect();
+            let left = r.left;
+            if (left + popupW > window.innerWidth - 8) left = Math.max(8, window.innerWidth - popupW - 8);
+            if (left < 8) left = 8;
+            let top;
+            const spaceBelow = window.innerHeight - r.bottom;
+            if (popupH + 6 <= spaceBelow) {
+                top = r.bottom + 6;
+            } else if (r.top >= popupH + 6) {
+                top = r.top - popupH - 6;
+            } else {
+                top = r.bottom + 6;
+            }
+            if (top < 8) top = 8;
+            dpPopup.style.left = left + 'px';
+            dpPopup.style.top = top + 'px';
+            dpPopup.style.visibility = 'visible';
+        }
+
+        function dpClose() {
+            dpPopup.classList.add('hidden');
+            dpTarget = null;
+        }
+
+        function dpRender() {
+            dpLabel.textContent = new Date(dpYear, dpMonth, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            const firstIdx = (new Date(dpYear, dpMonth, 1).getDay() + 6) % 7;
+            const daysInMonth = new Date(dpYear, dpMonth + 1, 0).getDate();
+            const today = new Date();
+            const todayISO = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            let html = '';
+            for (let i = 0; i < firstIdx; i++) html += '<div></div>';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const iso = dpYear + '-' + String(dpMonth + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+                let cls = 'h-9 flex items-center justify-center rounded cursor-pointer text-sm hover:bg-surface-container-low transition-colors';
+                if (iso === todayISO) cls += ' font-bold text-primary';
+                if (iso === dpSelected) cls += ' bg-primary text-white font-bold hover:bg-primary';
+                html += `<div class="${cls}" data-iso="${iso}">${day}</div>`;
+            }
+            dpDays.innerHTML = html;
+        }
+
+        dpDays.addEventListener('click', function(e) {
+            const cell = e.target.closest('[data-iso]');
+            if (!cell || !dpTarget) return;
+            dpSelected = cell.dataset.iso;
+            dpTarget.value = formatDate(new Date(dpSelected));
+            dpTarget.dispatchEvent(new Event('change', { bubbles: true }));
+            dpClose();
+        });
+
+        document.getElementById('dp-prev').addEventListener('click', function(e) {
+            e.preventDefault();
+            dpMonth--;
+            if (dpMonth < 0) { dpMonth = 11; dpYear--; }
+            dpRender();
+        });
+        document.getElementById('dp-next').addEventListener('click', function(e) {
+            e.preventDefault();
+            dpMonth++;
+            if (dpMonth > 11) { dpMonth = 0; dpYear++; }
+            dpRender();
+        });
+        document.getElementById('dp-close').addEventListener('click', function(e) {
+            e.preventDefault();
+            dpClose();
+        });
+        document.getElementById('dp-today').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!dpTarget) return;
+            const t = new Date();
+            dpTarget.value = formatDate(t);
+            dpTarget.dispatchEvent(new Event('change', { bubbles: true }));
+            dpClose();
+        });
+
+        document.querySelectorAll('[data-date-field]').forEach(function(field) {
+            const input = field.querySelector('input');
+            field.addEventListener('click', function() { openDateField(input); });
+            input.addEventListener('focus', function() { openDateField(input); });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (dpPopup.classList.contains('hidden')) return;
+            if (dpPopup.contains(e.target)) return;
+            if (e.target.closest('[data-date-field]')) return;
+            dpClose();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') dpClose();
+        });
+
+        function parseDate(str) {
+            const parts = str.split('/');
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+
+        function formatDate(d) {
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return dd + '/' + mm + '/' + yyyy;
+        }
+
+        // Form submit
+        document.getElementById('leave-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const editingId = this.dataset.editingId;
+            const name = document.getElementById('leave-name').value.trim();
+            const type = document.getElementById('leave-type').value;
+            const fromStr = document.getElementById('leave-from').value;
+            const toStr = document.getElementById('leave-to').value;
+            const reason = document.getElementById('leave-reason').value.trim();
+
+            if (!name || !fromStr || !toStr) return;
+
+            if (editingId) {
+                const oldRow = draftRows.find(r => r.id === editingId);
+                if (oldRow) {
+                    const oldTo = new Date(oldRow.toStr);
+                    for (let d = new Date(oldRow.fromStr); d <= oldTo; d.setDate(d.getDate() + 1)) {
+                        const key = d.getFullYear() + '-' + d.getMonth();
+                        const dayNum = d.getDate();
+                        if (calLeaves[key] && calLeaves[key][dayNum]) {
+                            calLeaves[key][dayNum] = calLeaves[key][dayNum].filter(l => l.name !== oldRow.name);
+                            if (calLeaves[key][dayNum].length === 0) delete calLeaves[key][dayNum];
+                        }
+                    }
+                }
+                draftRows = draftRows.filter(r => r.id !== editingId);
+                delete this.dataset.editingId;
+            }
+
+            const fromDate = parseDate(fromStr);
+            const toDate = parseDate(toStr);
+            const dayDiff = Math.floor((toDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+            const rowId = Date.now().toString();
+
+            const fromISO = fromDate.getFullYear() + '-' + String(fromDate.getMonth() + 1).padStart(2, '0') + '-' + String(fromDate.getDate()).padStart(2, '0');
+            const toISO = toDate.getFullYear() + '-' + String(toDate.getMonth() + 1).padStart(2, '0') + '-' + String(toDate.getDate()).padStart(2, '0');
+
+            for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+                const key = d.getFullYear() + '-' + d.getMonth();
+                const dayNum = d.getDate();
+                if (!calLeaves[key]) calLeaves[key] = {};
+                if (!calLeaves[key][dayNum]) calLeaves[key][dayNum] = [];
+                calLeaves[key][dayNum].push({ name, type: leaveStatusForDate(d), reason });
+            }
+
+            renderCalendar();
+
+            const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            const fromDisplay = fromDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const toDisplay = toDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            const isFinished = leaveStatusForDate(toDate) === 'finished';
+            draftRows.push({ id: rowId, name, type, fromStr: fromISO, toStr: toISO, fromDisplay, toDisplay, dayDiff, initials, reason, finished: isFinished });
+            saveData();
+            renderSavedRows();
+            document.getElementById('leave-form').reset();
+        });
+
+        function removeLeavesForRow(rowData) {
+            const rowTo = new Date(rowData.toStr);
+            for (let d = new Date(rowData.fromStr); d <= rowTo; d.setDate(d.getDate() + 1)) {
+                const key = d.getFullYear() + '-' + d.getMonth();
+                const dayNum = d.getDate();
+                if (calLeaves[key] && calLeaves[key][dayNum]) {
+                    calLeaves[key][dayNum] = calLeaves[key][dayNum].filter(l => l.name !== rowData.name);
+                    if (calLeaves[key][dayNum].length === 0) delete calLeaves[key][dayNum];
+                }
+            }
+        }
+
+        function renderSavedRows() {
+            const tbody = document.getElementById('draft-table-body');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            tbody.innerHTML = '';
+            draftRows.forEach(r => {
+                const toDate = new Date(r.toStr);
+                const isFinished = toDate < today;
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-surface-container-lowest transition-colors';
+                row.innerHTML = `
+                    <td class="px-md py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center font-bold text-secondary">${r.initials}</div>
+                            <div>
+                                <p class="font-bold text-on-surface">${r.name}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-md py-4 font-label-caps text-xs">${r.type}</td>
+                    <td class="px-md py-4 text-sm">${r.fromDisplay} - ${r.toDisplay}</td>
+                    <td class="px-md py-4 font-bold">${r.dayDiff}</td>
+                    <td class="px-md py-4">
+                    <span class="px-2 py-1 ${isFinished ? 'bg-green-500 text-white' : 'bg-green-100 text-green-700'} text-[10px] font-label-caps rounded-full">${isFinished ? 'FINISHED' : 'APPROVED'}</span>
+                </td>
+                <td class="px-md py-4">
+                    <div class="flex gap-2">
+                        <button class="p-1 hover:text-primary transition-colors btn-edit" data-id="${r.id}"><span class="material-symbols-outlined text-lg">edit</span></button>
+                        <button class="p-1 hover:text-error transition-colors btn-delete" data-id="${r.id}"><span class="material-symbols-outlined text-lg">delete</span></button>
+                    </div>
+                </td>
+            `;
+                tbody.appendChild(row);
+            });
+
+            tbody.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.dataset.id;
+                    const rowData = draftRows.find(r => r.id === id);
+                    if (!rowData) return;
+
+                    document.getElementById('leave-name').value = rowData.name;
+                    document.getElementById('leave-type').value = rowData.type;
+                    document.getElementById('leave-from').value = formatDate(new Date(rowData.fromStr));
+                    document.getElementById('leave-to').value = formatDate(new Date(rowData.toStr));
+                    document.getElementById('leave-reason').value = rowData.reason || '';
+
+                    document.getElementById('leave-form').dataset.editingId = id;
+                    document.getElementById('leave-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+
+            tbody.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.dataset.id;
+                    const rowData = draftRows.find(r => r.id === id);
+                    if (!rowData) return;
+
+                    removeLeavesForRow(rowData);
+                    draftRows = draftRows.filter(r => r.id !== id);
+                    saveData();
+                    renderSavedRows();
+                    renderCalendar();
+                });
+            });
+        }
+
+        renderSavedRows();
+        renderCalendar();
+
+        cutiSyncFromServer();
+        if (window.Sync) setInterval(cutiSyncFromServer, Sync.pollMs);
+
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'scale(0.96)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = 'scale(1)';
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body></html>
