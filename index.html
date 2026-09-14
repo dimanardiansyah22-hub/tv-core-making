@@ -346,11 +346,14 @@ html.dark ::-webkit-scrollbar-thumb {
 <!-- Login Gate: PIN sebelum mengakses project -->
 <style>
 #tvcVeilParticles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
-        .tvc-logo{position:absolute;border-radius:50%;object-fit:cover;animation:tvc-float linear infinite;will-change:transform,opacity;}
+        .tvc-logo{position:absolute;border-radius:50%;object-fit:cover;will-change:transform,opacity;}
         @keyframes tvc-float{
-            0%{transform:translate(0,0) rotate(var(--r0,-12deg)) scale(.85);opacity:0;}
-            40%{opacity:var(--o,.4);}
-            100%{transform:translate(var(--dx,60px),var(--dy,-160px)) rotate(var(--r1,10deg)) scale(1.06);opacity:0;}
+            0%{transform:translate(0,0) rotate(var(--r0,-12deg)) scale(.85);}
+            100%{transform:translate(var(--dx,60px),var(--dy,-160px)) rotate(var(--r1,10deg)) scale(1.06);}
+        }
+        @keyframes tvc-flicker{
+            0%,100%{opacity:var(--o,.4);}
+            50%{opacity:.04;}
         }
     </style>
 <div id="tvcLoginVeil" style="position:fixed;inset:0;z-index:10000;background:var(--background);display:none;align-items:center;justify-content:center;padding:16px">
@@ -378,19 +381,18 @@ html.dark ::-webkit-scrollbar-thumb {
                 p.className = 'tvc-logo';
                 p.src = 'logocore.png';
                 p.alt = '';
-                var size = 22 + Math.random() * 34;
+                var size = 11 + Math.random() * 17;
                 p.style.width = size + 'px';
                 p.style.height = size + 'px';
                 p.style.left = (Math.random() * 100) + '%';
                 p.style.top = (20 + Math.random() * 80) + '%';
                 p.style.setProperty('--dx', Math.round((Math.random() * 140 - 40)) + 'px');
                 p.style.setProperty('--dy', Math.round(-(90 + Math.random() * 120)) + 'px');
-                p.style.setProperty('--o', (0.2 + Math.random() * 0.35).toFixed(2));
+                p.style.setProperty('--o', (0.25 + Math.random() * 0.4).toFixed(2));
                 p.style.setProperty('--r0', Math.round((Math.random() * 24 - 12)) + 'deg');
                 p.style.setProperty('--r1', Math.round((Math.random() * 20 - 10)) + 'deg');
-                p.style.animationDuration = (14 + Math.random() * 16) + 's';
-                p.style.animationDelay = (-Math.random() * 30) + 's';
-                p.style.animationIterationCount = 'infinite';
+                p.style.animation = 'tvc-float linear ' + (14 + Math.random() * 16) + 's infinite, tvc-flicker ease-in-out ' + (0.5 + Math.random() * 1.2) + 's infinite';
+                p.style.animationDelay = (-Math.random() * 30) + 's, ' + (-Math.random() * 1.5) + 's';
                 wrap.appendChild(p);
             }
         })();
