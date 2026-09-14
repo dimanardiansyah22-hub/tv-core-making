@@ -57,15 +57,12 @@
     });
   }
 
-  /* Mapping Pekerjaan: tamu TIDAK boleh mengakses foto mekanik.
-     - Foto yang terpasang di papan disembunyikan tampilannya.
-     - Klik "+" / foto / dropdown member diblokir, hapus (contextmenu) diblokir. */
+  /* Mapping Pekerjaan: tamu boleh melihat foto mekanik, tapi TIDAK
+     boleh klik kiri (buka dropdown / kelola foto) atau klik kanan
+     (hapus foto). */
   var page = '';
   try { page = ((location.pathname.split('/').pop() || '') + '').toLowerCase(); } catch (e) {}
   if (page.indexOf('mapping-core') === 0) {
-    var lockPhotoCss = document.createElement('style');
-    lockPhotoCss.textContent = '.marker .photo, .photo { display:none !important; }';
-    (document.head || document.documentElement).appendChild(lockPhotoCss);
     document.addEventListener('click', function (e) {
       var el = e.target && e.target.closest ? e.target.closest('.plus, .photo, #dropdown') : null;
       if (el) { e.preventDefault(); e.stopPropagation(); }
