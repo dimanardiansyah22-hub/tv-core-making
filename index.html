@@ -241,6 +241,16 @@ html.dark ::-webkit-scrollbar-thumb {
         }
 
         /* Support modal */
+        #guestBadge {
+            border: 1px solid #d97706;
+            color: #92400e;
+            background: rgba(217, 119, 6, 0.14);
+        }
+        html.dark #guestBadge {
+            border-color: #fbbf24;
+            color: #fde68a;
+            background: rgba(251, 191, 36, 0.10);
+        }
         .support-veil {
             position: fixed;
             inset: 0;
@@ -356,6 +366,9 @@ html.dark ::-webkit-scrollbar-thumb {
   <span class="font-bold uppercase tracking-tighter text-[7.8px] md:text-[10.4px] w-full text-center text-secondary -mt-[8px]" style="letter-spacing: -0.02em; transform: scaleX(0.9); transform-origin: center center;">Toyota Motor Manufacturing Indonesia</span>
 </div></div>
 <div class="flex items-center gap-[31.2px]">
+<span id="guestBadge" style="display:none;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em;white-space:nowrap;">
+<span class="material-symbols-outlined" style="font-size:14px;">visibility</span> MODE TAMU — READ ONLY
+</span>
 <div class="hidden md:flex flex-col items-end text-right" id="real-time-widget">
 <span class="font-label-caps text-[20px] text-secondary uppercase tracking-widest pt-0" id="current-date">Sabtu, 25 Juli 2026</span>
 <span class="font-headline-sm font-bold text-[20px] text-secondary" id="current-time">03:45 WIB</span>
@@ -738,6 +751,14 @@ html.dark ::-webkit-scrollbar-thumb {
                 } catch (e) { return null; }
             }
             window.tvcSession = session;
+            function updateGuestBadge() {
+                var badge = document.getElementById('guestBadge');
+                if (!badge) return;
+                var sess = window.tvcSession();
+                badge.style.display = (sess && sess.role === 'guest') ? 'inline-flex' : 'none';
+            }
+            window.tvcUpdateGuestBadge = updateGuestBadge;
+            updateGuestBadge();
             function show() {
                 veil.style.display = 'flex';
                 var inp = document.getElementById('tvcLoginPin');
@@ -753,6 +774,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 var inp = document.getElementById('tvcLoginPin');
                 if (inp) inp.value = '';
                 hide();
+                updateGuestBadge();
                 reloadActiveInternal();
             }
             window.switchUser = function () {
@@ -760,6 +782,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 var err = document.getElementById('tvcLoginErr');
                 if (err) err.style.display = 'none';
                 show();
+                updateGuestBadge();
             };
             function reloadActiveInternal() {
                 var iframe = document.querySelector('#main-content iframe');

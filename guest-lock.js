@@ -3,13 +3,14 @@
  * -------------------------------------------------------------
  * Dipanggil tiap halaman internal (mapping, OEE, laporan, planning)
  * dengan parameter URL ?role=guest. Saat aktif:
- *  - Banner "MODE TAMU" di atas halaman.
  *  - Bidang isian teks, textarea, contenteditable, dan canvas
  *    dinonaktifkan (tidak bisa input / gambar).
  *  - Tombol yang jelas-jelas aksi tulis (Simpan/Tambah/Hapus/
  *    Edit/Ubah/Submit/Upload/Kirim, dsb.) dinonaktifkan.
  *  - Kontrol navigasi/filter (select, search, checkbox) tetap jalan
  *    agar tamu tetap bisa melihat & menyaring data.
+ *  - Indikator mode tamu ditampilkan oleh badge di header index.html
+ *    (tidak dipasang callout di badan halaman).
  * Jika role bukan 'guest', skrip ini tidak melakukan apa-apa.
  */
 (function () {
@@ -56,15 +57,7 @@
     });
   }
 
-  function addBanner() {
-    var b = document.createElement('div');
-    b.textContent = 'MODE TAMU — hanya melihat, tidak dapat mengubah data';
-    b.style.cssText = 'position:sticky;top:0;left:0;right:0;z-index:99999;background:#334155;color:#fff;text-align:center;font:700 12px/1 sans-serif;padding:7px 10px;letter-spacing:.05em;';
-    document.body.insertBefore(b, document.body.firstChild);
-  }
-
   function boot() {
-    addBanner();
     lock();
     var mo = new MutationObserver(function () { lock(); });
     mo.observe(document.body, { childList: true, subtree: true });
