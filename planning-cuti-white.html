@@ -322,9 +322,9 @@ html.dark #leave-form button[type="submit"]:hover { background-color: #003d9e; }
 <h2 class="font-headline-sm text-on-surface">Kalender Cuti</h2>
 </div>
 <div class="flex items-center gap-sm">
-<button id="cal-prev" class="p-2 border border-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_left</span></button>
-<span class="font-button-text" id="cal-month-label">October 2023</span>
-<button id="cal-next" class="p-2 border border-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_right</span></button>
+<button id="cal-prev" type="button" data-guest-allow="1" class="p-2 border border-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_left</span></button>
+ <span class="font-button-text" id="cal-month-label">October 2023</span>
+ <button id="cal-next" type="button" data-guest-allow="1" class="p-2 border border-outline-variant hover:bg-surface-container-low"><span class="material-symbols-outlined">chevron_right</span></button>
 <button id="cal-refresh" class="p-2 border border-outline-variant hover:bg-surface-container-low text-primary" title="Sync calendar from draft data"><span class="material-symbols-outlined">refresh</span></button>
 </div>
 </div>
