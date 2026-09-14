@@ -344,7 +344,18 @@ html.dark ::-webkit-scrollbar-thumb {
 </head>
 <body class="bg-background text-on-background font-body-md">
 <!-- Login Gate: PIN sebelum mengakses project -->
+<style>
+        #tvcVeilParticles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+        .tvc-pt{position:absolute;border-radius:50%;filter:blur(1px);animation:tvc-float linear infinite;}
+        @keyframes tvc-float{
+            0%{transform:translate3d(0,0,0) scale(.7);opacity:0;}
+            20%{opacity:var(--o,.55);}
+            80%{opacity:var(--o,.55);}
+            100%{transform:translate3d(var(--dx,30px),var(--dy,-80px),0) scale(1.15);opacity:0;}
+        }
+    </style>
 <div id="tvcLoginVeil" style="position:fixed;inset:0;z-index:10000;background:var(--background);display:none;align-items:center;justify-content:center;padding:16px">
+  <div id="tvcVeilParticles" aria-hidden="true"></div>
   <div style="width:100%;max-width:340px;background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
       <img src="logocore.png" alt="Logo" style="width:68px;height:68px;border-radius:50%;object-fit:cover;background:var(--surface-container-high);border:1px solid var(--outline-variant)">
@@ -358,6 +369,32 @@ html.dark ::-webkit-scrollbar-thumb {
     <button id="tvcGuestBtn" style="width:100%;margin-top:10px;padding:12px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;">Login as Guest</button>
   </div>
 </div>
+<script>
+        // Debu-debu melayang di background dialog login
+        (function () {
+            var wrap = document.getElementById('tvcVeilParticles');
+            if (!wrap) return;
+            var colors = ['rgba(235,10,30,.55)', 'rgba(212,160,23,.5)', 'rgba(96,125,170,.45)', 'rgba(255,255,255,.6)'];
+            for (var i = 0; i < 24; i++) {
+                var p = document.createElement('i');
+                p.className = 'tvc-pt';
+                var size = 2 + Math.random() * 4;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = (Math.random() * 100) + '%';
+                p.style.top = (Math.random() * 100) + '%';
+                p.style.setProperty('--dx', Math.round((Math.random() * 120 - 60)) + 'px');
+                p.style.setProperty('--dy', Math.round(-(30 + Math.random() * 90)) + 'px');
+                p.style.setProperty('--o', (0.3 + Math.random() * 0.4).toFixed(2));
+                p.style.background = colors[i % colors.length];
+                p.style.animationDuration = (8 + Math.random() * 12) + 's';
+                p.style.animationDelay = (-Math.random() * 20) + 's';
+                p.style.animationIterationCount = 'infinite';
+                if (Math.random() < 0.3) p.style.filter = 'blur(2px)';
+                wrap.appendChild(p);
+            }
+        })();
+    </script>
 <script>
         // Deklarasi sesi lebih awal: dipakai loadPage saat membuat iframe awal
         // (menghindari halaman mapping/oee pertama dimuat tanpa ?role=...).
