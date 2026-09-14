@@ -99,6 +99,24 @@
     lockWip();
   }
 
+  /* Planning Cuti: tamu boleh memilih bulan (view saja), tetapi tidak
+     boleh mengklik/mengubah kolom Leave Type di tabel. */
+  if (page.indexOf('planning-cuti') === 0) {
+    document.addEventListener('click', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('#draft-table-body tr td:nth-child(2)') : null;
+      if (el) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    (function lockLeaveType() {
+      var sel = document.getElementById('leave-type');
+      if (sel) {
+        sel.disabled = true;
+        sel.setAttribute('aria-disabled', 'true');
+        sel.style.pointerEvents = 'none';
+        sel.style.opacity = '0.55';
+      }
+    })();
+  }
+
   function boot() {
     lock();
     var mo = new MutationObserver(function () { lock(); });
