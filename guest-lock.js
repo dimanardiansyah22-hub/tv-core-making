@@ -17,6 +17,12 @@
   'use strict';
   var role = '';
   try { role = new URLSearchParams(window.location.search).get('role') || ''; } catch (e) {}
+  if (role !== 'guest') {
+    try {
+      var parentSession = window.parent && window.parent.tvcSession && window.parent.tvcSession();
+      if (parentSession && parentSession.role === 'guest') role = 'guest';
+    } catch (e) {}
+  }
   if (role !== 'guest') return;
 
   var ACTION_WORDS = ['simpan', 'tambah', 'hapus', 'ubah', 'edit', 'delete', 'add', 'save', 'submit', 'update', 'upload', 'kirim', 'reset', 'konfirmasi', 'barcode'];
