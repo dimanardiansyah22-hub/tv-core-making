@@ -344,7 +344,8 @@ html.dark ::-webkit-scrollbar-thumb {
     <input id="tvcLoginPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN"
       style="width:100%;box-sizing:border-box;margin-top:16px;background:var(--background);border:1px solid var(--outline-variant);color:var(--on-background);font-family:inherit;text-align:center;font-size:26px;letter-spacing:.5em;padding:12px 4px;border-radius:10px;outline:none;">
     <div id="tvcLoginErr" style="display:none;margin-top:10px;text-align:center;font-size:13px;color:var(--error)">PIN salah. Coba lagi.</div>
-    <button id="tvcLoginBtn" style="width:100%;margin-top:16px;padding:13px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">Masuk</button>
+    <button id="tvcLoginBtn" style="width:100%;margin-top:16px;padding:13px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">Masuk Sebagai Admin</button>
+    <button id="tvcGuestBtn" style="width:100%;margin-top:10px;padding:12px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;">Login as Guest</button>
   </div>
 </div>
 <!-- TopNavBar -->
@@ -541,6 +542,8 @@ html.dark ::-webkit-scrollbar-thumb {
             const u = new URL(url, window.location.href);
             const gas = (window.Sync && Sync.getUrl()) || '';
             if (gas) u.searchParams.set('gas', gas);
+            const sess = (window.tvcSession && window.tvcSession()) || null;
+            if (sess && sess.role) u.searchParams.set('role', sess.role);
             main.innerHTML = `<iframe src="${u.href}" class="w-full h-full border-none" style="min-height: calc(100vh - 112px);"></iframe>`;
             if (url.indexOf('planning-cuti-') === 0) {
                 localStorage.setItem('planning-cuti-last', url);
@@ -716,7 +719,7 @@ html.dark ::-webkit-scrollbar-thumb {
     <!-- Login Gate logic -->
     <script>
         (function () {
-            var PIN = '4231';              // <<< GANTI PIN DI SINI sebelum dipakai publik
+            var PIN = '4231';              // <<< GANTI PIN ADMIN DI SINI sebelum dipakai publik
             var SESSION_DAYS = 7;          // lama sesi login (hari) tanpa PIN ulang
             var KEY = 'tvcm-pin-auth';
             var veil = document.getElementById('tvcLoginVeil');
@@ -725,29 +728,35 @@ html.dark ::-webkit-scrollbar-thumb {
             function token() {
                 try { return btoa('tvcm:' + PIN); } catch (e) { return 'tvcm'; }
             }
-            function authed() {
+            function session() {
                 try {
                     var s = JSON.parse(localStorage.getItem(KEY) || 'null');
-                    return !!(s && s.t === token() && Date.now() < (s.exp || 0));
-                } catch (e) { return false; }
+                    if (s && s.t && Date.now() < (s.exp || 0)) return s;
+                } catch (e) { return null; }
             }
+            window.tvcSession = session;
             function show() {
                 veil.style.display = 'flex';
                 var inp = document.getElementById('tvcLoginPin');
                 if (inp) setTimeout(function () { inp.focus(); }, 50);
             }
             function hide() { veil.style.display = 'none'; }
+            function grant(role) {
+                try {
+                    localStorage.setItem(KEY, JSON.stringify({ t: (role === 'admin' ? token() : 'guest-' + Date.now()), exp: Date.now() + SESSION_DAYS * 24 * 3600000, role: role }));
+                } catch (e) {}
+                var err = document.getElementById('tvcLoginErr');
+                if (err) err.style.display = 'none';
+                var inp = document.getElementById('tvcLoginPin');
+                if (inp) inp.value = '';
+                hide();
+            }
             function tryLogin() {
                 var inp = document.getElementById('tvcLoginPin');
                 var err = document.getElementById('tvcLoginErr');
                 if (!inp) return;
                 if (inp.value === PIN) {
-                    try {
-                        localStorage.setItem(KEY, JSON.stringify({ t: token(), exp: Date.now() + SESSION_DAYS * 24 * 3600000 }));
-                    } catch (e) {}
-                    if (err) err.style.display = 'none';
-                    inp.value = '';
-                    hide();
+                    grant('admin');
                 } else {
                     if (err) err.style.display = 'block';
                     inp.value = '';
@@ -758,7 +767,8 @@ html.dark ::-webkit-scrollbar-thumb {
                 if (e.key === 'Enter' && veil.style.display === 'flex' && document.getElementById('tvcLoginPin') === document.activeElement) tryLogin();
             });
             document.getElementById('tvcLoginBtn').addEventListener('click', tryLogin);
-            if (!authed()) show();
+            document.getElementById('tvcGuestBtn').addEventListener('click', function () { grant('guest'); });
+            if (!session()) show();
         })();
     </script>
 
