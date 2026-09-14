@@ -79,6 +79,24 @@
     }, true);
   }
 
+  /* Visualisasi WIP Core: tamu tidak boleh menginput tabel/planning,
+     membuka input line stop, atau menghapus data. */
+  if (page.indexOf('visualisasi-wip-core') === 0) {
+    document.addEventListener('click', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.note-pane') : null;
+      if (el) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    function lockWip() {
+      document.querySelectorAll('#wip-core-table .cell-input, .ef-input, #noteModal input, #noteModal select, #noteModal textarea').forEach(function (el) {
+        el.disabled = true;
+        el.setAttribute('aria-disabled', 'true');
+        el.style.pointerEvents = 'none';
+        el.style.opacity = '0.55';
+      });
+    }
+    lockWip();
+  }
+
   function boot() {
     lock();
     var mo = new MutationObserver(function () { lock(); });
