@@ -358,6 +358,19 @@ html.dark ::-webkit-scrollbar-thumb {
     <button id="tvcGuestBtn" style="width:100%;margin-top:10px;padding:12px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;">Login as Guest</button>
   </div>
 </div>
+<script>
+        // Deklarasi sesi lebih awal: dipakai loadPage saat membuat iframe awal
+        // (menghindari halaman mapping/oee pertama dimuat tanpa ?role=...).
+        (function () {
+            function readSession() {
+                try {
+                    var s = JSON.parse(localStorage.getItem('tvcm-pin-auth') || 'null');
+                    if (s && s.t && Date.now() < (s.exp || 0)) return s;
+                } catch (e) { return null; }
+            }
+            window.tvcSession = window.tvcSession || readSession;
+        })();
+    </script>
 <!-- TopNavBar -->
 <header class="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant h-16">
 <div class="flex justify-between items-center h-full px-gutter">
