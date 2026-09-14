@@ -369,6 +369,9 @@ html.dark ::-webkit-scrollbar-thumb {
 <button onclick="toggleDashboardFullscreen()" class="flex items-center gap-[10.4px] cursor-pointer hover:bg-surface-container-low p-[10.4px] rounded transition-colors duration-200 text-primary" aria-label="Toggle Fullscreen">
   <span class="material-symbols-outlined" id="dashboardFullscreenIcon" style="font-size: 31.2px;">fullscreen</span>
 </button>
+<button onclick="switchUser()" class="flex items-center gap-[10.4px] cursor-pointer hover:bg-surface-container-low p-[10.4px] rounded transition-colors duration-200 text-primary" aria-label="Ganti Pengguna" title="Ganti pengguna / kembali ke login">
+  <span class="material-symbols-outlined" style="font-size: 31.2px;">switch_account</span>
+</button>
 </div>
 </div>
 </header>
@@ -544,7 +547,7 @@ html.dark ::-webkit-scrollbar-thumb {
             if (gas) u.searchParams.set('gas', gas);
             const sess = (window.tvcSession && window.tvcSession()) || null;
             if (sess && sess.role) u.searchParams.set('role', sess.role);
-            main.innerHTML = `<iframe src="${u.href}" class="w-full h-full border-none" style="min-height: calc(100vh - 112px);"></iframe>`;
+            main.innerHTML = `<iframe data-internal="${url.indexOf('http') === 0 ? '0' : '1'}" src="${u.href}" class="w-full h-full border-none" style="min-height: calc(100vh - 112px);"></iframe>`;
             if (url.indexOf('planning-cuti-') === 0) {
                 localStorage.setItem('planning-cuti-last', url);
             }
@@ -750,6 +753,26 @@ html.dark ::-webkit-scrollbar-thumb {
                 var inp = document.getElementById('tvcLoginPin');
                 if (inp) inp.value = '';
                 hide();
+                reloadActiveInternal();
+            }
+            window.switchUser = function () {
+                try { localStorage.removeItem(KEY); } catch (e) {}
+                var err = document.getElementById('tvcLoginErr');
+                if (err) err.style.display = 'none';
+                show();
+            };
+            function reloadActiveInternal() {
+                var iframe = document.querySelector('#main-content iframe');
+                if (!iframe || iframe.dataset.internal !== '1') return;
+                var sess = window.tvcSession();
+                if (!sess) return;
+                try {
+                    var u = new URL(iframe.getAttribute('src'), window.location.href);
+                    var gas = (window.Sync && Sync.getUrl()) || '';
+                    if (gas) u.searchParams.set('gas', gas);
+                    if (sess.role) u.searchParams.set('role', sess.role);
+                    iframe.src = u.href;
+                } catch (e) {}
             }
             function tryLogin() {
                 var inp = document.getElementById('tvcLoginPin');
