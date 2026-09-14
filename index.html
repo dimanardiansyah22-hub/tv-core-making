@@ -345,13 +345,12 @@ html.dark ::-webkit-scrollbar-thumb {
 <body class="bg-background text-on-background font-body-md">
 <!-- Login Gate: PIN sebelum mengakses project -->
 <style>
-        #tvcVeilParticles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
-        .tvc-pt{position:absolute;border-radius:50%;filter:blur(1px);animation:tvc-float linear infinite;}
+#tvcVeilParticles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+        .tvc-logo{position:absolute;border-radius:50%;object-fit:cover;animation:tvc-float linear infinite;will-change:transform,opacity;}
         @keyframes tvc-float{
-            0%{transform:translate3d(0,0,0) scale(.7);opacity:0;}
-            20%{opacity:var(--o,.55);}
-            80%{opacity:var(--o,.55);}
-            100%{transform:translate3d(var(--dx,30px),var(--dy,-80px),0) scale(1.15);opacity:0;}
+            0%{transform:translate(0,0) rotate(var(--r0,-12deg)) scale(.85);opacity:0;}
+            40%{opacity:var(--o,.4);}
+            100%{transform:translate(var(--dx,60px),var(--dy,-160px)) rotate(var(--r1,10deg)) scale(1.06);opacity:0;}
         }
     </style>
 <div id="tvcLoginVeil" style="position:fixed;inset:0;z-index:10000;background:var(--background);display:none;align-items:center;justify-content:center;padding:16px">
@@ -370,27 +369,28 @@ html.dark ::-webkit-scrollbar-thumb {
   </div>
 </div>
 <script>
-        // Debu-debu melayang di background dialog login
+        // Logo logocore.png melayang-layang di background dialog login
         (function () {
             var wrap = document.getElementById('tvcVeilParticles');
             if (!wrap) return;
-            var colors = ['rgba(235,10,30,.55)', 'rgba(212,160,23,.5)', 'rgba(96,125,170,.45)', 'rgba(255,255,255,.6)'];
-            for (var i = 0; i < 24; i++) {
-                var p = document.createElement('i');
-                p.className = 'tvc-pt';
-                var size = 2 + Math.random() * 4;
+            for (var i = 0; i < 16; i++) {
+                var p = document.createElement('img');
+                p.className = 'tvc-logo';
+                p.src = 'logocore.png';
+                p.alt = '';
+                var size = 22 + Math.random() * 34;
                 p.style.width = size + 'px';
                 p.style.height = size + 'px';
                 p.style.left = (Math.random() * 100) + '%';
-                p.style.top = (Math.random() * 100) + '%';
-                p.style.setProperty('--dx', Math.round((Math.random() * 120 - 60)) + 'px');
-                p.style.setProperty('--dy', Math.round(-(30 + Math.random() * 90)) + 'px');
-                p.style.setProperty('--o', (0.3 + Math.random() * 0.4).toFixed(2));
-                p.style.background = colors[i % colors.length];
-                p.style.animationDuration = (8 + Math.random() * 12) + 's';
-                p.style.animationDelay = (-Math.random() * 20) + 's';
+                p.style.top = (20 + Math.random() * 80) + '%';
+                p.style.setProperty('--dx', Math.round((Math.random() * 140 - 40)) + 'px');
+                p.style.setProperty('--dy', Math.round(-(90 + Math.random() * 120)) + 'px');
+                p.style.setProperty('--o', (0.2 + Math.random() * 0.35).toFixed(2));
+                p.style.setProperty('--r0', Math.round((Math.random() * 24 - 12)) + 'deg');
+                p.style.setProperty('--r1', Math.round((Math.random() * 20 - 10)) + 'deg');
+                p.style.animationDuration = (14 + Math.random() * 16) + 's';
+                p.style.animationDelay = (-Math.random() * 30) + 's';
                 p.style.animationIterationCount = 'infinite';
-                if (Math.random() < 0.3) p.style.filter = 'blur(2px)';
                 wrap.appendChild(p);
             }
         })();
