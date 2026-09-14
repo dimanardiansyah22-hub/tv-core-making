@@ -57,6 +57,25 @@
     });
   }
 
+  /* Mapping Pekerjaan: tamu TIDAK boleh mengakses foto mekanik.
+     - Foto yang terpasang di papan disembunyikan tampilannya.
+     - Klik "+" / foto / dropdown member diblokir, hapus (contextmenu) diblokir. */
+  var page = '';
+  try { page = ((location.pathname.split('/').pop() || '') + '').toLowerCase(); } catch (e) {}
+  if (page.indexOf('mapping-core') === 0) {
+    var lockPhotoCss = document.createElement('style');
+    lockPhotoCss.textContent = '.marker .photo, .photo { display:none !important; }';
+    (document.head || document.documentElement).appendChild(lockPhotoCss);
+    document.addEventListener('click', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.plus, .photo, #dropdown') : null;
+      if (el) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+    document.addEventListener('contextmenu', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('.photo') : null;
+      if (el) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
+  }
+
   function boot() {
     lock();
     var mo = new MutationObserver(function () { lock(); });
