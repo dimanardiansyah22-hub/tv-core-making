@@ -30,6 +30,7 @@
   function isWriteEl(el) {
     if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
     if (el.getAttribute && el.getAttribute('data-guest-allow') != null) return false;
+    if (el.closest && el.closest('#historyModal')) return false;
     var tag = (el.tagName || '').toLowerCase();
     if (el.getAttribute('contenteditable') === 'true') return true;
     if (tag === 'textarea') return true;
