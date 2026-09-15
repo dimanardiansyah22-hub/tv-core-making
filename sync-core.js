@@ -22,7 +22,7 @@
   'use strict';
   var LS_KEY_GAS = 'tvcore-gas-url';
   var LS_KEY_GAS_ALT = 'antar-shift-gas-url';
-  var POLL_MS = 30000;
+  var POLL_MS = 10000;
   // Utamakan URL yang diatur dari halaman Laporan Antar Shift agar
   // semua aplikasi selalu memakai deployment /exec yang sama.
   var syncUrl = localStorage.getItem(LS_KEY_GAS_ALT) || localStorage.getItem(LS_KEY_GAS) || '';
