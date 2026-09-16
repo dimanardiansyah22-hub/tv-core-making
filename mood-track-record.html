@@ -73,6 +73,21 @@
         transition: all .2s;
     }
     .btn:hover { border-color: var(--outline); }
+    .search {
+        border: 1px solid var(--outline-variant);
+        background: var(--surface-container-lowest);
+        color: var(--on-surface);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        font-family: inherit;
+        width: 260px;
+        outline: none;
+        transition: border-color .2s;
+    }
+    .search:focus { border-color: var(--primary); }
+    .search::placeholder { color: var(--secondary); }
     .stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -141,12 +156,14 @@
             <span class="sub" id="subtitle">Memuat data…</span>
         </div>
         <div class="actions">
+            <input class="search" id="search" type="search" placeholder="Cari nama member…" oninput="applySearch()">
             <button class="btn" id="theme-btn" onclick="toggleTheme()" type="button">Mode gelap</button>
             <button class="btn" onclick="load()" type="button">Refresh</button>
         </div>
     </div>
 
     <div class="stats" id="stats" style="display:none;"></div>
+    <div class="empty" id="no-result" style="display:none;">Tidak ada member dengan nama tersebut.</div>
     <div class="list" id="list"><div class="loading">Memuat data dari Supabase…</div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -291,7 +308,7 @@ async function load(){
 
             let cnt='';
             if(m.nB||m.nU)cnt='<span class="bad">'+m.nB+m.nU+' bad</span>';
-            return '<div class="member-card">'+
+            return '<div class="member-card" data-name="'+esc(m.nama.toLowerCase())+'">'+
                 '<div class="member-top">'+
                     '<div class="avatar">'+esc(initials)+'</div>'+
                     '<div>'+
@@ -303,12 +320,25 @@ async function load(){
                 '<div class="tl">'+rows+'</div>'+
             '</div>';
         }).join('');
+        applySearch();
     }catch(err){
         list.innerHTML='<div class="empty">Gagal memuat data: '+esc(err.message||err)+'<br><button class="btn" style="margin-top:14px" onclick="load()">Coba lagi</button></div>';
     }
 }
 
 /* ── tema terang/gelap ── */
+function applySearch(){
+    const q=String(document.getElementById('search').value||'').trim().toLowerCase();
+    const cards=document.querySelectorAll('.member-card');
+    let visible=0;
+    cards.forEach(c=>{
+        const show=!q||String(c.getAttribute('data-name')||'').indexOf(q)>=0;
+        c.style.display=show?'':'none';
+        if(show)visible++;
+    });
+    const emp=document.getElementById('no-result');
+    if(emp)emp.style.display=(cards.length&&!visible)?'block':'none';
+}
 function applyTheme(){
     const dark=localStorage.getItem('theme')==='dark';
     document.documentElement.classList.toggle('dark',dark);
