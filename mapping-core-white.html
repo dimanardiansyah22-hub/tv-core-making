@@ -904,6 +904,25 @@ let _saveTimer = null;
 let _pendingSave = false;
 let _lastServerTs = '';
 
+let noteLocal = {};
+function inputLocked() {
+    const el = document.activeElement;
+    return !!(el && el.classList && el.classList.contains('note-input'));
+}
+function protectActiveNotes() {
+    const now = Date.now();
+    Object.keys(noteLocal).forEach(pos => {
+        const rec = noteLocal[pos];
+        if (!rec) return;
+        if (now - rec.ts < 60000) {
+            state[pos] = state[pos] || {};
+            state[pos].note = rec.text;
+        } else {
+            delete noteLocal[pos];
+        }
+    });
+}
+
 function saveState() {
     localStorage.setItem(LS_KEY, JSON.stringify({
         positions,
@@ -940,6 +959,7 @@ function applyData(data) {
         Object.keys(state).forEach(k => delete state[k]);
         Object.assign(state, data.state);
     }
+    protectActiveNotes();
     if (data.nextId) nextId = data.nextId;
     if (data.updatedAt) _lastServerTs = data.updatedAt;
 }
@@ -947,6 +967,7 @@ function applyData(data) {
 async function syncFromServer() {
     if (!window.Sync || !Sync.hasUrl()) return;
     if (_pendingSave) return;
+    if (inputLocked()) return;
     try {
         const res = await Sync.get('mapping', { core: CORE, action: 'get' });
         const data = (res && res.ok && res.data) ? res.data : null;
@@ -1071,6 +1092,7 @@ async function syncCapSave(snapshot) {
 async function capSyncFromServer() {
     if (!window.Sync || !Sync.hasUrl()) return;
     if (_capPendingSave) return;
+    if (inputLocked()) return;
     try {
         const res = await Sync.get('corecap', { core: CORE, action: 'get' });
         const data = (res && res.ok && res.data) ? res.data : null;
@@ -1302,6 +1324,7 @@ function render() {
             note.addEventListener('input', () => {
                 if (!state[p.id]) state[p.id] = {};
                 state[p.id].note = note.value;
+                noteLocal[p.id] = { text: note.value, ts: Date.now() };
                 saveState();
             });
             const clearBtn = document.createElement('button');
@@ -1313,6 +1336,7 @@ function render() {
                 note.value = '';
                 if (!state[p.id]) state[p.id] = {};
                 state[p.id].note = '';
+                noteLocal[p.id] = { text: '', ts: Date.now() };
                 saveState();
             });
             wrap.appendChild(note);
