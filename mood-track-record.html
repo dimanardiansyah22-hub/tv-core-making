@@ -197,6 +197,7 @@ async function load(){
         const [{data:moods,error:e1},{data:voices,error:e2}]=await Promise.all([
             sbMood.from('log_mood')
                 .select('noreg,nama,mood,tanggal,jam,line')
+                .eq('line','Core Making')
                 .gte('tanggal',mulaiStr)
                 .order('tanggal',{ascending:false})
                 .order('jam',{ascending:false})
@@ -225,6 +226,7 @@ async function load(){
         const byMember={};
         let totalScan=0,totalBad=0;
         (moods||[]).forEach(r=>{
+            if(String(r.line||'')!=='Core Making')return;
             const k=moodKey(r.nama);
             if(!byMember[k])byMember[k]={nama:r.nama,noreg:r.noreg,line:r.line,order:[],hari:{}};
             const m=byMember[k];
