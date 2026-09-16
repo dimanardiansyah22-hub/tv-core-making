@@ -733,7 +733,7 @@
 </div>
 </div>
 <div id="plan-notice" class="hidden mt-2 px-2 py-1.5 bg-yellow-50 border border-yellow-300 rounded text-[12px] text-yellow-700 font-semibold text-center leading-tight">
-  Masukkan Planning Produksi &amp; Cycle Time
+  Isi Actual 1TR / Actual 2TR &amp; Cycle Time untuk menghitung OEE
 </div>
 </div>
 </div>
@@ -1178,7 +1178,24 @@ function computeOee() {
 function updateEfficiency() {
   const { av, pe, rq, oee, ls, pt, hasBaseline } = computeOee();
   const notice = document.getElementById('plan-notice');
-  if (notice) notice.classList.toggle('hidden', !!hasBaseline);
+  if (notice) {
+    const act1 = parseFloat(document.getElementById('prod-1tr-act')?.value) || 0;
+    const act2 = parseFloat(document.getElementById('prod-2tr-act')?.value) || 0;
+    const ct = parseFloat(document.getElementById('ct-input')?.value) || 0;
+    const missing = [];
+    if (!act1 && !act2) missing.push('Actual 1TR & Actual 2TR');
+    else {
+      if (!act1) missing.push('Actual 1TR');
+      if (!act2) missing.push('Actual 2TR');
+    }
+    if (!ct) missing.push('Cycle Time');
+    if (missing.length) {
+      notice.classList.remove('hidden');
+      notice.textContent = 'Isi ' + missing.join(', ') + ' untuk menghitung OEE';
+    } else {
+      notice.classList.add('hidden');
+    }
+  }
   const fmt = n => Math.round(n) + '%';
   const set = (id, v) => {
     document.getElementById(id).textContent = fmt(v);
