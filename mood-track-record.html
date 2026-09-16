@@ -350,6 +350,15 @@ function toggleTheme(){
     applyTheme();
 }
 applyTheme();
+/* Ikuti mode terang/gelap saat diubah di header dashboard (index.html)
+   yang menulis localStorage 'theme'. Yang paling penting: karena storage
+   event dapat tidak konsisten antar iframe, ada pengecek berkala. */
+window.addEventListener('storage',function(e){if(e.key==='theme')applyTheme();});
+setInterval(function(){
+    const want=localStorage.getItem('theme')==='dark';
+    const have=document.documentElement.classList.contains('dark');
+    if(want!==have)applyTheme();
+},1500);
 load();
 </script>
 </body>
