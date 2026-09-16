@@ -1670,6 +1670,7 @@ function buildSummarySheet() {
   const planSection =
     '<div style="flex:1;min-width:0">'
     +   '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin-bottom:6px;color:#334155">Planning Produksi &amp; Cycle Time</div>'
+    +   '<div style="display:inline-block;font-size:11px;font-weight:900;text-transform:uppercase;padding:2px 8px;border-radius:999px;color:#fff;background:' + ((typeof planMode !== 'undefined') && planMode === 'all2tr' ? '#0e7490' : '#7c3aed') + ';margin-bottom:8px">Mode: ' + pdfEsc((typeof planMode !== 'undefined') && planMode === 'all2tr' ? 'All 2 TR' : 'Ratio') + '</div>'
     +   '<table style="width:100%;border-collapse:collapse">'
     +     '<thead><tr style="background:#e2e8f0">'
     +       '<th ' + th + '>TR</th><th ' + th + '>Plan</th><th ' + th + '>Actual</th>'
