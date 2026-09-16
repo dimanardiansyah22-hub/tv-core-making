@@ -294,6 +294,50 @@
       color: #374151;
       border-color: #d1d5db;
     }
+    .btn-wip-dd {
+      flex: 1;
+      background: #1d4ed8;
+      color: #fff;
+      border: 1px solid #1e40af;
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-wip-dd.dim {
+      opacity: .35;
+      filter: saturate(.3);
+      box-shadow: none;
+    }
+    .wip-row-dim {
+      opacity: .35;
+      pointer-events: none;
+      filter: grayscale(.6);
+    }
+    body.dark-mode .wip-row-dim { opacity: .3; }
+    .btn-wip-dd:hover {
+      background: #1e40af;
+    }
+    .btn-wip-dd.active {
+      background: #16a34a;
+      border-color: #15803d;
+      box-shadow: 0 0 0 2px #86efac, 0 0 12px rgba(22, 163, 74, .5);
+    }
+    body.dark-mode .btn-wip-dd {
+      background: #1e3a8a;
+      border-color: #3b82f6;
+    }
+    body.dark-mode .btn-wip-dd:hover {
+      background: #1e40af;
+    }
+    body.dark-mode .btn-wip-dd.active {
+      background: #15803d;
+      border-color: #22c55e;
+    }
     .shift-btn:hover {
       background: #e5e7eb;
     }
@@ -705,6 +749,10 @@
 </div>
 <div class="mt-auto pt-2 border-t prod-table">
 <div class="ef-label text-[15px] font-bold uppercase tracking-widest text-center">Planning Produksi</div>
+<div class="flex gap-2 mt-1.5">
+<button type="button" id="btn-ratio" onclick="setPlanMode('ratio')" class="btn-wip-dd active" title="Mode hitung: Actual 1TR + Actual 2TR digabung (ratio)">Ratio</button>
+<button type="button" id="btn-all2tr" onclick="setPlanMode('all2tr')" class="btn-wip-dd dim" title="Mode hitung: berdasarkan Actual 2TR saja">All 2 TR</button>
+</div>
 <table class="w-full text-xs mt-1.5 border-collapse">
 <thead>
 <tr>
@@ -714,7 +762,7 @@
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr id="row-prod-1tr">
 <td class="py-1 font-bold text-center align-middle bg-row-pink">1 TR</td>
 <td class="py-1 text-center align-middle"><input type="text" inputmode="numeric" id="prod-1tr-plan" class="ef-input prod-num" placeholder="0"></td>
 <td class="py-1 text-center align-middle"><input type="text" inputmode="numeric" id="prod-1tr-act" class="ef-input prod-num" placeholder="0"></td>
@@ -1157,9 +1205,30 @@ function renderMachineList() {
   }).join('');
 }
 
+let planMode = (() => { try { return localStorage.getItem('wip-plan-mode') || 'ratio'; } catch (e) { return 'ratio'; } })();
+
+function setPlanMode(mode) {
+  planMode = mode === 'all2tr' ? 'all2tr' : 'ratio';
+  const ratioBtn = document.getElementById('btn-ratio');
+  const all2trBtn = document.getElementById('btn-all2tr');
+  const row1tr = document.getElementById('row-prod-1tr');
+  if (ratioBtn) {
+    ratioBtn.classList.toggle('active', planMode === 'ratio');
+    ratioBtn.classList.toggle('dim', planMode !== 'ratio');
+  }
+  if (all2trBtn) {
+    all2trBtn.classList.toggle('active', planMode === 'all2tr');
+    all2trBtn.classList.toggle('dim', planMode !== 'all2tr');
+  }
+  if (row1tr) row1tr.classList.toggle('wip-row-dim', planMode === 'all2tr');
+  try { localStorage.setItem('wip-plan-mode', planMode); } catch (e) {}
+  updateEfficiency();
+  saveAllData();
+}
+
 function computeOee() {
   const read = id => parseFloat(document.getElementById(id)?.value) || 0;
-  const act1 = read('prod-1tr-act');
+  const act1 = planMode === 'all2tr' ? 0 : read('prod-1tr-act');
   const act2 = read('prod-2tr-act');
   const ct = read('ct-input');
   const ls = lineStopMinutesByType();
