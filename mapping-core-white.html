@@ -336,15 +336,13 @@ body.dark-mode .dropdown .dd-item span {
     from { opacity: 0; transform: translateY(var(--mood-ty, 0%)) translateX(26px) skewX(-6deg); }
     to { opacity: 1; transform: translateY(var(--mood-ty, 0%)) translateX(0) skewX(0); }
 }
-body.dark-mode .mood-callout {
-    background: #1a1a2e;
-    border-color: #b45309;
+body.dark-mode .marker .mood.has-callout .mood-callout {
+    background: #fff;
+    border-color: #dc2626;
 }
-body.dark-mode .mood-callout.red {
-    border-color: #ef4444;
-}
-body.dark-mode .mood-callout .mood-text {
-    color: #e8e8f0;
+body.dark-mode .marker .mood-callout .mood-text,
+body.dark-mode .marker .mood-callout .mood-text.empty {
+    color: #000;
 }
 
 .note-wrap {
