@@ -1159,12 +1159,12 @@ function renderMachineList() {
 
 function computeOee() {
   const read = id => parseFloat(document.getElementById(id)?.value) || 0;
-  const plan1 = read('prod-1tr-plan');
-  const plan2 = read('prod-2tr-plan');
+  const act1 = read('prod-1tr-act');
+  const act2 = read('prod-2tr-act');
   const ct = read('ct-input');
   const ls = lineStopMinutesByType();
-  /* Baseline 100% OEE = (Plan 1TR + Plan 2TR) × 5 lot/pcs × Cycle Time */
-  const baseTime = (plan1 + plan2) * 5 * ct;
+  /* Baseline 100% OEE = (Actual 1TR + Actual 2TR) × 5 lot/pcs × Cycle Time */
+  const baseTime = (act1 + act2) * 5 * ct;
   if (baseTime <= 0) {
     return { av: 0, pe: 0, rq: 0, oee: 0, ls, pt: 0, hasBaseline: false };
   }
