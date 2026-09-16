@@ -1111,7 +1111,7 @@ function dataName(name) {
 function moodKey(s) {
     return String(s || '').trim().toUpperCase();
 }
-const MOOD_VALID_MS = 13 * 60 * 60 * 1000;
+const MOOD_VALID_MS = 20 * 60 * 60 * 1000;
 function moodAt(st) {
     const rec = moodByName[moodKey(dataName(st && st.name))];
     if (!rec) return '';
