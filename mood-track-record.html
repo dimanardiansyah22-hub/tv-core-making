@@ -200,6 +200,11 @@ function fmtDate(t){
     const d=new Date(t+'T12:00:00');
     return d.getDate()+' '+BULAN[d.getMonth()]+' '+d.getFullYear();
 }
+function shiftDate(strDays,n){
+    const s=new Date(strDays+'T12:00:00');
+    s.setDate(s.getDate()+n);
+    return isoTanggalLocal(s);
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 async function load(){
@@ -230,16 +235,21 @@ async function load(){
         if(e1)throw new Error(e1.message||'Gagal memuat log_mood');
         if(e2)throw new Error(e2.message||'Gagal memuat voice_members');
 
-        /* ── index voice member ── */
-        const voiceLatest={};
-        const voiceByDate={};
+        /* ── index voice member ──
+           Voice hanya "terhubung" ke Bad Mood bila diinput pada:
+           hari sebelum / hari saat / hari setelah tanggal bad mood. */
+        const voiceList={};
         (voices||[]).forEach(v=>{
             const vk=moodKey(v.member_name);
             const txt=String(v.voice_text||'').trim();
             if(!txt)return;
-            const d=String(v.created_at||'').slice(0,10);
-            if(!voiceLatest[vk])voiceLatest[vk]={text:txt,d};
-            if(d&&!(voiceByDate[vk+'|'+d]))voiceByDate[vk+'|'+d]={text:txt,d};
+            const raw=String(v.created_at||'');
+            const d=raw.slice(0,10);
+            if(!d)return;
+            const ts=new Date(raw).getTime();
+            if(!isFinite(ts))return;
+            if(!voiceList[vk])voiceList[vk]=[];
+            voiceList[vk].push({d,ts,text:txt});
         });
 
         /* ── kelompokkan per member ── */
@@ -289,16 +299,22 @@ async function load(){
                 let voice='';
                 if(isBad){
                     const vk=moodKey(m.nama);
-                    const same=voiceByDate[vk+'|'+d];
-                    const lm=voiceLatest[vk];
-                    let vt='',note='';
-                    if(same&&same.text){vt=same.text;}
-                    else if(lm&&lm.text){vt=lm.text;if(lm.d&&lm.d!==d)note='voice terakhir anggota tersebut ('+lm.d+')';}
-                    voice='<div class="tl-voice">'+
-                        '<span class="mic">Voice member:</span>'+
-                        '<div class="text">'+esc(vt||'Belum ada data voice member !')+'</div>'+
-                        (note?'<div class="src">'+esc(note)+'</div>':'')+
-                        '</div>';
+                    const tBad=new Date(d+'T'+(h.jam||'12:00:00')).getTime();
+                    const lo=shiftDate(d,-1),hi=shiftDate(d,1);
+                    let best=null,bestScore=1e15;
+                    (voiceList[vk]||[]).forEach(v=>{
+                        if(v.d>=lo&&v.d<=hi){
+                            const s=Math.abs(v.ts-tBad);
+                            if(s<bestScore){bestScore=s;best=v;}
+                        }
+                    });
+                    if(best){
+                        voice='<div class="tl-voice">'+
+                            '<span class="mic">Voice member:</span>'+
+                            '<div class="text">'+esc(best.text)+'</div>'+
+                            (best.d!==d?'<div class="src">'+esc(best.d)+'</div>':'')+
+                            '</div>';
+                    }
                 }
                 return '<div class="tl-row">'+
                     '<div class="tl-date">'+esc(fmtDate(d))+'</div>'+
