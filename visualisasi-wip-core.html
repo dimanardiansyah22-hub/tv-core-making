@@ -1251,11 +1251,16 @@ function updateEfficiency() {
     const act1 = parseFloat(document.getElementById('prod-1tr-act')?.value) || 0;
     const act2 = parseFloat(document.getElementById('prod-2tr-act')?.value) || 0;
     const ct = parseFloat(document.getElementById('ct-input')?.value) || 0;
+    const isAll2tr = (typeof planMode !== 'undefined') && planMode === 'all2tr';
     const missing = [];
-    if (!act1 && !act2) missing.push('Actual 1TR & Actual 2TR');
-    else {
-      if (!act1) missing.push('Actual 1TR');
+    if (isAll2tr) {
       if (!act2) missing.push('Actual 2TR');
+    } else {
+      if (!act1 && !act2) missing.push('Actual 1TR & Actual 2TR');
+      else {
+        if (!act1) missing.push('Actual 1TR');
+        if (!act2) missing.push('Actual 2TR');
+      }
     }
     if (!ct) missing.push('Cycle Time');
     if (missing.length) {
