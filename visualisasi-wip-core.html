@@ -1782,6 +1782,7 @@ function openPdfModal(msg) {
 }
 /* Elemen modal ada di akhir <body>, jadi pengikatan ditunda sampai DOM siap */
 window.addEventListener('DOMContentLoaded', () => {
+  setPlanMode(planMode);
   document.getElementById('pdfCloseBtn').addEventListener('click', () => document.getElementById('pdfModal').classList.remove('on'));
   document.getElementById('pdfModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('on'); });
   document.getElementById('histCloseBtn').addEventListener('click', () => document.getElementById('historyModal').classList.remove('on'));
