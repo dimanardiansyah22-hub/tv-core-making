@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1600">
+<title>Track Record Mood Member — Core Making</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --background: #f9f9f9;
+        --surface: #f9f9f9;
+        --surface-container-lowest: #ffffff;
+        --surface-container-low: #f3f3f3;
+        --surface-container-high: #e8e8e8;
+        --outline-variant: #e9bcb7;
+        --outline: #936e6a;
+        --on-surface: #1a1c1c;
+        --secondary: #5f5e5e;
+        --primary: #bd0014;
+        --on-primary: #ffffff;
+        --on-surface-variant: #5e3f3b;
+        --error: #ba1a1a;
+        --shadow: rgba(0,0,0,.10);
+    }
+    html.dark {
+        --background: #0b0d14;
+        --surface: #101219;
+        --surface-container-lowest: #06080d;
+        --surface-container-low: #13151d;
+        --surface-container-high: #222436;
+        --outline-variant: #404354;
+        --outline: #8e92a0;
+        --on-surface: #e4e4ec;
+        --secondary: #bcc7d4;
+        --primary: #4a8cff;
+        --on-primary: #ffffff;
+        --on-surface-variant: #c4c6d0;
+        --error: #ffb4ab;
+        --shadow: rgba(0,0,0,.5);
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        background: var(--background);
+        color: var(--on-surface);
+        font-family: "Inter", sans-serif;
+        font-size: 15px;
+        padding: 20px;
+        min-height: 100vh;
+    }
+    .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        max-width: 1280px;
+        margin: 0 auto 18px;
+    }
+    .head .title { font-family: "Hanken Grotesk", sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1; }
+    .head .title .sub { display: block; font-size: 13px; font-weight: 500; color: var(--secondary); margin-top: 4px; }
+    .head .actions { display: flex; gap: 10px; }
+    .btn {
+        border: 1px solid var(--outline-variant);
+        background: var(--surface-container-lowest);
+        color: var(--on-surface);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all .2s;
+    }
+    .btn:hover { border-color: var(--outline); }
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        max-width: 1280px;
+        margin: 0 auto 18px;
+    }
+    .stat {
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 12px;
+        padding: 12px 16px;
+    }
+    .stat .num { font-family: "Hanken Grotesk", sans-serif; font-weight: 800; font-size: 26px; }
+    .stat .lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--secondary); margin-top: 2px; }
+    .stat.bad .num { color: var(--error); }
+    .list { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .member-card {
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 14px;
+        padding: 14px 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+    }
+    .member-top { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+        width: 46px; height: 46px; flex: none;
+        border-radius: 50%;
+        background: var(--primary);
+        color: var(--on-primary);
+        display: flex; align-items: center; justify-content: center;
+        font-family: "Hanken Grotesk", sans-serif; font-weight: 800; font-size: 18px;
+    }
+    .member-name { font-family: "Hanken Grotesk", sans-serif; font-weight: 700; font-size: 17px; }
+    .member-meta { color: var(--secondary); font-size: 12px; margin-top: 2px; }
+    .member-count { margin-left: auto; text-align: right; flex: none; font-family: "Hanken Grotesk", sans-serif; font-weight: 700; font-size: 14px; }
+    .member-count .bad { color: var(--error); }
+    .member-count div { color: var(--secondary); font-size: 11px; font-weight: 500; }
+    .tl { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .tl-row {
+        display: flex; align-items: flex-start; gap: 10px;
+        background: var(--surface-container-low);
+        border: 1px solid var(--outline-variant);
+        border-radius: 10px;
+        padding: 8px 10px;
+    }
+    .tl-date { flex: none; width: 96px; font-family: "Hanken Grotesk", sans-serif; font-weight: 600; font-size: 13px; }
+    .tl-date small { display: block; color: var(--secondary); font-weight: 500; }
+    .tl-mood { display: flex; align-items: center; gap: 8px; flex: none; min-width: 150px; }
+    .tl-mood img { width: 24px; height: 24px; }
+    .tl-mood .lbl { font-weight: 600; font-size: 13px; }
+    .tl-jam { color: var(--secondary); font-size: 12px; font-weight: 500; flex: none; }
+    .tl-voice { margin-top: 6px; font-size: 13px; color: var(--on-surface-variant); }
+    .tl-voice .mic { font-size: 12px; }
+    .tl-voice .text { background: var(--surface-container-lowest); border: 1px dashed var(--outline-variant); border-radius: 8px; padding: 7px 10px; margin-top: 4px; white-space: pre-line; word-break: break-word; }
+    .tl-voice .src { font-size: 11px; color: var(--secondary); margin-top: 3px; }
+    .empty { text-align: center; color: var(--secondary); padding: 60px 20px; border: 1px dashed var(--outline-variant); border-radius: 14px; }
+    .badge-danger { background: var(--error); color: var(--on-primary); border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
+    .loading { text-align: center; color: var(--secondary); padding: 80px 20px; }
+</style>
+</head>
+<body>
+    <div class="head">
+        <div class="title">
+            Track Record Mood Member
+            <span class="sub" id="subtitle">Memuat data…</span>
+        </div>
+        <div class="actions">
+            <button class="btn" id="theme-btn" onclick="toggleTheme()" type="button">Mode gelap</button>
+            <button class="btn" onclick="load()" type="button">Refresh</button>
+        </div>
+    </div>
+
+    <div class="stats" id="stats" style="display:none;"></div>
+    <div class="list" id="list"><div class="loading">Memuat data dari Supabase…</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+/* ==============================================================
+   Track Record Mood Member (read-only)
+   Sumber:
+   - log_mood       → Supabase SB : noreg, nama, mood, tanggal, jam, line
+   - voice_members  → Supabase VB : member_name, voice_text, created_at
+   ============================================================== */
+const SB_URL='https://zvsgqmqyuxevvzyjadzv.supabase.co';
+const SB_KEY='sb_publishable_nFphtt4y1peWkqpqTn1Mcg_QWnM7RPf';
+const VB_URL='https://hkrdqeauhfloqguojggx.supabase.co';
+const VB_KEY='sb_publishable_pbazhs1vFq3ehg6s0Ue_zQ_5jcsvqff';
+const sbMood=window.supabase.createClient(SB_URL,SB_KEY);
+const sbVoice=window.supabase.createClient(VB_URL,VB_KEY);
+
+const MOOD_EMOJI={
+    'Happy':'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png',
+    'Bad Mood':'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Frowning%20face/3D/frowning_face_3d.png',
+    'Unfit':'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Face%20with%20thermometer/3D/face_with_thermometer_3d.png'
+};
+const badMoods=['Bad Mood','Unfit'];
+const moodKey=s=>String(s||'').trim().toUpperCase();
+const BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+function isoTanggalLocal(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(t){
+    const d=new Date(t+'T12:00:00');
+    return d.getDate()+' '+BULAN[d.getMonth()]+' '+d.getFullYear();
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function load(){
+    const list=document.getElementById('list');
+    const stats=document.getElementById('stats');
+    list.innerHTML='<div class="loading">Memuat data dari Supabase…</div>';
+    stats.style.display='none';
+
+    const mulai=new Date();
+    mulai.setHours(0,0,0,0);
+    mulai.setDate(mulai.getDate()-29);
+    const mulaiStr=isoTanggalLocal(mulai);
+
+    try{
+        const [{data:moods,error:e1},{data:voices,error:e2}]=await Promise.all([
+            sbMood.from('log_mood')
+                .select('noreg,nama,mood,tanggal,jam,line')
+                .gte('tanggal',mulaiStr)
+                .order('tanggal',{ascending:false})
+                .order('jam',{ascending:false})
+                .limit(10000),
+            sbVoice.from('voice_members')
+                .select('member_name,voice_text,created_at')
+                .order('created_at',{ascending:false})
+                .limit(5000)
+        ]);
+        if(e1)throw new Error(e1.message||'Gagal memuat log_mood');
+        if(e2)throw new Error(e2.message||'Gagal memuat voice_members');
+
+        /* ── index voice member ── */
+        const voiceLatest={};
+        const voiceByDate={};
+        (voices||[]).forEach(v=>{
+            const vk=moodKey(v.member_name);
+            const txt=String(v.voice_text||'').trim();
+            if(!txt)return;
+            const d=String(v.created_at||'').slice(0,10);
+            if(!voiceLatest[vk])voiceLatest[vk]={text:txt,d};
+            if(d&&!(voiceByDate[vk+'|'+d]))voiceByDate[vk+'|'+d]={text:txt,d};
+        });
+
+        /* ── kelompokkan per member ── */
+        const byMember={};
+        let totalScan=0,totalBad=0;
+        (moods||[]).forEach(r=>{
+            const k=moodKey(r.nama);
+            if(!byMember[k])byMember[k]={nama:r.nama,noreg:r.noreg,line:r.line,order:[],hari:{}};
+            const m=byMember[k];
+            if(!m.hari[r.tanggal]){
+                m.hari[r.tanggal]={mood:r.mood,jam:r.jam};
+                m.order.push(r.tanggal);
+            }
+        });
+        Object.values(byMember).forEach(m=>{
+            m.nS=0;m.nB=0;m.nU=0;
+            m.order.forEach(d=>{
+                const h=m.hari[d];
+                totalScan++;
+                if(h.mood==='Bad Mood'){m.nB++;totalBad++;}
+                else if(h.mood==='Unfit'){m.nU++;totalBad++;}
+                else m.nS++;
+            });
+        });
+        const members=Object.values(byMember).sort((a,b)=>a.nama.localeCompare(b.nama));
+
+        document.getElementById('subtitle').textContent=
+            '30 hari terakhir • diperbarui '+new Date().toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'});
+
+        stats.style.display='grid';
+        stats.innerHTML=
+            '<div class="stat"><div class="num">'+members.length+'</div><div class="lbl">Member mengisi survey</div></div>'+
+            '<div class="stat"><div class="num">'+totalScan+'</div><div class="lbl">Total scan (30 hari)</div></div>'+
+            '<div class="stat bad"><div class="num">'+totalBad+'</div><div class="lbl">Bad Mood / Unfit</div></div>';
+
+        if(!members.length){
+            list.innerHTML='<div class="empty">Belum ada data survey pada 30 hari terakhir.</div>';
+            return;
+        }
+
+        list.innerHTML=members.map(m=>{
+            const initials=(m.nama||'?').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('');
+            const rows=m.order.map(d=>{
+                const h=m.hari[d];
+                const isBad=badMoods.indexOf(h.mood)>=0;
+                let voice='';
+                if(isBad){
+                    const vk=moodKey(m.nama);
+                    const same=voiceByDate[vk+'|'+d];
+                    const lm=voiceLatest[vk];
+                    let vt='',note='';
+                    if(same&&same.text){vt=same.text;}
+                    else if(lm&&lm.text){vt=lm.text;if(lm.d&&lm.d!==d)note='voice terakhir anggota tersebut ('+lm.d+')';}
+                    voice='<div class="tl-voice">'+
+                        '<span class="mic">Voice member:</span>'+
+                        '<div class="text">'+esc(vt||'Belum ada data voice member !')+'</div>'+
+                        (note?'<div class="src">'+esc(note)+'</div>':'')+
+                        '</div>';
+                }
+                return '<div class="tl-row">'+
+                    '<div class="tl-date">'+esc(fmtDate(d))+'</div>'+
+                    '<div class="tl-mood"><img src="'+MOOD_EMOJI[h.mood]+'" alt="'+esc(h.mood)+'"><span class="lbl">'+esc(h.mood)+'</span></div>'+
+                    '<div class="tl-jam">'+esc((h.jam||'').slice(0,5))+'</div>'+
+                    '<div style="flex:1"></div>'+
+                    '<div>'+voice+'</div>'+
+                    '</div>';
+            }).join('');
+
+            let cnt='';
+            if(m.nB||m.nU)cnt='<span class="bad">'+m.nB+m.nU+' bad</span>';
+            return '<div class="member-card">'+
+                '<div class="member-top">'+
+                    '<div class="avatar">'+esc(initials)+'</div>'+
+                    '<div>'+
+                        '<div class="member-name">'+esc(m.nama)+'</div>'+
+                        '<div class="member-meta">NoReg '+esc(m.noreg||'-')+(m.line?' • '+esc(m.line):'')+' • '+m.order.length+' hari</div>'+
+                    '</div>'+
+                    '<div class="member-count">'+cnt+'<div>'+(m.nB+m.nU?'⚠ perlu follow up':'—')+'</div></div>'+
+                '</div>'+
+                '<div class="tl">'+rows+'</div>'+
+            '</div>';
+        }).join('');
+    }catch(err){
+        list.innerHTML='<div class="empty">Gagal memuat data: '+esc(err.message||err)+'<br><button class="btn" style="margin-top:14px" onclick="load()">Coba lagi</button></div>';
+    }
+}
+
+/* ── tema terang/gelap ── */
+function applyTheme(){
+    const dark=localStorage.getItem('theme')==='dark';
+    document.documentElement.classList.toggle('dark',dark);
+    document.documentElement.classList.toggle('light',!dark);
+    document.getElementById('theme-btn').textContent=dark?'Mode terang':'Mode gelap';
+}
+function toggleTheme(){
+    localStorage.setItem('theme',localStorage.getItem('theme')==='dark'?'light':'dark');
+    applyTheme();
+}
+applyTheme();
+load();
+</script>
+</body>
+</html>
