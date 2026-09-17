@@ -391,10 +391,14 @@ class="w-full bg-background border border-outline-variant text-on-background fon
 <span class="font-label-caps text-[10px] text-secondary uppercase tracking-wider">Kumulatif</span>
 </div>
 </div>
-<!-- CSS Pareto Bars -->
-<div id="paretoPlot" class="h-64 flex items-end gap-2 border-b border-l border-outline-variant relative px-2 pt-8"></div>
+<!-- CSS Pareto Bars + garis kumulatif (sumbu %) -->
+<div class="relative">
+<div id="paretoPlot" class="h-64 flex items-end gap-2 border-b border-l border-outline-variant relative pl-2 pr-9 pt-8"></div>
+<svg id="paretoSvg" class="absolute inset-0 w-full h-full pointer-events-none" style="overflow:visible"></svg>
+<div id="paretoPctAxis" class="absolute top-0 bottom-0 right-0 w-7 pointer-events-none font-data-mono"></div>
+</div>
 <!-- X-Axis labels -->
-<div id="paretoAxis" class="flex gap-2 px-2 font-label-caps text-[10px] text-secondary uppercase tracking-wider mt-1"></div>
+<div id="paretoAxis" class="flex gap-2 pl-2 pr-9 font-label-caps text-[10px] text-secondary uppercase tracking-wider mt-1"></div>
 <!-- Empty / loading state -->
 <div id="paretoEmpty" class="hidden mt-4 py-6 text-center font-data-mono text-[12px] text-secondary"></div>
 </section>
@@ -692,6 +696,8 @@ function renderPareto() {
   var plot = document.getElementById('paretoPlot');
   var axisBox = document.getElementById('paretoAxis');
   var empty = document.getElementById('paretoEmpty');
+  var svg = document.getElementById('paretoSvg');
+  var pctAxis = document.getElementById('paretoPctAxis');
   var monthLabel = document.getElementById('paretoMonthLabel');
   var src = document.getElementById('chartMonthLabel');
   if (monthLabel && src) monthLabel.textContent = src.textContent;
@@ -706,28 +712,49 @@ function renderPareto() {
     if (empty) { empty.classList.remove('hidden'); empty.textContent = 'Tidak ada line stop pada periode ini.'; }
     if (plot) plot.innerHTML = '';
     if (axisBox) axisBox.innerHTML = '';
+    if (svg) svg.innerHTML = '';
+    if (pctAxis) pctAxis.innerHTML = '';
     return;
   }
   if (empty) empty.classList.add('hidden');
   var total = arr.reduce(function (s, o) { return s + o.minutes; }, 0);
   var maxMin = arr[0].minutes;
   var cum = 0;
+  arr.forEach(function (o) { cum += o.minutes; o.pct = Math.round(cum / total * 100); });
   var bars = '';
   var axis = [];
   arr.forEach(function (o) {
-    cum += o.minutes;
-    var pct = Math.round(cum / total * 100);
     var h = Math.max(3, o.minutes / maxMin * 200);
     var short = paretoShortMachine(o.mesin);
-    bars += '<div class="flex-1 flex flex-col items-center justify-end h-full min-w-0" title="' + esc(o.mesin) + ': ' + o.minutes + ' mnt (kum ' + pct + '%)">'
+    bars += '<div class="pareto-col flex-1 flex flex-col items-center justify-end h-full min-w-0" title="' + esc(o.mesin) + ': ' + o.minutes + ' mnt (kum ' + o.pct + '%)">'
       + '<div class="font-data-mono text-[11px] font-bold text-on-background leading-none mb-1">' + o.minutes + '</div>'
-      + '<div class="font-data-mono text-[10px] font-bold leading-none mb-1" style="color:#dc2626">' + pct + '%</div>'
+      + '<div class="font-data-mono text-[10px] font-bold leading-none mb-1" style="color:#dc2626">' + o.pct + '%</div>'
       + '<div class="w-full hover:brightness-110 transition-all" style="height:' + h + 'px;background:linear-gradient(180deg,#38bdf8,#0284c7);border:1px solid var(--outline);border-bottom:none"></div>'
       + '</div>';
     axis.push('<div class="flex-1 min-w-0 text-center text-[10px] truncate" title="' + esc(o.mesin) + '">' + esc(short) + '</div>');
   });
   if (plot) plot.innerHTML = bars;
   if (axisBox) axisBox.innerHTML = axis.join('');
+  /* Garis kumulatif (sumbu kedua, %) + ticks sumbu kanan */
+  if (svg && pctAxis && plot) {
+    var H = plot.clientHeight || 256;
+    var BH = 200;
+    var lineY = function (p) { return H - (p / 100) * BH; };
+    var pr = plot.getBoundingClientRect();
+    var pts = [];
+    plot.querySelectorAll('.pareto-col').forEach(function (col, i) {
+      var r = col.getBoundingClientRect();
+      pts.push([(r.left + r.width / 2 - pr.left).toFixed(1), lineY(arr[i].pct).toFixed(1)]);
+    });
+    var s = '<polyline points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" fill="none" stroke="#dc2626" stroke-width="2"/>';
+    pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="#dc2626"/>'; });
+    svg.innerHTML = s;
+    var ticks = '';
+    [0, 25, 50, 75, 100].forEach(function (p) {
+      ticks += '<div class="absolute right-0 text-[10px] font-bold" style="top:' + Math.max(0, lineY(p) - 7).toFixed(0) + 'px;color:#dc2626">' + p + '%</div>';
+    });
+    pctAxis.innerHTML = ticks;
+  }
 }
 
 function fmtDate(d) {
