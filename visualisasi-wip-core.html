@@ -955,16 +955,24 @@ function setPanelVal(data, id, fallback) {
 let _wipSaveTimer = null;
 let _wipPendingSave = {};
 let _wipLastTs = {};
-/* Kunci yg sudah disimpan lokal tapi BELUM terkonfirmasi ke server.
-   Selama kotor, snapshot server TIDAK BOLEH menimpanya (anti isian hilang). */
+/* Kunci yg diubah lokal beserta WAKTU ubahnya (ms). Menang atas snapshot server
+   hanya bila perubahan lokal LEBIH BARU drpd updatedAt server (last-write-wins
+   antar device). Dibersihkan setelah save terkonfirmasi server. */
 let _wipDirty = {};
+/* Toleransi beda jam device vs server: lindungi ketikan < 2 mnt dari snapshot basi */
+const WIP_SKEW_MS = 120000;
 
 function saveAllData() {
   const snapshot = collectWipData();
-  localStorage.setItem(getStorageKey(), JSON.stringify(snapshot));
+  const key = getStorageKey();
+  let prev = {};
+  try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
+  localStorage.setItem(key, JSON.stringify(snapshot));
   const shift = currentShift();
+  const now = Date.now();
+  try { localStorage.setItem('wip-core-ts-' + shift, String(now)); } catch (e) {}
   if (!_wipDirty[shift]) _wipDirty[shift] = {};
-  Object.keys(snapshot).forEach(k => { _wipDirty[shift][k] = true; });
+  Object.keys(snapshot).forEach(k => { if (snapshot[k] !== prev[k]) _wipDirty[shift][k] = now; });
   scheduleWipSave();
 }
 
@@ -1033,18 +1041,31 @@ function setPanelValSafe(data, id) {
   /* nilai kosong/tak ada: biarkan apa adanya (jangan pernah hapus) */
 }
 
-/* Gabung snapshot server ke data lokal TANPA menghapus:
-   - kunci lokal yg masih kotor (belum terkirim) SELALU menang
-   - nilai server yg kosong/tak ada tak boleh menimpa nilai lokal yg terisi */
+/* Gabung snapshot server ke data lokal (last-write-wins antar device):
+   - kunci yg diubah lokal SETELAH updatedAt server (toleransi skew) menang
+   - kunci lokal yg lebih baru drpd snapshot (save gagal/tertunda) menang + didorong ulang
+   - nilai server yg kosong/tak ada tak boleh menghapus nilai lokal yg terisi */
 function mergeWipData(shift, server) {
   let local = {};
   try { local = JSON.parse(localStorage.getItem(getStorageKey()) || '{}'); } catch (e) { local = {}; }
   const dirty = _wipDirty[shift] || {};
+  let localTs = 0;
+  try { localTs = Number(localStorage.getItem('wip-core-ts-' + shift)) || 0; } catch (e) {}
+  let serverTs = 0;
+  try { serverTs = new Date(server.updatedAt).getTime() || 0; } catch (e) {}
   const merged = Object.assign({}, local);
   Object.keys(server).forEach(k => {
     if (k === 'updatedAt') return;
-    if (dirty[k]) return;
-    if (server[k] !== undefined && server[k] !== '') merged[k] = server[k];
+    const sv = server[k];
+    if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
+    if (sv === undefined || sv === '') return; /* server kosong: jangan hapus lokal */
+    const lv = local[k];
+    if ((lv !== undefined && lv !== '') && (dirty[k] || localTs > serverTs)) {
+      if (!_wipDirty[shift]) _wipDirty[shift] = {};
+      _wipDirty[shift][k] = Math.max(dirty[k] || 0, localTs); /* pastikan ikut terdorong ke server */
+      return;
+    }
+    merged[k] = sv;
   });
   return merged;
 }
@@ -1072,11 +1093,6 @@ function loadSavedData() {
   try {
     const raw = localStorage.getItem(getStorageKey());
     const data = raw ? JSON.parse(raw) : {};
-    /* TANDAI data lokal sbg kotor: nilai lokal yg terisi harus menang atas
-       snapshot server yg basi (save 800ms yg belum terkirim saat pindah halaman) */
-    const shift = currentShift();
-    if (!_wipDirty[shift]) _wipDirty[shift] = {};
-    Object.keys(data).forEach(k => { if (data[k] !== undefined && data[k] !== '') _wipDirty[shift][k] = true; });
     const focusEl = document.activeElement;
     const focusedCell = (focusEl && focusEl.classList && focusEl.classList.contains('cell-input')) ? focusEl : null;
     document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
