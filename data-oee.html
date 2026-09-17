@@ -389,6 +389,7 @@ class="w-full bg-background border border-outline-variant text-on-background fon
 <span class="font-label-caps text-[10px] text-secondary uppercase tracking-wider">Menit</span>
 <div style="width:22px;border-top:2px dashed #dc2626"></div>
 <span class="font-label-caps text-[10px] text-secondary uppercase tracking-wider">Kumulatif</span>
+<span id="paretoTotalLabel" class="font-data-mono text-[11px] font-bold text-on-background"></span>
 </div>
 </div>
 <!-- CSS Pareto Bars + garis kumulatif (sumbu %) -->
@@ -699,6 +700,7 @@ function renderPareto() {
   var svg = document.getElementById('paretoSvg');
   var pctAxis = document.getElementById('paretoPctAxis');
   var monthLabel = document.getElementById('paretoMonthLabel');
+  var totalLabel = document.getElementById('paretoTotalLabel');
   var src = document.getElementById('chartMonthLabel');
   if (monthLabel && src) monthLabel.textContent = src.textContent;
   var byM = {};
@@ -714,10 +716,12 @@ function renderPareto() {
     if (axisBox) axisBox.innerHTML = '';
     if (svg) svg.innerHTML = '';
     if (pctAxis) pctAxis.innerHTML = '';
+    if (totalLabel) totalLabel.textContent = '';
     return;
   }
   if (empty) empty.classList.add('hidden');
   var total = arr.reduce(function (s, o) { return s + o.minutes; }, 0);
+  if (totalLabel) totalLabel.textContent = 'n = ' + total.toLocaleString('id-ID') + ' mnt';
   var maxMin = arr[0].minutes;
   var cum = 0;
   arr.forEach(function (o) { cum += o.minutes; o.pct = Math.round(cum / total * 100); });
