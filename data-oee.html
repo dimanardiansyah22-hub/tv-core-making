@@ -739,7 +739,7 @@ function renderPareto() {
       + '<div class="font-data-mono text-[13px] font-bold text-on-background leading-none mb-1">' + o.minutes + '</div>'
       + '<div class="w-full hover:brightness-110 transition-all" style="height:' + h + 'px;background:linear-gradient(180deg,#38bdf8,#0284c7);border:1px solid var(--outline);border-bottom:none"></div>'
       + '</div>';
-    axis.push('<div class="flex-1 min-w-0 text-center text-[10px] truncate" title="' + esc(o.mesin) + '">' + esc(short) + '</div>');
+    axis.push('<div class="flex-1 min-w-0 text-center text-[13px] font-semibold truncate" title="' + esc(o.mesin) + '">' + esc(short) + '</div>');
   });
   if (plot) plot.innerHTML = bars;
   if (axisBox) axisBox.innerHTML = axis.join('');
