@@ -1377,10 +1377,11 @@ function bindPanelInputs() {
   });
 }
 
-/* Navigasi keyboard pada panel Planning Produksi + CT (spreadsheet):
-   kiri/kanan pindah Plan ↔ Actual, atas/bawah & Enter turun/naik baris */
+/* Navigasi keyboard pada panel Planning Produksi (spreadsheet):
+   kiri/kanan pindah Plan ↔ Actual, atas/bawah & Enter turun/naik baris.
+   Cycle Time area terpisah: tak ada navigasi keyboard masuk/keluar CT. */
 function bindPanelNav() {
-  const rows = [['prod-1tr-plan', 'prod-1tr-act'], ['prod-2tr-plan', 'prod-2tr-act'], ['ct-input']];
+  const rows = [['prod-1tr-plan', 'prod-1tr-act'], ['prod-2tr-plan', 'prod-2tr-act']];
   const ids = rows.flat();
   const index = x => ids.indexOf(typeof x === 'string' ? x : x.id);
 
@@ -1402,13 +1403,10 @@ function bindPanelNav() {
       } else if (k === 'ArrowDown' || k === 'Enter') {
         if (el.id === 'prod-1tr-plan') next = index('prod-2tr-plan');
         else if (el.id === 'prod-1tr-act') next = index('prod-2tr-act');
-        else if (el.id === 'prod-2tr-plan') next = index('ct-input');
-        else if (el.id === 'prod-2tr-act') next = index('ct-input');
-        else next = index('prod-1tr-plan');
+        else return;
       } else if (k === 'ArrowUp') {
         if (el.id === 'prod-2tr-plan') next = index('prod-1tr-plan');
         else if (el.id === 'prod-2tr-act') next = index('prod-1tr-act');
-        else if (el.id === 'ct-input') next = index('prod-2tr-plan');
         else return;
       } else { return; }
 
