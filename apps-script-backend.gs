@@ -347,11 +347,15 @@ function saveWipPdf_(data) {
    Dipakai tombol "Buat PDF Asakai" di data-oee.html.
    Folder dibuat otomatis bila belum ada. File dibagikan ANYONE_WITH_LINK.
    PDF sebelumnya dgn nama dasar yg sama diganti supaya tidak menumpuk. */
+var ASAKAI_FOLDER_ID = '1xFZSrZ5JbOGjnflJhHaRgihybqIHKM-q';
 function getAsakaiFolder_() {
+  try {
+    return DriveApp.getFolderById(ASAKAI_FOLDER_ID);
+  } catch (e) { /* akses ditolak / tidak ada → cari atau buat */ }
   try {
     var it = DriveApp.getFoldersByName('Asakai');
     if (it.hasNext()) return it.next();
-  } catch (e) { /* lanjut buat baru */ }
+  } catch (e2) { /* lanjut buat baru */ }
   return DriveApp.createFolder('Asakai');
 }
 
