@@ -1061,6 +1061,7 @@ async function wipSyncFromServer() {
   if (_wipPendingSave[shift]) return;
   try {
     const res = await Sync.get('wip', { shift, action: 'get' });
+    if (currentShift() !== shift) return; /* pindah shift saat fetch: buang respons agar pagi/malam tak tercampur */
     const data = (res && res.ok && res.data) ? res.data : null;
     if (!data || !data.updatedAt) return;
     if (data.updatedAt !== _wipLastTs[shift]) {
