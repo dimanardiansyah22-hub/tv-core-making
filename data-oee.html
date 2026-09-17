@@ -764,7 +764,7 @@ function renderPareto() {
       var tx = p[0], ty = (py - 8).toFixed(1), anchor = 'middle';
       if (side === 1) { tx = (cx + 9).toFixed(1); ty = (py + 3).toFixed(1); anchor = 'start'; }
       else if (side === -1) { tx = (cx - 9).toFixed(1); ty = (py + 3).toFixed(1); anchor = 'end'; }
-      s += '<text x="' + tx + '" y="' + ty + '" text-anchor="' + anchor + '" font-size="10" font-weight="bold" fill="#dc2626" style="paint-order:stroke" stroke="#ffffff" stroke-width="3">' + arr[i].pct + '%</text>';
+      s += '<text x="' + tx + '" y="' + ty + '" text-anchor="' + anchor + '" font-size="10" font-weight="bold" fill="#dc2626" style="paint-order:stroke" stroke="#ffffff" stroke-width="1.2">' + arr[i].pct + '%</text>';
     });
     svg.innerHTML = s;
     var ticks = '';
