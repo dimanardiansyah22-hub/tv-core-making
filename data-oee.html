@@ -242,14 +242,14 @@
 </div>
 </div>
 <!-- Filters Section -->
-<section class="section-card p-sm flex flex-col md:flex-row gap-md items-end w-full shadow-none">
+<section class="section-card p-sm flex flex-col md:flex-row flex-wrap gap-md items-end w-full shadow-none">
 <!-- Date Filter -->
-<div class="flex flex-col gap-xs w-full md:w-auto">
+<div class="flex flex-col gap-xs w-full md:flex-1 md:basis-[170px] md:min-w-0 md:max-w-[300px]">
 <label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Bulan Produksi</label>
 <div class="relative flex items-center">
 <input type="hidden" id="fDate"/>
 <input type="text" id="fDateDisplay" readonly placeholder="MM-YYYY"
-class="w-full md:w-56 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
+class="w-full bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
 <button type="button" id="fDateBtn" class="absolute right-1 p-2 text-secondary hover:text-primary cursor-pointer" aria-label="Pilih tanggal" title="Pilih tanggal">
 <span class="material-symbols-outlined">calendar_month</span>
 </button>
@@ -257,11 +257,11 @@ class="w-full md:w-56 bg-background border border-outline-variant text-on-backgr
 </div>
 </div>
 <!-- Shift Filter -->
-<div class="flex flex-col gap-xs w-full md:w-auto">
+<div class="flex flex-col gap-xs w-full md:flex-1 md:basis-[170px] md:min-w-0 md:max-w-[300px]">
 <label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Shift</label>
 <div class="relative flex items-center">
 <span class="material-symbols-outlined absolute left-3 text-secondary">schedule</span>
-<select id="fShift" class="w-full md:w-36 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
+<select id="fShift" class="w-full bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
 <option value="all">Semua</option>
 <option value="pagi">Pagi</option>
 <option value="malam">Malam</option>
@@ -269,11 +269,11 @@ class="w-full md:w-56 bg-background border border-outline-variant text-on-backgr
 </div>
 </div>
 <!-- Line Stop Type Filter -->
-<div class="flex flex-col gap-xs w-full md:w-auto">
+<div class="flex flex-col gap-xs w-full md:flex-1 md:basis-[170px] md:min-w-0 md:max-w-[300px]">
 <label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Tipe Line Stop</label>
 <div class="relative flex items-center">
 <span class="material-symbols-outlined absolute left-3 text-secondary">analytics</span>
-<select id="fType" class="w-full md:w-44 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
+<select id="fType" class="w-full bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
 <option value="ALL">Semua Tipe</option>
 <option value="AV">Availability (AV)</option>
 <option value="PE">Performance (PE)</option>
@@ -282,34 +282,34 @@ class="w-full md:w-56 bg-background border border-outline-variant text-on-backgr
 </div>
 </div>
 <!-- Machine Filter -->
-<div class="flex flex-col gap-xs w-full md:w-auto">
+<div class="flex flex-col gap-xs w-full md:flex-1 md:basis-[170px] md:min-w-0 md:max-w-[300px]">
 <label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Mesin</label>
 <div class="relative flex items-center">
 <span class="material-symbols-outlined absolute left-3 text-secondary">precision_manufacturing</span>
-<select id="fMachine" class="w-full md:w-48 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
+<select id="fMachine" class="w-full bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-10 pr-8 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors appearance-none cursor-pointer">
 <option value="ALL">Semua Mesin</option>
 </select>
 </div>
 </div>
 <!-- Date Range Filter (List Up Problem) -->
-<div class="flex flex-col gap-xs w-full md:w-auto">
+<div class="flex flex-col gap-xs w-full md:flex-1 md:basis-[170px] md:min-w-0 md:max-w-[300px]">
 <label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Dari Tanggal</label>
 <div class="relative flex items-center">
 <input type="hidden" id="fFrom"/>
 <input type="text" id="fFromDisplay" readonly placeholder="DD-MM-YYYY"
-class="w-full md:w-56 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
+class="w-full bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
 <button type="button" id="fFromBtn" class="absolute right-1 p-2 text-secondary hover:text-primary cursor-pointer" aria-label="Pilih tanggal awal" title="Pilih tanggal awal">
 <span class="material-symbols-outlined">calendar_month</span>
 </button>
 <div id="fFromPicker" class="hidden absolute z-50 top-full mt-2 w-72 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-xl p-3"></div>
 </div>
 </div>
-<div class="flex flex-col gap-xs w-full md:w-auto">
+<div class="flex flex-col gap-xs w-full md:flex-1 md:basis-[170px] md:min-w-0 md:max-w-[300px]">
 <label class="font-label-caps text-label-caps text-secondary uppercase tracking-wider">Sampai Tanggal</label>
 <div class="relative flex items-center">
 <input type="hidden" id="fTo"/>
 <input type="text" id="fToDisplay" readonly placeholder="DD-MM-YYYY"
-class="w-full md:w-56 bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
+class="w-full bg-background border border-outline-variant text-on-background font-data-mono text-data-mono pl-3 pr-10 py-2 focus:border-primary focus:outline-none focus:ring-0 transition-colors cursor-pointer"/>
 <button type="button" id="fToBtn" class="absolute right-1 p-2 text-secondary hover:text-primary cursor-pointer" aria-label="Pilih tanggal akhir" title="Pilih tanggal akhir">
 <span class="material-symbols-outlined">calendar_month</span>
 </button>
@@ -317,7 +317,7 @@ class="w-full md:w-56 bg-background border border-outline-variant text-on-backgr
 </div>
 </div>
 <!-- Apply Button -->
-<button onclick="applyFilters()" class="w-full md:w-auto px-6 py-2 bg-transparent border border-primary text-primary font-label-caps text-label-caps font-bold hover:bg-primary hover:text-on-primary transition-colors active:scale-95 uppercase tracking-wider h-[38px]">
+<button onclick="applyFilters()" class="w-full md:w-auto md:shrink-0 px-6 py-2 bg-transparent border border-primary text-primary font-label-caps text-label-caps font-bold hover:bg-primary hover:text-on-primary transition-colors active:scale-95 uppercase tracking-wider h-[38px]">
                 Terapkan
             </button>
 </section>
