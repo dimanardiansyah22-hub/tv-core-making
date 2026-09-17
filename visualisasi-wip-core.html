@@ -695,6 +695,7 @@
 <span class="material-symbols-outlined text-base">dark_mode</span>
 <span>Shift Malam</span>
 </button>
+<span id="wipSyncStatus" class="no-print text-[12px] font-semibold" style="color:#64748b;align-self:center">Lokal saja</span>
 </div>
 <button onclick="toggleFullscreen()" class="no-print flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300" id="fullscreenBtn">
 <span class="material-symbols-outlined text-base" id="fullscreenIcon">fullscreen</span>
@@ -966,6 +967,13 @@ let _wipLastTs = {};
 /* Kunci yg sudah disimpan lokal tapi BELUM terkonfirmasi ke server.
    Selama kotor, snapshot server TIDAK BOLEH menimpanya (anti isian hilang). */
 let _wipDirty = {};
+/* Indikator status sinkron di header (anti panik: bedakan "memuat" vs "hilang") */
+function setWipSyncStatus(text, color) {
+  const el = document.getElementById('wipSyncStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = color || '#64748b';
+}
 
 function saveAllData() {
   const snapshot = collectWipData();
@@ -980,6 +988,7 @@ function scheduleWipSave() {
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
   _wipPendingSave[shift] = true;
+  setWipSyncStatus('Menyimpan…', '#b45309');
   clearTimeout(_wipSaveTimer);
   const snapshot = { shift, data: collectWipData() };
   _wipSaveTimer = setTimeout(() => syncWipSave(snapshot), 800);
@@ -992,8 +1001,10 @@ async function syncWipSave(snapshot) {
     if (res && res.updatedAt) _wipLastTs[snapshot.shift] = res.updatedAt;
     _wipDirty[snapshot.shift] = {};
     _wipPendingSave[snapshot.shift] = false;
+    setWipSyncStatus('Tersimpan ✓', '#15803d');
   } catch (e) {
     _wipPendingSave[snapshot.shift] = false;
+    setWipSyncStatus('Gagal menyimpan — data aman di lokal', '#b91c1c');
   }
 }
 
@@ -1057,15 +1068,16 @@ function mergeWipData(shift, server) {
   return merged;
 }
 
-async function wipSyncFromServer() {
+async function wipSyncFromServer(loud) {
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
-  if (_wipPendingSave[shift]) return;
+  if (_wipPendingSave[shift]) { if (loud) setWipSyncStatus('Menyimpan…', '#b45309'); return; }
+  if (loud) setWipSyncStatus('Memuat data shift…', '#b45309');
   try {
     const res = await Sync.get('wip', { shift, action: 'get' });
     if (currentShift() !== shift) return; /* pindah shift saat fetch: buang respons agar pagi/malam tak tercampur */
     const data = (res && res.ok && res.data) ? res.data : null;
-    if (!data || !data.updatedAt) return;
+    if (!data || !data.updatedAt) { if (loud) setWipSyncStatus('Tersinkron ✓', '#15803d'); return; }
     if (data.updatedAt !== _wipLastTs[shift]) {
       _wipLastTs[shift] = data.updatedAt;
       const values = mergeWipData(shift, data);
@@ -1073,7 +1085,8 @@ async function wipSyncFromServer() {
       applyWipData(values);
       if (Object.keys(_wipDirty[shift] || {}).length) scheduleWipSave();
     }
-  } catch (e) {}
+    if (loud && !Object.keys(_wipDirty[shift] || {}).length && !_wipPendingSave[shift]) setWipSyncStatus('Tersinkron ✓', '#15803d');
+  } catch (e) { if (loud) setWipSyncStatus('Gagal memuat — data lokal aman', '#b91c1c'); }
 }
 
 function loadSavedData() {
@@ -1545,7 +1558,7 @@ function switchShift(value) {
   document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(isMalam ? 'shiftMalamBtn' : 'shiftPagiBtn').classList.add('active');
   renderTimeSlots(isMalam ? nightSlots : daySlots);
-  wipSyncFromServer();
+  wipSyncFromServer(true);
 }
 
 /* ── Generate to PDF: ringkasan WIP Core ──
@@ -2271,8 +2284,8 @@ renderTimeSlots(initialShift === 'malam' ? nightSlots : daySlots);
 bindPanelInputs();
 bindPanelNav();
 
-wipSyncFromServer();
-if (window.Sync) setInterval(wipSyncFromServer, Sync.pollMs);
+wipSyncFromServer(true);
+if (window.Sync) setInterval(() => wipSyncFromServer(false), Sync.pollMs);
 
 renderMachineOptions();
 loadMachines();
