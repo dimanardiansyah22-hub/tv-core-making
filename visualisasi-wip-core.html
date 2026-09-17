@@ -1077,6 +1077,11 @@ function loadSavedData() {
   try {
     const raw = localStorage.getItem(getStorageKey());
     const data = raw ? JSON.parse(raw) : {};
+    /* TANDAI data lokal sbg kotor: nilai lokal yg terisi harus menang atas
+       snapshot server yg basi (save 800ms yg belum terkirim saat pindah halaman) */
+    const shift = currentShift();
+    if (!_wipDirty[shift]) _wipDirty[shift] = {};
+    Object.keys(data).forEach(k => { if (data[k] !== undefined && data[k] !== '') _wipDirty[shift][k] = true; });
     const focusEl = document.activeElement;
     const focusedCell = (focusEl && focusEl.classList && focusEl.classList.contains('cell-input')) ? focusEl : null;
     document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
