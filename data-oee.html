@@ -754,8 +754,17 @@ function renderPareto() {
     });
     var s = '<polyline points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" fill="none" stroke="#dc2626" stroke-width="2"/>';
     pts.forEach(function (p, i) {
+      var cx = Number(p[0]), py = Number(p[1]);
       s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="#dc2626"/>';
-      s += '<text x="' + p[0] + '" y="' + (Number(p[1]) - 8).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">' + arr[i].pct + '%</text>';
+      /* Hindari tumpuk dgn label menit di kolom yg sama: geser label % ke samping titik */
+      var barH = Math.max(3, arr[i].minutes / maxMin * BH);
+      var collide = Math.abs((py - 13) - ((H - barH) - 10)) < 20;
+      var side = 0;
+      if (collide) side = (i === arr.length - 1) ? -1 : 1;
+      var tx = p[0], ty = (py - 8).toFixed(1), anchor = 'middle';
+      if (side === 1) { tx = (cx + 9).toFixed(1); ty = (py + 3).toFixed(1); anchor = 'start'; }
+      else if (side === -1) { tx = (cx - 9).toFixed(1); ty = (py + 3).toFixed(1); anchor = 'end'; }
+      s += '<text x="' + tx + '" y="' + ty + '" text-anchor="' + anchor + '" font-size="10" font-weight="bold" fill="#dc2626" style="paint-order:stroke" stroke="#ffffff" stroke-width="3">' + arr[i].pct + '%</text>';
     });
     svg.innerHTML = s;
     var ticks = '';
