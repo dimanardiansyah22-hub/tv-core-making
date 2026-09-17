@@ -728,7 +728,6 @@ function renderPareto() {
     var short = paretoShortMachine(o.mesin);
     bars += '<div class="pareto-col flex-1 flex flex-col items-center justify-end h-full min-w-0" title="' + esc(o.mesin) + ': ' + o.minutes + ' mnt (kum ' + o.pct + '%)">'
       + '<div class="font-data-mono text-[11px] font-bold text-on-background leading-none mb-1">' + o.minutes + '</div>'
-      + '<div class="font-data-mono text-[10px] font-bold leading-none mb-1" style="color:#dc2626">' + o.pct + '%</div>'
       + '<div class="w-full hover:brightness-110 transition-all" style="height:' + h + 'px;background:linear-gradient(180deg,#38bdf8,#0284c7);border:1px solid var(--outline);border-bottom:none"></div>'
       + '</div>';
     axis.push('<div class="flex-1 min-w-0 text-center text-[10px] truncate" title="' + esc(o.mesin) + '">' + esc(short) + '</div>');
@@ -747,7 +746,10 @@ function renderPareto() {
       pts.push([(r.left + r.width / 2 - pr.left).toFixed(1), lineY(arr[i].pct).toFixed(1)]);
     });
     var s = '<polyline points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" fill="none" stroke="#dc2626" stroke-width="2"/>';
-    pts.forEach(function (p) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="#dc2626"/>'; });
+    pts.forEach(function (p, i) {
+      s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="#dc2626"/>';
+      s += '<text x="' + p[0] + '" y="' + (Number(p[1]) - 8).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">' + arr[i].pct + '%</text>';
+    });
     svg.innerHTML = s;
     var ticks = '';
     [0, 25, 50, 75, 100].forEach(function (p) {
