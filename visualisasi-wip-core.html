@@ -1033,10 +1033,12 @@ function applyWipData(data) {
 
 function setPanelValSafe(data, id) {
   const el = document.getElementById(id);
-  if (el) {
-    if (data[id] !== undefined && data[id] !== '') el.value = data[id];
-    else if (el === document.activeElement) return;
-  }
+  if (!el) return;
+  if (el === document.activeElement) return; /* sedang diketik: jangan timpa */
+  const k = (typeof PANEL_KEYS !== 'undefined') ? PANEL_KEYS[id] : undefined;
+  const v = (k && data[k] !== undefined) ? data[k] : data[id];
+  if (v !== undefined && v !== '') el.value = v;
+  /* nilai kosong/tak ada: biarkan apa adanya (jangan pernah hapus) */
 }
 
 /* Gabung snapshot server ke data lokal TANPA menghapus:
