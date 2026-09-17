@@ -124,6 +124,8 @@ function doPost(e) {
     else result = { ok: false, error: 'Aksi POST tidak dikenal: ' + action };
   } else if (app === 'wipreport' && action === 'savepdf') {
     result = saveWipPdf_(body);
+  } else if (app === 'asakaireport' && action === 'savepdf') {
+    result = saveAsakaiPdf_(body);
   } else if (app === 'bnf' && action === 'savepdf') {
     result = saveBnfPdf_(body);
   } else if (app === 'oeedata' && action === 'save') {
@@ -336,6 +338,39 @@ function saveWipPdf_(data) {
     var file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
     return { ok: true, id: file.getId(), temp: !!data.temp };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+/* ── Simpan PDF laporan OEE Asakai ke folder khusus "Asakai" ──
+   Dipakai tombol "Buat PDF Asakai" di data-oee.html.
+   Folder dibuat otomatis bila belum ada. File dibagikan ANYONE_WITH_LINK.
+   PDF sebelumnya dgn nama dasar yg sama diganti supaya tidak menumpuk. */
+function getAsakaiFolder_() {
+  try {
+    var it = DriveApp.getFoldersByName('Asakai');
+    if (it.hasNext()) return it.next();
+  } catch (e) { /* lanjut buat baru */ }
+  return DriveApp.createFolder('Asakai');
+}
+
+function saveAsakaiPdf_(data) {
+  var b64 = data.b64 || '';
+  if (!b64) return { ok: false, error: 'PDF kosong' };
+  try {
+    var name = data.name || 'Laporan OEE Core Making - Asakai.pdf';
+    var folder = getAsakaiFolder_();
+    var base = name.replace(/\.pdf$/i, '').toLowerCase();
+    var files = folder.getFiles();
+    while (files.hasNext()) {
+      var ex = files.next();
+      if (ex.getName().toLowerCase().replace(/\.pdf$/i, '') === base) ex.setTrashed(true);
+    }
+    var blob = Utilities.newBlob(Utilities.base64Decode(b64), 'application/pdf', name);
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return { ok: true, id: file.getId(), folderId: folder.getId() };
   } catch (e) {
     return { ok: false, error: e.message };
   }

@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;family=Inter:wght@100..900&amp;family=JetBrains+Mono:wght@100..900&amp;display=swap" rel="stylesheet">
 <!-- Tailwind CSS -->
 <script src="tailwind-cdn.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
@@ -320,6 +322,12 @@ class="w-full bg-background border border-outline-variant text-on-background fon
 <button onclick="applyFilters()" class="w-full md:w-auto md:shrink-0 px-6 py-2 bg-transparent border border-primary text-primary font-label-caps text-label-caps font-bold hover:bg-primary hover:text-on-primary transition-colors active:scale-95 uppercase tracking-wider h-[38px]">
                 Terapkan
             </button>
+<!-- Buat PDF Asakai -->
+<button id="asakaiPdfBtn" onclick="generateAsakaiPdf()" class="w-full md:w-auto md:shrink-0 px-6 py-2 bg-primary text-on-primary font-label-caps text-label-caps font-bold hover:opacity-90 transition-all active:scale-95 uppercase tracking-wider h-[38px] flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                Buat PDF Asakai
+            </button>
+<span id="asakaiPdfStatus" class="w-full md:w-auto font-data-mono text-[11px] text-secondary"></span>
 </section>
 <!-- Top Section: OEE Bar Chart + Pareto Line Stop (rasio 60:40) -->
 <div class="flex flex-col lg:flex-row gap-4 items-stretch">
@@ -952,6 +960,230 @@ function exportCSV() {
 }
 
 /* ── Sinkronkan tema dengan index.html (light/dark) ── */
+/* ── PDF Asakai: ringkasan OEE + Pareto + list problem sesuai filter ──
+   Mekanisme sama seperti Generate PDF Visualisasi WIP Core:
+   lembar ringkasan offscreen → html2canvas → jsPDF A4 portrait → folder Asakai di Drive */
+var _asakaiB64 = '', _asakaiName = '';
+function setAsakaiStatus(msg, isErr) {
+  var el = document.getElementById('asakaiPdfStatus');
+  if (!el) return;
+  el.innerHTML = '';
+  var s = document.createElement('span');
+  s.textContent = msg;
+  s.style.color = isErr ? '#dc2626' : '';
+  el.appendChild(s);
+}
+function collectAsakaiRows() {
+  var f = currentFilters();
+  var rows = [];
+  var useRange = !!(f.from || f.to);
+  allDates().sort().reverse().forEach(function (d) {
+    if (useRange) {
+      if (f.from && d < f.from) return;
+      if (f.to && d > f.to) return;
+    } else if (f.date && getMonthKey(d) !== f.date) {
+      return;
+    }
+    ['pagi', 'malam'].forEach(function (sh) {
+      if (f.shift !== 'all' && f.shift !== sh) return;
+      var rec = OEE_STORE[d][sh];
+      if (!rec) return;
+      (rec.problems || []).forEach(function (p) {
+        if (f.type && (p.type || 'AV') !== f.type) return;
+        if (f.machine && (p.mesin || '') !== f.machine) return;
+        rows.push({ date: d, shift: sh, slot: p.slot, type: p.type || 'AV', mesin: p.mesin || '', problem: p.problem || '', minutes: p.minutes || 0, pg: p.pg || '' });
+      });
+    });
+  });
+  if (SORT_KEY) {
+    var numKeys = { minutes: 1 };
+    rows.sort(function (a, b) {
+      var va = a[SORT_KEY], vb = b[SORT_KEY];
+      if (numKeys[SORT_KEY]) {
+        va = va == null ? 0 : Number(va);
+        vb = vb == null ? 0 : Number(vb);
+        return (va - vb) * SORT_DIR;
+      }
+      va = String(va == null ? '' : va);
+      vb = String(vb == null ? '' : vb);
+      return va.localeCompare(vb) * SORT_DIR;
+    });
+  }
+  return rows;
+}
+function asakaiAverages() {
+  var f = currentFilters();
+  var useRange = !!(f.from || f.to);
+  var sums = { oee: 0, av: 0, pe: 0, rq: 0, n: 0 };
+  var counts = { oee: 0, av: 0, pe: 0, rq: 0 };
+  allDates().forEach(function (d) {
+    if (useRange) {
+      if (f.from && d < f.from) return;
+      if (f.to && d > f.to) return;
+    } else if (f.date && getMonthKey(d) !== f.date) {
+      return;
+    }
+    ['pagi', 'malam'].forEach(function (sh) {
+      if (f.shift !== 'all' && f.shift !== sh) return;
+      var rec = OEE_STORE[d] && OEE_STORE[d][sh];
+      if (!rec) return;
+      sums.n++;
+      ['oee', 'av', 'pe', 'rq'].forEach(function (k) {
+        if (rec[k] != null && !isNaN(Number(rec[k]))) { sums[k] += Number(rec[k]); counts[k]++; }
+      });
+    });
+  });
+  function avg(k) { return counts[k] ? Math.round(sums[k] / counts[k] * 10) / 10 : null; }
+  return { oee: avg('oee'), av: avg('av'), pe: avg('pe'), rq: avg('rq'), n: sums.n };
+}
+function asakaiPeriodLabel() {
+  var f = currentFilters();
+  if (f.from || f.to) {
+    return (f.from ? fmtDate(f.from) : '…') + ' s.d. ' + (f.to ? fmtDate(f.to) : '…');
+  }
+  var m = f.date;
+  if (!m) { var ds = allDates(); if (ds.length) m = getMonthKey(ds[ds.length - 1]); }
+  if (!m) return '-';
+  return monthName(m) + ' ' + m.slice(0, 4);
+}
+function asakaiFilterDesc() {
+  var f = currentFilters();
+  var sh = f.shift === 'all' ? 'Pagi + Malam' : (f.shift === 'malam' ? 'Malam' : 'Pagi');
+  return 'Shift: ' + sh + ' • Tipe: ' + (f.type || 'Semua Tipe') + ' • Mesin: ' + (f.machine || 'Semua Mesin');
+}
+function asakaiEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function buildAsakaiSheet() {
+  var rows = collectAsakaiRows();
+  var avg = asakaiAverages();
+  var byM = {};
+  collectParetoRows().forEach(function (r) {
+    var m = r.mesin || '(Tanpa mesin)';
+    byM[m] = (byM[m] || 0) + (Number(r.minutes) || 0);
+  });
+  var par = Object.keys(byM).map(function (m) { return { mesin: m, minutes: byM[m] }; })
+    .filter(function (o) { return o.minutes > 0; })
+    .sort(function (a, b) { return b.minutes - a.minutes; });
+  var nTotal = par.reduce(function (s, o) { return s + o.minutes; }, 0);
+  var pMax = par.length ? par[0].minutes : 1;
+  var now = new Date();
+  var pad = function (x) { return ('0' + x).slice(-2); };
+  var genAt = pad(now.getDate()) + '-' + pad(now.getMonth() + 1) + '-' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  function kpi(label, val, color) {
+    return '<div style="flex:1;min-width:0;border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;text-align:center">'
+      + '<div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#64748b">' + label + '</div>'
+      + '<div style="font-size:22px;font-weight:900;color:' + color + '">' + val + '</div></div>';
+  }
+  function pct(v) { return v == null ? '–' : (v + '%'); }
+  var paretoHtml = par.length ? par.map(function (o) {
+    var w = Math.max(4, Math.round(o.minutes / pMax * 420));
+    return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0">'
+      + '<div style="width:150px;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + asakaiEsc(o.mesin) + '</div>'
+      + '<div style="width:' + w + 'px;max-width:420px;height:16px;background:linear-gradient(90deg,#38bdf8,#0284c7);border:1px solid #64748b"></div>'
+      + '<div style="font-size:12px;font-weight:800">' + o.minutes + ' mnt</div></div>';
+  }).join('') : '<div style="font-size:12px;color:#64748b">Tidak ada line stop pada periode ini.</div>';
+  var th = 'border:1px solid #94a3b8;padding:5px 6px;font-size:11px;font-weight:800;background:#e2e8f0;text-align:center;white-space:nowrap';
+  var tdC = 'border:1px solid #cbd5e1;padding:4px 6px;font-size:11px;text-align:center;vertical-align:top';
+  var tdL = 'border:1px solid #cbd5e1;padding:4px 6px;font-size:11px;vertical-align:top';
+  var probHtml = rows.length ? rows.map(function (r, i) {
+    return '<tr><td style="' + tdC + '">' + (i + 1) + '</td>'
+      + '<td style="' + tdC + ';white-space:nowrap">' + asakaiEsc(fmtDate(r.date)) + '</td>'
+      + '<td style="' + tdC + '">' + (r.shift === 'malam' ? 'Malam' : 'Pagi') + '</td>'
+      + '<td style="' + tdC + ';white-space:nowrap">' + asakaiEsc(fmtSlot(r.slot)) + '</td>'
+      + '<td style="' + tdC + '">' + asakaiEsc(r.mesin || '-') + '</td>'
+      + '<td style="' + tdC + '">' + asakaiEsc(r.type) + '</td>'
+      + '<td style="' + tdL + '">' + asakaiEsc(r.problem || '-') + '</td>'
+      + '<td style="' + tdL + '">' + asakaiEsc(r.pg || '-') + '</td>'
+      + '<td style="' + tdC + '">' + r.minutes + '</td></tr>';
+  }).join('') : '<tr><td colspan="9" style="' + tdC + '">Tidak ada data problem yang cocok dengan filter.</td></tr>';
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'width:794px;background:#ffffff;color:#0f172a;font-family:Arial,Helvetica,sans-serif;font-size:12px;padding:28px;position:absolute;left:-9999px;top:0;';
+  sheet.innerHTML =
+    '<div style="border-bottom:4px solid #0f172a;padding-bottom:8px">'
+    + '<div style="font-size:24px;font-weight:900;text-transform:uppercase">Laporan OEE Core Making — Asakai</div>'
+    + '<div style="font-size:13px;color:#475569;margin-top:2px">Periode: ' + asakaiEsc(asakaiPeriodLabel()) + ' &nbsp;•&nbsp; ' + asakaiEsc(asakaiFilterDesc()) + '</div>'
+    + '<div style="font-size:11px;color:#64748b;margin-top:2px">Dibuat: ' + genAt + ' &nbsp;•&nbsp; ' + rows.length + ' problem line stop</div></div>'
+    + '<div style="display:flex;gap:10px;margin:14px 0">'
+    + kpi('Rata-rata OEE', pct(avg.oee), '#0f172a') + kpi('Availability', pct(avg.av), '#8b5cf6')
+    + kpi('Performance', pct(avg.pe), '#0284c7') + kpi('Rate of Quality', pct(avg.rq), '#d4a017')
+    + kpi('Total Line Stop', nTotal.toLocaleString('id-ID') + ' mnt', '#dc2626')
+    + '</div>'
+    + '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin:14px 0 6px;color:#334155">Pareto Line Stop per Mesin (n = ' + nTotal.toLocaleString('id-ID') + ' mnt)</div>'
+    + paretoHtml
+    + '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin:16px 0 6px;color:#334155">List Up Problem Line Stop</div>'
+    + '<table style="width:100%;border-collapse:collapse"><thead><tr>'
+    + '<th style="' + th + '">No</th><th style="' + th + '">Tanggal</th><th style="' + th + '">Shift</th>'
+    + '<th style="' + th + '">Jam</th><th style="' + th + '">Mesin</th><th style="' + th + '">Tipe</th>'
+    + '<th style="' + th + '">Problem</th><th style="' + th + '">Penanggulangan</th><th style="' + th + '">Dur (Min)</th>'
+    + '</tr></thead><tbody>' + probHtml + '</tbody></table>';
+  return sheet;
+}
+async function generateAsakaiPdf() {
+  var btn = document.getElementById('asakaiPdfBtn');
+  btn.disabled = true;
+  setAsakaiStatus('Menyusun laporan…');
+  try {
+    var sheet = buildAsakaiSheet();
+    document.body.appendChild(sheet);
+    await new Promise(function (r) { setTimeout(r, 80); });
+    var canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    sheet.remove();
+    var MX = 10, MY = 10;
+    var pdf = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    var pw = pdf.internal.pageSize.getWidth();
+    var ph = pdf.internal.pageSize.getHeight();
+    var cw = pw - 2 * MX;
+    var chAvail = ph - 2 * MY;
+    var pxPerPage = Math.max(1, Math.floor(canvas.width * chAvail / cw));
+    var y = 0, first = true;
+    while (y < canvas.height) {
+      if (!first) pdf.addPage();
+      var h = Math.min(pxPerPage, canvas.height - y);
+      var part = document.createElement('canvas');
+      part.width = canvas.width; part.height = h;
+      var ctx = part.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, h);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', MX, MY, cw, h * cw / canvas.width);
+      y += h; first = false;
+    }
+    _asakaiB64 = pdf.output('datauristring').split(',')[1];
+    _asakaiName = 'Laporan OEE Core Making - Asakai (' + asakaiPeriodLabel().replace(/[\\\\/:*?\"<>|]/g, '-') + ').pdf';
+    setAsakaiStatus('Mengunggah ke Drive (folder Asakai)…');
+    var url = getUrl();
+    if (!url) throw new Error('URL Apps Script belum diatur — buka halaman Visualisasi WIP Core terlebih dahulu');
+    var res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ app: 'asakaireport', action: 'savepdf', name: _asakaiName, b64: _asakaiB64 }),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      redirect: 'follow'
+    }).then(function (r) { return r.json(); });
+    if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
+    var el = document.getElementById('asakaiPdfStatus');
+    el.innerHTML = '';
+    var ok = document.createElement('span');
+    ok.textContent = 'Tersimpan di Drive ✓ ';
+    el.appendChild(ok);
+    var dl = document.createElement('a');
+    dl.href = 'data:application/pdf;base64,' + _asakaiB64;
+    dl.download = _asakaiName;
+    dl.textContent = 'Unduh';
+    dl.style.cssText = 'color:var(--primary);font-weight:700;margin-left:8px';
+    el.appendChild(dl);
+    var fo = document.createElement('a');
+    fo.href = 'https://drive.google.com/drive/folders/' + res.folderId;
+    fo.target = '_blank';
+    fo.textContent = 'Buka folder Asakai';
+    fo.style.cssText = 'color:var(--primary);font-weight:700;margin-left:8px';
+    el.appendChild(fo);
+  } catch (err) {
+    setAsakaiStatus('Gagal: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function applyTheme() {
   var saved = 'light';
   try { saved = localStorage.getItem('theme') || 'light'; } catch (e) {}
