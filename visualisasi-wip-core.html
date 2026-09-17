@@ -280,14 +280,6 @@
 
     body.dark-mode .note-pane { border-bottom: 1px dashed #999 !important; }
     body.dark-mode .note-pane:last-child { border-bottom: none !important; }
-    body.dark-mode #fullscreenBtn {
-      background: #4a4a6a !important;
-      color: #e0e0f0 !important;
-      border-color: #777 !important;
-    }
-    body.dark-mode #fullscreenBtn:hover {
-      background: #5a5a7a !important;
-    }
 
     .shift-btn {
       background: #f3f4f6;
@@ -696,11 +688,6 @@
 <span>Shift Malam</span>
 </button>
 <span id="wipSyncStatus" class="no-print text-[12px] font-semibold" style="color:#64748b;align-self:center">Lokal saja</span>
-</div>
-<button onclick="toggleFullscreen()" class="no-print flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors border border-gray-300" id="fullscreenBtn">
-<span class="material-symbols-outlined text-base" id="fullscreenIcon">fullscreen</span>
-<span id="fullscreenLabel">Full Screen</span>
-</button>
 </div>
 </header>
 <!-- END: HeaderSection -->
@@ -2218,64 +2205,6 @@ function noteClearCell() {
   renderReadiness();
   updateEfficiency();
 }
-
-function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen();
-  } else {
-    document.exitFullscreen();
-  }
-}
-
-/* Fullscreen: ambil 40% lebar kolom keterangan, berikan ke kolom readiness */
-function reallocateFullscreenWidths() {
-  const table = document.getElementById('wip-core-table');
-  const thReady = table.querySelector('th[data-col="readiness"]');
-  const thNote = table.querySelector('th[data-col="note"]');
-  if (!thReady || !thNote) return;
-  const wNote = thNote.getBoundingClientRect().width;
-  const wReady = thReady.getBoundingClientRect().width;
-  if (wNote < 20) return;
-  const shift = Math.round(wNote * 0.4);
-  const newReady = Math.round(wReady + shift);
-  const newNote = Math.round(wNote - shift);
-  const apply = (sel, w) => {
-    table.querySelectorAll(sel).forEach(el => {
-      el.style.setProperty('width', w + 'px', 'important');
-      el.style.setProperty('min-width', w + 'px', 'important');
-    });
-  };
-  apply('col[data-k="ready"], th[data-col="readiness"], td[data-col="readiness"]', newReady);
-  apply('col[data-k="note"], th[data-col="note"], td[data-col="note"]', newNote);
-  renderReadiness();
-}
-
-function clearFullscreenWidths() {
-  const table = document.getElementById('wip-core-table');
-  table.querySelectorAll('col[data-k="ready"], th[data-col="readiness"], td[data-col="readiness"], col[data-k="note"], th[data-col="note"], td[data-col="note"]').forEach(el => {
-    el.style.removeProperty('width');
-    el.style.removeProperty('min-width');
-  });
-}
-
-document.addEventListener('fullscreenchange', function() {
-  const icon = document.getElementById('fullscreenIcon');
-  const label = document.getElementById('fullscreenLabel');
-  const table = document.getElementById('wip-core-table');
-  if (document.fullscreenElement) {
-    icon.textContent = 'fullscreen_exit';
-    label.textContent = 'Exit';
-    table.classList.add('fullscreen');
-    renderReadiness();
-    requestAnimationFrame(() => requestAnimationFrame(reallocateFullscreenWidths));
-  } else {
-    icon.textContent = 'fullscreen';
-    label.textContent = 'Full Screen';
-    clearFullscreenWidths();
-    table.classList.remove('fullscreen');
-    renderReadiness();
-  }
-});
 
 const initialShift = localStorage.getItem('wip-shift') || 'pagi';
 if (initialShift === 'malam') document.body.classList.add('dark-mode');
