@@ -1189,10 +1189,10 @@ async function generateAsakaiPdf() {
     var dlBtn = document.getElementById('asakaiDownloadBtn');
     dlBtn.href = link;
     dlBtn.download = _asakaiName;
-    dlBtn.style.display = '';
+    dlBtn.style.display = 'inline-block';
     var foBtn = document.getElementById('asakaiFolderBtn');
     foBtn.href = 'https://drive.google.com/drive/folders/' + res.folderId;
-    foBtn.style.display = '';
+    foBtn.style.display = 'inline-block';
     setAsakaiStatus('Tersimpan di Drive ✓ (QR tampil)');
   } catch (err) {
     document.getElementById('asakaiModalStatus').textContent = 'Gagal: ' + err.message;
@@ -1481,8 +1481,10 @@ document.addEventListener('click', function (e) {
 });
 
 init();
-document.getElementById('asakaiCloseBtn').addEventListener('click', closeAsakaiModal);
-document.getElementById('asakaiPdfModal').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeAsakaiModal(); });
+window.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('asakaiCloseBtn').addEventListener('click', closeAsakaiModal);
+  document.getElementById('asakaiPdfModal').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeAsakaiModal(); });
+});
 </script>
 <!-- Modal PDF Asakai: QR unduh + status (ala Generate PDF WIP Core) -->
 <div id="asakaiPdfModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,.5)">
