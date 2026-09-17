@@ -765,7 +765,12 @@
 <div class="mt-2 pt-2 ct-sep">
 <div class="flex items-center justify-between">
 <span class="ef-label text-[15px] font-bold uppercase tracking-widest">Cycle Time</span>
+<span class="flex items-center gap-1">
 <input type="text" inputmode="decimal" id="ct-input" class="ef-input !w-24" placeholder="0" title="Cycle Time menit per pcs">
+<button type="button" id="ct-lock-btn" onclick="toggleCtLock()" class="no-print flex items-center px-1.5 py-1 text-sm text-gray-500 hover:text-gray-800 rounded-lg border border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors" title="Kunci Cycle Time agar tak berubah tak sengaja">
+<span class="material-symbols-outlined text-base" id="ct-lock-icon">lock_open</span>
+</button>
+</span>
 </div>
 </div>
 <div id="plan-notice" class="hidden mt-2 px-2 py-1.5 bg-yellow-50 border border-yellow-300 rounded text-[12px] text-yellow-700 font-semibold text-center leading-tight">
@@ -1340,6 +1345,20 @@ function bindInputEvents() {
   });
   bindCellNav();
 }
+
+/* Gembok Cycle Time: cegah ubah tak sengaja. Status tersimpan (wip-ct-lock). */
+let ctLocked = (() => { try { return localStorage.getItem('wip-ct-lock') === '1'; } catch (e) { return false; } })();
+function setCtLock(locked) {
+  ctLocked = !!locked;
+  const inp = document.getElementById('ct-input');
+  const icon = document.getElementById('ct-lock-icon');
+  const btn = document.getElementById('ct-lock-btn');
+  if (inp) { inp.readOnly = ctLocked; inp.style.opacity = ctLocked ? '.6' : ''; }
+  if (icon) icon.textContent = ctLocked ? 'lock' : 'lock_open';
+  if (btn) btn.title = ctLocked ? 'Buka kunci Cycle Time' : 'Kunci Cycle Time agar tak berubah tak sengaja';
+  try { localStorage.setItem('wip-ct-lock', ctLocked ? '1' : '0'); } catch (e) {}
+}
+function toggleCtLock() { setCtLock(!ctLocked); }
 
 function bindPanelInputs() {
   const numericFilter = value => value.replace(/[^0-9.]/g, '');
@@ -2211,6 +2230,7 @@ if (initialShift === 'malam') document.body.classList.add('dark-mode');
 document.getElementById(initialShift === 'malam' ? 'shiftMalamBtn' : 'shiftPagiBtn').classList.add('active');
 renderTimeSlots(initialShift === 'malam' ? nightSlots : daySlots);
 bindPanelInputs();
+setCtLock(ctLocked);
 bindPanelNav();
 
 wipSyncFromServer(true);
