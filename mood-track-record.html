@@ -59,6 +59,7 @@
         margin: 0 auto 18px;
     }
     .head .title { font-family: "Hanken Grotesk", sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1; }
+    .head .title .backbtn { vertical-align: middle; margin-right: 10px; text-decoration: none; }
     .head .title .sub { display: block; font-size: 13px; font-weight: 500; color: var(--secondary); margin-top: 4px; }
     .head .actions { display: flex; gap: 10px; }
     .btn {
@@ -154,6 +155,9 @@
 <body>
     <div class="head">
         <div class="title">
+            <a class="btn icon backbtn" href="mapping-core-red.html" onclick="try{var l=localStorage.getItem('mapping-pekerjaan-last');if(l){this.href=l;}}catch(e){}" title="Kembali ke Mapping Pekerjaan" aria-label="Kembali ke Mapping Pekerjaan">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </a>
             Track Record Mood Member
             <span class="sub" id="subtitle">Memuat data…</span>
         </div>

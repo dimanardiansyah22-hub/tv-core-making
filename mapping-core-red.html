@@ -636,6 +636,26 @@ body.dark-mode #multiSkillBtn {
     color: #4ade80;
 }
 body.dark-mode #multiSkillBtn:hover { background: rgba(34, 197, 94, 0.32); }
+#moodRecordBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border-radius: 7px;
+    padding: 7px 11px;
+    background: rgba(2, 132, 199, 0.12);
+    color: #075985;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+#moodRecordBtn:hover { background: rgba(2, 132, 199, 0.24); }
+body.dark-mode #moodRecordBtn {
+    background: rgba(56, 189, 248, 0.16);
+    color: #7dd3fc;
+}
+body.dark-mode #moodRecordBtn:hover { background: rgba(56, 189, 248, 0.3); }
 
 .ms-modal {
     position: fixed;
@@ -803,6 +823,7 @@ body.dark-mode .ms-foot { color: #f87171; }
                 <span class="legend-item"><img class="mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Beaming%20face%20with%20smiling%20eyes/3D/beaming_face_with_smiling_eyes_3d.png" alt="Happy" draggable="false"><em>Happy</em></span>
                 <span class="legend-item"><img class="mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Frowning%20face/3D/frowning_face_3d.png" alt="Bad Mood" draggable="false"><em>Bad Mood</em></span>
                 <span class="legend-item"><img class="mini" src="https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji@main/assets/Face%20with%20thermometer/3D/face_with_thermometer_3d.png" alt="Unfit" draggable="false"><em>Unfit</em></span>
+                <a id="moodRecordBtn" href="mood-track-record.html" data-guest-allow="1" title="Buka Track Record Mood Member"><i class="fas fa-heart-pulse"></i><span>Track Record</span></a>
             </div>
             <div class="legend-sep"></div>
             <div class="legend-sec">
