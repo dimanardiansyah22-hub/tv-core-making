@@ -963,9 +963,16 @@ function setPanelVal(data, id, fallback) {
 let _wipSaveTimer = null;
 let _wipPendingSave = {};
 let _wipLastTs = {};
+/* Kunci yg sudah disimpan lokal tapi BELUM terkonfirmasi ke server.
+   Selama kotor, snapshot server TIDAK BOLEH menimpanya (anti isian hilang). */
+let _wipDirty = {};
 
 function saveAllData() {
-  localStorage.setItem(getStorageKey(), JSON.stringify(collectWipData()));
+  const snapshot = collectWipData();
+  localStorage.setItem(getStorageKey(), JSON.stringify(snapshot));
+  const shift = currentShift();
+  if (!_wipDirty[shift]) _wipDirty[shift] = {};
+  Object.keys(snapshot).forEach(k => { _wipDirty[shift][k] = true; });
   scheduleWipSave();
 }
 
@@ -983,6 +990,7 @@ async function syncWipSave(snapshot) {
   try {
     const res = await Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data });
     if (res && res.updatedAt) _wipLastTs[snapshot.shift] = res.updatedAt;
+    _wipDirty[snapshot.shift] = {};
     _wipPendingSave[snapshot.shift] = false;
   } catch (e) {
     _wipPendingSave[snapshot.shift] = false;
@@ -1031,6 +1039,22 @@ function setPanelValSafe(data, id) {
   }
 }
 
+/* Gabung snapshot server ke data lokal TANPA menghapus:
+   - kunci lokal yg masih kotor (belum terkirim) SELALU menang
+   - nilai server yg kosong/tak ada tak boleh menimpa nilai lokal yg terisi */
+function mergeWipData(shift, server) {
+  let local = {};
+  try { local = JSON.parse(localStorage.getItem(getStorageKey()) || '{}'); } catch (e) { local = {}; }
+  const dirty = _wipDirty[shift] || {};
+  const merged = Object.assign({}, local);
+  Object.keys(server).forEach(k => {
+    if (k === 'updatedAt') return;
+    if (dirty[k]) return;
+    if (server[k] !== undefined && server[k] !== '') merged[k] = server[k];
+  });
+  return merged;
+}
+
 async function wipSyncFromServer() {
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
@@ -1041,10 +1065,10 @@ async function wipSyncFromServer() {
     if (!data || !data.updatedAt) return;
     if (data.updatedAt !== _wipLastTs[shift]) {
       _wipLastTs[shift] = data.updatedAt;
-      const values = Object.assign({}, data);
-      delete values.updatedAt;
+      const values = mergeWipData(shift, data);
       localStorage.setItem(getStorageKey(), JSON.stringify(values));
       applyWipData(values);
+      if (Object.keys(_wipDirty[shift] || {}).length) scheduleWipSave();
     }
   } catch (e) {}
 }
