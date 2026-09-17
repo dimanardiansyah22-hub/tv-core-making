@@ -59,7 +59,9 @@
         margin: 0 auto 18px;
     }
     .head .title { font-family: "Hanken Grotesk", sans-serif; font-weight: 800; font-size: 26px; line-height: 1.1; }
-    .head .title .backbtn { vertical-align: middle; margin-right: 10px; text-decoration: none; }
+    .head .title .backbtn { vertical-align: middle; margin-right: 10px; text-decoration: none; padding: 10px 12px; box-shadow: 0 2px 8px var(--shadow), 0 0 0 1px var(--outline-variant); }
+    .head .title .backbtn:hover { box-shadow: 0 4px 14px var(--shadow); border-color: var(--outline); }
+    .head .title .backbtn svg { width: 22px; height: 22px; }
     .head .title .sub { display: block; font-size: 13px; font-weight: 500; color: var(--secondary); margin-top: 4px; }
     .head .actions { display: flex; gap: 10px; }
     .btn {
