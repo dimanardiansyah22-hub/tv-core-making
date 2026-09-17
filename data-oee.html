@@ -408,6 +408,7 @@ class="w-full md:w-56 bg-background border border-outline-variant text-on-backgr
 <!-- Table Footer -->
 <div class="mt-4 flex items-center justify-between border-t border-outline-variant pt-4">
 <span id="tableFooter" class="font-data-mono text-[11px] text-secondary"></span>
+<span id="tablePager" class="flex items-center gap-1"></span>
 </div>
 </section>
 </main>
@@ -429,6 +430,8 @@ class="w-full md:w-56 bg-background border border-outline-variant text-on-backgr
 var OEE_STORE = {};
 var SORT_KEY = '';
 var SORT_DIR = 1;
+var PAGE_SIZE = 20;
+var PAGE = 1;
 var TYPE_COLORS = {
   AV: 'bg-[#8b5cf6] text-white border border-[#a78bfa]',
   PE: 'bg-[#0284c7] text-white border border-[#7dd3fc]',
@@ -688,16 +691,23 @@ function renderTable() {
   var body = document.getElementById('tableBody');
   var countEl = document.getElementById('tableCount');
   countEl.textContent = rows.length ? '(' + rows.length + ')' : '';
+  var pagerEl = document.getElementById('tablePager');
   if (!rows.length) {
     body.innerHTML = '<tr><td colspan="10" class="px-3 py-8 text-center text-secondary">Tidak ada data problem yang cocok dengan filter.</td></tr>';
     document.getElementById('tableFooter').textContent = '0 records';
+    if (pagerEl) pagerEl.innerHTML = '';
     return;
   }
-  body.innerHTML = rows.map(function (r, i) {
+  var totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  if (PAGE > totalPages) PAGE = totalPages;
+  if (PAGE < 1) PAGE = 1;
+  var start = (PAGE - 1) * PAGE_SIZE;
+  var pageRows = rows.slice(start, start + PAGE_SIZE);
+  body.innerHTML = pageRows.map(function (r, i) {
     var tcol = TYPE_COLORS[r.type] || 'bg-surface-variant text-on-surface border border-outline';
     var durCls = r.minutes >= 60 ? 'text-error font-bold' : (r.minutes >= 30 ? 'text-warning-amber font-bold' : 'text-on-background');
     return '<tr class="hover:bg-surface-container-low border-b border-outline-variant transition-colors cursor-default">'
-      + '<td class="px-3 py-3 text-secondary">' + ('0' + (i + 1)).slice(-2) + '</td>'
+      + '<td class="px-3 py-3 text-secondary">' + ('0' + (start + i + 1)).slice(-2) + '</td>'
       + '<td class="px-3 py-3 text-on-background whitespace-nowrap">' + esc(fmtDate(r.date)) + '</td>'
       + '<td class="px-3 py-3 text-on-background whitespace-nowrap">' + (r.shift === 'malam' ? 'Malam' : 'Pagi') + '</td>'
       + '<td class="px-3 py-3 text-secondary whitespace-nowrap">' + esc(fmtSlot(r.slot)) + '</td>'
@@ -709,10 +719,49 @@ function renderTable() {
       + '<td class="px-3 py-3 text-center whitespace-nowrap"><button type="button" class="oee-del-btn text-error hover:bg-error/10 rounded px-2 py-1 transition-colors" data-del-date="' + esc(r.date) + '" data-del-shift="' + esc(r.shift) + '" title="Hapus data OEE ' + esc(r.date) + ' (' + (r.shift === 'malam' ? 'Malam' : 'Pagi') + ')"><span class="material-symbols-outlined text-base">delete</span></button></td>'
       + '</tr>';
   }).join('');
-  document.getElementById('tableFooter').textContent = 'Showing ' + rows.length + ' records';
+  document.getElementById('tableFooter').textContent = 'Showing ' + (start + 1) + '–' + (start + pageRows.length) + ' of ' + rows.length + ' records';
+  renderPager(rows.length, totalPages);
+}
+
+/* Paginasi List Up Problem Line Stop: 20 baris/halaman */
+function gotoPage(p) {
+  PAGE = p;
+  renderTable();
+}
+function renderPager(total, totalPages) {
+  var box = document.getElementById('tablePager');
+  if (!box) return;
+  if (totalPages <= 1) { box.innerHTML = ''; return; }
+  function btn(label, page, disabled, active, title) {
+    var cls = 'min-w-[26px] px-1.5 py-1 text-[11px] font-bold rounded border transition-colors '
+      + (active ? 'bg-primary text-white border-primary'
+        : 'border-outline-variant text-secondary hover:text-primary hover:border-primary');
+    var dis = disabled ? ' disabled style="opacity:.4;pointer-events:none"' : '';
+    return '<button type="button" class="' + cls + '"' + dis + ' onclick="gotoPage(' + page + ')"'
+      + (title ? ' title="' + title + '"' : '') + '>' + label + '</button>';
+  }
+  var h = '';
+  h += btn('&laquo;', 1, PAGE <= 1, false, 'Halaman pertama');
+  h += btn('&lsaquo;', Math.max(1, PAGE - 1), PAGE <= 1, false, 'Sebelumnya');
+  var pages = [1];
+  [PAGE - 1, PAGE, PAGE + 1].forEach(function (p) {
+    if (p > 1 && p < totalPages && pages.indexOf(p) === -1) pages.push(p);
+  });
+  if (pages.indexOf(totalPages) === -1) pages.push(totalPages);
+  pages.sort(function (a, b) { return a - b; });
+  var prev = 0;
+  pages.forEach(function (p) {
+    if (p - prev > 1) h += '<span class="text-secondary text-[11px] px-0.5">&hellip;</span>';
+    h += btn(String(p), p, false, p === PAGE, 'Halaman ' + p);
+    prev = p;
+  });
+  h += btn('&rsaquo;', Math.min(totalPages, PAGE + 1), PAGE >= totalPages, false, 'Berikutnya');
+  h += btn('&raquo;', totalPages, PAGE >= totalPages, false, 'Halaman terakhir');
+  box.innerHTML = h;
 }
 
 function applyFilters() {
+  PAGE = 1;
   renderAll();
 }
 
@@ -965,6 +1014,7 @@ window.addEventListener('storage', function (e) {
     if (SORT_KEY === key) { SORT_DIR = -SORT_DIR; }
     else { SORT_KEY = key; SORT_DIR = 1; }
     syncInds();
+    PAGE = 1;
     renderTable();
   });
 })();
