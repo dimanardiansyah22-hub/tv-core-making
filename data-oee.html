@@ -395,7 +395,7 @@ class="w-full bg-background border border-outline-variant text-on-background fon
 <!-- CSS Pareto Bars + garis kumulatif (sumbu %) -->
 <div class="relative">
 <div id="paretoMinAxis" class="absolute left-0 top-0 bottom-0 w-10 pointer-events-none font-data-mono"></div>
-<div id="paretoPlot" class="h-64 flex items-end gap-2 border-b border-l border-outline-variant relative pl-12 pr-9 pt-8"></div>
+<div id="paretoPlot" class="h-64 flex items-end gap-2 border-b border-l border-outline-variant relative pl-12 pr-9 pt-[18px]"></div>
 <svg id="paretoSvg" class="absolute inset-0 w-full h-full pointer-events-none" style="overflow:visible"></svg>
 <div id="paretoPctAxis" class="absolute top-0 bottom-0 right-0 w-7 pointer-events-none font-data-mono"></div>
 </div>
@@ -726,12 +726,14 @@ function renderPareto() {
   var total = arr.reduce(function (s, o) { return s + o.minutes; }, 0);
   if (totalLabel) totalLabel.textContent = 'n = ' + total.toLocaleString('id-ID') + ' mnt';
   var maxMin = total; /* sumbu menit: 0 s.d. n */
+  var H = (plot && plot.clientHeight) || 256;
+  var BH = Math.max(50, H - 18); /* bar tertinggi mentok ke atas; 18px teratas utk label angka */
   var cum = 0;
   arr.forEach(function (o) { cum += o.minutes; o.pct = Math.round(cum / total * 100); });
   var bars = '';
   var axis = [];
   arr.forEach(function (o) {
-    var h = Math.max(3, o.minutes / maxMin * 200);
+    var h = Math.max(3, o.minutes / maxMin * BH);
     var short = paretoShortMachine(o.mesin);
     bars += '<div class="pareto-col flex-1 flex flex-col items-center justify-end h-full min-w-0" title="' + esc(o.mesin) + ': ' + o.minutes + ' mnt (kum ' + o.pct + '%)">'
       + '<div class="font-data-mono text-[11px] font-bold text-on-background leading-none mb-1">' + o.minutes + '</div>'
@@ -743,8 +745,6 @@ function renderPareto() {
   if (axisBox) axisBox.innerHTML = axis.join('');
   /* Garis kumulatif (sumbu kedua, %) + ticks sumbu kanan */
   if (svg && pctAxis && minAxis && plot) {
-    var H = plot.clientHeight || 256;
-    var BH = 200;
     var lineY = function (p) { return H - (p / 100) * BH; };
     var pr = plot.getBoundingClientRect();
     var pts = [];
