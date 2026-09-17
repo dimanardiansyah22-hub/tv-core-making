@@ -12,6 +12,7 @@
 <script src="tailwind-cdn.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
@@ -1119,9 +1120,30 @@ function buildAsakaiSheet() {
     + '</tr></thead><tbody>' + probHtml + '</tbody></table>';
   return sheet;
 }
+function openAsakaiModal(msg) {
+  document.getElementById('asakaiPdfModal').classList.remove('hidden');
+  var st = document.getElementById('asakaiModalStatus');
+  if (st) st.textContent = msg || '';
+  document.getElementById('asakaiQrBox').innerHTML = '<span class="text-[12px] text-secondary">Menyiapkan QR code...</span>';
+  document.getElementById('asakaiDownloadBtn').style.display = 'none';
+  document.getElementById('asakaiFolderBtn').style.display = 'none';
+}
+function closeAsakaiModal() {
+  document.getElementById('asakaiPdfModal').classList.add('hidden');
+}
+function renderAsakaiQr(text) {
+  var box = document.getElementById('asakaiQrBox');
+  box.innerHTML = '';
+  try {
+    new QRCode(box, { text: text, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+  } catch (e) {
+    box.innerHTML = '<span class="text-[12px] text-secondary">QR gagal dibuat — gunakan tombol Unduh.</span>';
+  }
+}
 async function generateAsakaiPdf() {
   var btn = document.getElementById('asakaiPdfBtn');
   btn.disabled = true;
+  openAsakaiModal('Menyusun laporan…');
   setAsakaiStatus('Menyusun laporan…');
   try {
     var sheet = buildAsakaiSheet();
@@ -1150,6 +1172,7 @@ async function generateAsakaiPdf() {
     }
     _asakaiB64 = pdf.output('datauristring').split(',')[1];
     _asakaiName = 'Laporan OEE Core Making - Asakai (' + asakaiPeriodLabel().replace(/[\\\\/:*?\"<>|]/g, '-') + ').pdf';
+    document.getElementById('asakaiModalStatus').textContent = 'Mengunggah ke Drive (folder Asakai)…';
     setAsakaiStatus('Mengunggah ke Drive (folder Asakai)…');
     var url = getUrl();
     if (!url) throw new Error('URL Apps Script belum diatur — buka halaman Visualisasi WIP Core terlebih dahulu');
@@ -1160,24 +1183,19 @@ async function generateAsakaiPdf() {
       redirect: 'follow'
     }).then(function (r) { return r.json(); });
     if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
-    var el = document.getElementById('asakaiPdfStatus');
-    el.innerHTML = '';
-    var ok = document.createElement('span');
-    ok.textContent = 'Tersimpan di Drive ✓ ';
-    el.appendChild(ok);
-    var dl = document.createElement('a');
-    dl.href = 'data:application/pdf;base64,' + _asakaiB64;
-    dl.download = _asakaiName;
-    dl.textContent = 'Unduh';
-    dl.style.cssText = 'color:var(--primary);font-weight:700;margin-left:8px';
-    el.appendChild(dl);
-    var fo = document.createElement('a');
-    fo.href = 'https://drive.google.com/drive/folders/' + res.folderId;
-    fo.target = '_blank';
-    fo.textContent = 'Buka folder Asakai';
-    fo.style.cssText = 'color:var(--primary);font-weight:700;margin-left:8px';
-    el.appendChild(fo);
+    var link = 'https://drive.google.com/uc?export=download&id=' + res.id;
+    document.getElementById('asakaiModalStatus').textContent = 'Tersimpan di Drive ✓ — scan QR untuk mengunduh';
+    renderAsakaiQr(link);
+    var dlBtn = document.getElementById('asakaiDownloadBtn');
+    dlBtn.href = link;
+    dlBtn.download = _asakaiName;
+    dlBtn.style.display = '';
+    var foBtn = document.getElementById('asakaiFolderBtn');
+    foBtn.href = 'https://drive.google.com/drive/folders/' + res.folderId;
+    foBtn.style.display = '';
+    setAsakaiStatus('Tersimpan di Drive ✓ (QR tampil)');
   } catch (err) {
+    document.getElementById('asakaiModalStatus').textContent = 'Gagal: ' + err.message;
     setAsakaiStatus('Gagal: ' + err.message, true);
   } finally {
     btn.disabled = false;
@@ -1463,5 +1481,21 @@ document.addEventListener('click', function (e) {
 });
 
 init();
+document.getElementById('asakaiCloseBtn').addEventListener('click', closeAsakaiModal);
+document.getElementById('asakaiPdfModal').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeAsakaiModal(); });
 </script>
+<!-- Modal PDF Asakai: QR unduh + status (ala Generate PDF WIP Core) -->
+<div id="asakaiPdfModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,.5)">
+  <div class="rounded-lg shadow-xl p-6 max-w-sm w-full mx-4 text-center" style="background:var(--surface-container-lowest);border:1px solid var(--outline-variant)">
+    <h3 class="font-headline-sm text-headline-sm text-on-background mb-1">Laporan OEE — Asakai (PDF)</h3>
+    <p class="text-[12px] text-secondary mb-2">PDF otomatis tersimpan di folder Drive Asakai — scan QR dengan HP untuk mengunduh</p>
+    <p id="asakaiModalStatus" class="font-data-mono text-[12px] text-secondary mb-3">Menyusun laporan...</p>
+    <div id="asakaiQrBox" class="flex justify-center mb-4"><span class="text-[12px] text-secondary">Menyiapkan QR code...</span></div>
+    <div class="flex justify-center gap-3 flex-wrap">
+      <a id="asakaiDownloadBtn" download="Laporan OEE Core Making - Asakai.pdf" class="px-4 py-2 rounded text-white font-label-caps font-bold text-label-caps transition-opacity hover:opacity-80" style="background:var(--primary);display:none">Unduh di perangkat ini</a>
+      <a id="asakaiFolderBtn" target="_blank" class="px-4 py-2 rounded border border-outline text-on-background font-label-caps font-bold text-label-caps hover:bg-surface-container-low transition-colors" style="display:none">Buka folder Asakai</a>
+      <button type="button" id="asakaiCloseBtn" class="px-4 py-2 rounded border border-outline text-on-background font-label-caps font-bold text-label-caps hover:bg-surface-container-low transition-colors">Tutup</button>
+    </div>
+  </div>
+</div>
 </body></html>
