@@ -366,10 +366,18 @@ function saveAsakaiPdf_(data) {
     var name = data.name || 'Laporan OEE Core Making - Asakai.pdf';
     var folder = getAsakaiFolder_();
     var base = name.replace(/\.pdf$/i, '').toLowerCase();
+    /* Aturan 12 jam: PDF sebelumnya yg berumur < 12 jam diganti (trash),
+       supaya QR/file tidak menumpuk bila generate berdekatan. */
+    var now = Date.now();
+    var WINDOW_MS = 12 * 60 * 60 * 1000;
     var files = folder.getFiles();
     while (files.hasNext()) {
       var ex = files.next();
-      if (ex.getName().toLowerCase().replace(/\.pdf$/i, '') === base) ex.setTrashed(true);
+      var exName = ex.getName();
+      if (ex.getMimeType() !== 'application/pdf' && !/\.pdf$/i.test(exName)) continue;
+      var sameBase = exName.toLowerCase().replace(/\.pdf$/i, '') === base;
+      var age = now - ex.getDateCreated().getTime();
+      if (sameBase || age < WINDOW_MS) ex.setTrashed(true);
     }
     var blob = Utilities.newBlob(Utilities.base64Decode(b64), 'application/pdf', name);
     var file = folder.createFile(blob);
