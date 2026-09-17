@@ -1004,8 +1004,8 @@ function applyWipData(data) {
     const slot = el.dataset.slot;
     const idx = el.dataset.idx;
     const key = `${slot}_${idx}`;
-    if (data[key] !== undefined) el.value = data[key];
-    else el.value = '';
+    const v = data[key];
+    if (v !== undefined && v !== '') el.value = v;
   });
   document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
     const slot = el.dataset.slot;
@@ -1014,13 +1014,21 @@ function applyWipData(data) {
     el.dataset.note = str;
     noteRenderSummary(el, str);
   });
-  setPanelVal(data, 'prod-1tr-plan', '');
-  setPanelVal(data, 'prod-1tr-act', '');
-  setPanelVal(data, 'prod-2tr-plan', '');
-  setPanelVal(data, 'prod-2tr-act', '');
-  setPanelVal(data, 'ct-input', '');
+  setPanelValSafe(data, 'prod-1tr-plan');
+  setPanelValSafe(data, 'prod-1tr-act');
+  setPanelValSafe(data, 'prod-2tr-plan');
+  setPanelValSafe(data, 'prod-2tr-act');
+  setPanelValSafe(data, 'ct-input');
   renderReadiness();
   updateEfficiency();
+}
+
+function setPanelValSafe(data, id) {
+  const el = document.getElementById(id);
+  if (el) {
+    if (data[id] !== undefined && data[id] !== '') el.value = data[id];
+    else if (el === document.activeElement) return;
+  }
 }
 
 async function wipSyncFromServer() {
@@ -1045,14 +1053,16 @@ function loadSavedData() {
   try {
     const raw = localStorage.getItem(getStorageKey());
     const data = raw ? JSON.parse(raw) : {};
-  document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
-    if (el === focusedCell) return;
-    const slot = el.dataset.slot;
-    const idx = el.dataset.idx;
-    const key = `${slot}_${idx}`;
-    if (data[key] !== undefined) el.value = data[key];
-    else el.value = '';
-  });
+    const focusEl = document.activeElement;
+    const focusedCell = (focusEl && focusEl.classList && focusEl.classList.contains('cell-input')) ? focusEl : null;
+    document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
+      if (el === focusedCell) return;
+      const slot = el.dataset.slot;
+      const idx = el.dataset.idx;
+      const key = `${slot}_${idx}`;
+      if (data[key] !== undefined) el.value = data[key];
+      else el.value = '';
+    });
     document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
       const slot = el.dataset.slot;
       const idx = el.dataset.idx;
@@ -1060,11 +1070,11 @@ function loadSavedData() {
       el.dataset.note = str;
       noteRenderSummary(el, str);
     });
-    setPanelVal(data, 'prod-1tr-plan', '');
-    setPanelVal(data, 'prod-1tr-act', '');
-    setPanelVal(data, 'prod-2tr-plan', '');
-    setPanelVal(data, 'prod-2tr-act', '');
-    setPanelVal(data, 'ct-input', '');
+    setPanelValSafe(data, 'prod-1tr-plan');
+    setPanelValSafe(data, 'prod-1tr-act');
+    setPanelValSafe(data, 'prod-2tr-plan');
+    setPanelValSafe(data, 'prod-2tr-act');
+    setPanelValSafe(data, 'ct-input');
   } catch(e) {}
 }
 
