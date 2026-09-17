@@ -1010,6 +1010,8 @@ function collectAsakaiRows() {
       return va.localeCompare(vb) * SORT_DIR;
     });
   }
+  /* PDF Asakai: 20 teratas, line stop terlama (menit terbesar) di atas */
+  rows.sort(function (a, b) { return (Number(b.minutes) || 0) - (Number(a.minutes) || 0); });
   return rows;
 }
 function asakaiAverages() {
@@ -1036,6 +1038,62 @@ function asakaiAverages() {
   });
   function avg(k) { return counts[k] ? Math.round(sums[k] / counts[k] * 10) / 10 : null; }
   return { oee: avg('oee'), av: avg('av'), pe: avg('pe'), rq: avg('rq'), n: sums.n };
+}
+/* Pareto vertikal + garis kumulatif utk PDF — tiru tampilan web (koordinat pasti) */
+function asakaiParetoHtml() {
+  var byM = {};
+  collectParetoRows().forEach(function (r) {
+    var m = r.mesin || '(Tanpa mesin)';
+    byM[m] = (byM[m] || 0) + (Number(r.minutes) || 0);
+  });
+  var arr = Object.keys(byM).map(function (m) { return { mesin: m, minutes: byM[m] }; })
+    .filter(function (o) { return o.minutes > 0; })
+    .sort(function (a, b) { return b.minutes - a.minutes; });
+  if (!arr.length) return '<div style="font-size:12px;color:#64748b">Tidak ada line stop pada periode ini.</div>';
+  var total = arr.reduce(function (s, o) { return s + o.minutes; }, 0);
+  var cum = 0;
+  arr.forEach(function (o) { cum += o.minutes; o.pct = Math.round(cum / total * 100); });
+  var W = 700, H = 244, TOP = 26, LEFT = 56, RIGHT = 44, LAB = 24;
+  var plotW = W - LEFT - RIGHT, plotH = H - TOP - LAB, base = H - LAB;
+  var n = arr.length, colW = plotW / n, barW = Math.min(colW - 8, 46);
+  var yMin = function (v) { return base - (v / total) * plotH; };
+  var yPct = function (p) { return base - (p / 100) * plotH; };
+  var f1 = function (x) { return Math.round(x * 10) / 10; };
+  var h = '';
+  h += '<div style="position:relative;width:' + W + 'px;height:' + H + 'px;background:#ffffff">';
+  h += '<div style="position:absolute;left:' + LEFT + 'px;top:0;bottom:' + LAB + 'px;width:1px;background:#94a3b8"></div>';
+  h += '<div style="position:absolute;left:' + LEFT + 'px;right:' + RIGHT + 'px;top:' + base + 'px;height:1px;background:#94a3b8"></div>';
+  [0, 0.25, 0.5, 0.75, 1].forEach(function (f) {
+    var v = Math.round(total * f), y = yMin(v);
+    h += '<div style="position:absolute;left:0;width:' + (LEFT - 5) + 'px;top:' + f1(y - 7) + 'px;text-align:right;font-size:10px;color:#64748b">' + v.toLocaleString('id-ID') + '</div>';
+  });
+  [0, 25, 50, 75, 100].forEach(function (p) {
+    var y = yPct(p);
+    h += '<div style="position:absolute;left:' + (W - RIGHT + 5) + 'px;top:' + f1(y - 7) + 'px;font-size:10px;font-weight:700;color:#dc2626">' + p + '%</div>';
+  });
+  var pts = [];
+  arr.forEach(function (o, i) {
+    var cx = LEFT + colW * (i + 0.5), bh = Math.max(3, o.minutes / total * plotH);
+    pts.push([f1(cx), f1(yPct(o.pct))]);
+    h += '<div title="' + asakaiEsc(o.mesin) + ': ' + o.minutes + ' mnt (kum ' + o.pct + '%)" style="position:absolute;left:' + f1(cx - barW / 2) + 'px;bottom:' + LAB + 'px;width:' + f1(barW) + 'px;height:' + f1(bh) + 'px;background:linear-gradient(180deg,#38bdf8,#0284c7);border:1px solid #64748b;border-bottom:none"></div>';
+    h += '<div style="position:absolute;left:' + f1(cx - colW / 2) + 'px;width:' + f1(colW) + 'px;top:' + f1(base - bh - 16) + 'px;text-align:center;font-size:12px;font-weight:800;color:#0f172a">' + o.minutes + '</div>';
+    h += '<div style="position:absolute;left:' + f1(cx - colW / 2) + 'px;width:' + f1(colW) + 'px;top:' + (base + 4) + 'px;text-align:center;font-size:12px;font-weight:600;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + asakaiEsc(paretoShortMachine(o.mesin)) + '</div>';
+  });
+  var s = '<svg width="' + W + '" height="' + H + '" style="position:absolute;left:0;top:0;overflow:visible">'
+    + '<polyline points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '" fill="none" stroke="#dc2626" stroke-width="2"/>';
+  pts.forEach(function (p, i) {
+    var barH = Math.max(3, arr[i].minutes / total * plotH);
+    var collide = Math.abs((p[1] - 13) - ((base - barH) - 10)) < 20;
+    var tx = p[0], ty = f1(p[1] - 8), anchor = 'middle';
+    if (collide) {
+      if (i === arr.length - 1) { tx = f1(p[0] - 9); ty = f1(p[1] + 3); anchor = 'end'; }
+      else { tx = f1(p[0] + 9); ty = f1(p[1] + 3); anchor = 'start'; }
+    }
+    s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="#dc2626"/>';
+    s += '<text x="' + tx + '" y="' + ty + '" text-anchor="' + anchor + '" font-size="12" font-weight="bold" fill="#dc2626" style="paint-order:stroke" stroke="#ffffff" stroke-width="1.2">' + arr[i].pct + '%</text>';
+  });
+  h += s + '</svg></div>';
+  return h;
 }
 function asakaiPeriodLabel() {
   var f = currentFilters();
@@ -1077,17 +1135,12 @@ function buildAsakaiSheet() {
       + '<div style="font-size:22px;font-weight:900;color:' + color + '">' + val + '</div></div>';
   }
   function pct(v) { return v == null ? '–' : (v + '%'); }
-  var paretoHtml = par.length ? par.map(function (o) {
-    var w = Math.max(4, Math.round(o.minutes / pMax * 420));
-    return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0">'
-      + '<div style="width:150px;font-size:12px;font-weight:700;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + asakaiEsc(o.mesin) + '</div>'
-      + '<div style="width:' + w + 'px;max-width:420px;height:16px;background:linear-gradient(90deg,#38bdf8,#0284c7);border:1px solid #64748b"></div>'
-      + '<div style="font-size:12px;font-weight:800">' + o.minutes + ' mnt</div></div>';
-  }).join('') : '<div style="font-size:12px;color:#64748b">Tidak ada line stop pada periode ini.</div>';
+  var paretoHtml = asakaiParetoHtml();
   var th = 'border:1px solid #94a3b8;padding:5px 6px;font-size:11px;font-weight:800;background:#e2e8f0;text-align:center;white-space:nowrap';
   var tdC = 'border:1px solid #cbd5e1;padding:4px 6px;font-size:11px;text-align:center;vertical-align:top';
   var tdL = 'border:1px solid #cbd5e1;padding:4px 6px;font-size:11px;vertical-align:top';
-  var probHtml = rows.length ? rows.map(function (r, i) {
+  var shown = rows.slice(0, 20);
+  var probHtml = shown.length ? shown.map(function (r, i) {
     return '<tr><td style="' + tdC + '">' + (i + 1) + '</td>'
       + '<td style="' + tdC + ';white-space:nowrap">' + asakaiEsc(fmtDate(r.date)) + '</td>'
       + '<td style="' + tdC + '">' + (r.shift === 'malam' ? 'Malam' : 'Pagi') + '</td>'
@@ -1104,7 +1157,7 @@ function buildAsakaiSheet() {
     '<div style="border-bottom:4px solid #0f172a;padding-bottom:8px">'
     + '<div style="font-size:24px;font-weight:900;text-transform:uppercase">Laporan OEE Core Making — Asakai</div>'
     + '<div style="font-size:13px;color:#475569;margin-top:2px">Periode: ' + asakaiEsc(asakaiPeriodLabel()) + ' &nbsp;•&nbsp; ' + asakaiEsc(asakaiFilterDesc()) + '</div>'
-    + '<div style="font-size:11px;color:#64748b;margin-top:2px">Dibuat: ' + genAt + ' &nbsp;•&nbsp; ' + rows.length + ' problem line stop</div></div>'
+    + '<div style="font-size:11px;color:#64748b;margin-top:2px">Dibuat: ' + genAt + ' &nbsp;•&nbsp; ' + rows.length + ' problem line stop (20 teratas, terlama di atas)</div></div>'
     + '<div style="display:flex;gap:10px;margin:14px 0">'
     + kpi('Rata-rata OEE', pct(avg.oee), '#0f172a') + kpi('Availability', pct(avg.av), '#8b5cf6')
     + kpi('Performance', pct(avg.pe), '#0284c7') + kpi('Rate of Quality', pct(avg.rq), '#d4a017')
@@ -1117,7 +1170,8 @@ function buildAsakaiSheet() {
     + '<th style="' + th + '">No</th><th style="' + th + '">Tanggal</th><th style="' + th + '">Shift</th>'
     + '<th style="' + th + '">Jam</th><th style="' + th + '">Mesin</th><th style="' + th + '">Tipe</th>'
     + '<th style="' + th + '">Problem</th><th style="' + th + '">Penanggulangan</th><th style="' + th + '">Dur (Min)</th>'
-    + '</tr></thead><tbody>' + probHtml + '</tbody></table>';
+    + '</tr></thead><tbody>' + probHtml + '</tbody></table>'
+    + (rows.length > 20 ? '<div style="font-size:11px;color:#64748b;margin-top:4px">Menampilkan 20 teratas dari ' + rows.length + ' problem — selengkapnya lihat halaman web.</div>' : '');
   return sheet;
 }
 function openAsakaiModal(msg) {
