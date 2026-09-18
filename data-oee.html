@@ -1039,6 +1039,53 @@ function asakaiAverages() {
   function avg(k) { return counts[k] ? Math.round(sums[k] / counts[k] * 10) / 10 : null; }
   return { oee: avg('oee'), av: avg('av'), pe: avg('pe'), rq: avg('rq'), n: sums.n };
 }
+/* Grafik OEE bulanan utk PDF — tiru tampilan web (31 hari, Pagi+Malam, garis target 96%) */
+function asakaiOeeChartHtml() {
+  var f = currentFilters();
+  var month = f.date ? getMonthKey(f.date) : '';
+  if (!month) { var ds = allDates(); if (ds.length) month = getMonthKey(ds[ds.length - 1]); }
+  var showPagi = f.shift === 'all' || f.shift === 'pagi';
+  var showMalam = f.shift === 'all' || f.shift === 'malam';
+  var W = 700, H = 208, TOP = 10, LEFT = 40, RIGHT = 8, LAB = 20;
+  var plotW = W - LEFT - RIGHT, plotH = H - TOP - LAB, base = H - LAB;
+  var head = '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin:14px 0 6px;color:#334155">Grafik OEE Bulanan'
+    + (month ? ' <span style="color:#64748b">(' + asakaiEsc(monthName(month)) + ' ' + month.slice(0, 4) + ')</span>' : '') + '</div>';
+  if (!month) return head + '<div style="font-size:12px;color:#64748b">Belum ada data OEE untuk ditampilkan.</div>';
+  var monthDates = {};
+  Object.keys(OEE_STORE).forEach(function (d) { if (getMonthKey(d) === month) monthDates[d] = true; });
+  var gW = plotW / 31, barW = 8;
+  var yOf = function (v) { return base - (v / 100) * plotH; };
+  var f1 = function (x) { return Math.round(x * 10) / 10; };
+  var h = '<div style="position:relative;width:' + W + 'px;height:' + H + 'px;background:#ffffff">';
+  h += '<div style="position:absolute;left:' + LEFT + 'px;top:0;bottom:' + LAB + 'px;width:1px;background:#94a3b8"></div>';
+  h += '<div style="position:absolute;left:' + LEFT + 'px;right:' + RIGHT + 'px;top:' + base + 'px;height:1px;background:#94a3b8"></div>';
+  [0, 20, 40, 60, 80, 100].forEach(function (v) {
+    var y = yOf(v);
+    h += '<div style="position:absolute;left:' + LEFT + 'px;right:' + RIGHT + 'px;top:' + f1(y) + 'px;height:1px;background:#e2e8f0"></div>';
+    h += '<div style="position:absolute;left:0;width:' + (LEFT - 5) + 'px;top:' + f1(y - 7) + 'px;text-align:right;font-size:10px;color:#64748b">' + v + '%</div>';
+  });
+  h += '<div style="position:absolute;left:' + LEFT + 'px;right:' + RIGHT + 'px;top:' + f1(yOf(96)) + 'px;border-top:2px dashed #dc2626"></div>';
+  h += '<div style="position:absolute;right:' + RIGHT + 'px;top:' + f1(yOf(96) - 14) + 'px;font-size:10px;font-weight:700;color:#dc2626;white-space:nowrap">Target OEE 96%</div>';
+  for (var i = 1; i <= 31; i++) {
+    var dd = month + '-' + ('0' + i).slice(-2);
+    var cx = LEFT + gW * (i - 0.5);
+    var bars = [];
+    if (showPagi && monthDates[dd] && OEE_STORE[dd].pagi) bars.push({ v: Math.max(0, Math.min(100, OEE_STORE[dd].pagi.oee || 0)), c: '#bd0014', t: 'Pagi' });
+    if (showMalam && monthDates[dd] && OEE_STORE[dd].malam) bars.push({ v: Math.max(0, Math.min(100, OEE_STORE[dd].malam.oee || 0)), c: '#2f3131', t: 'Malam' });
+    var off = -(bars.length * (barW + 2)) / 2;
+    bars.forEach(function (b) {
+      var bh = Math.max(2, b.v / 100 * plotH);
+      h += '<div title="' + asakaiEsc(dd) + ' ' + b.t + ' ' + Math.round(b.v) + '%" style="position:absolute;left:' + f1(cx + off) + 'px;top:' + f1(base - bh) + 'px;width:' + barW + 'px;height:' + f1(bh) + 'px;background:' + b.c + '"></div>';
+      off += barW + 2;
+    });
+    h += '<div style="position:absolute;left:' + f1(cx - gW / 2) + 'px;width:' + f1(gW) + 'px;top:' + (base + 3) + 'px;text-align:center;font-size:8px;color:#64748b">' + i + '</div>';
+  }
+  h += '<div style="position:absolute;left:' + LEFT + 'px;top:2px;font-size:10px;font-weight:700;color:#bd0014">P = Pagi</div>';
+  h += '<div style="position:absolute;left:' + (LEFT + 62) + 'px;top:2px;font-size:10px;font-weight:700;color:#2f3131">M = Malam</div>';
+  h += '</div>';
+  return head + h;
+}
+
 /* Pareto vertikal + garis kumulatif utk PDF — tiru tampilan web (koordinat pasti) */
 function asakaiParetoHtml() {
   var byM = {};
@@ -1163,6 +1210,7 @@ function buildAsakaiSheet() {
     + kpi('Performance', pct(avg.pe), '#0284c7') + kpi('Rate of Quality', pct(avg.rq), '#d4a017')
     + kpi('Total Line Stop', nTotal.toLocaleString('id-ID') + ' mnt', '#dc2626')
     + '</div>'
+    + asakaiOeeChartHtml()
     + '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin:14px 0 6px;color:#334155">Pareto Line Stop per Mesin (n = ' + nTotal.toLocaleString('id-ID') + ' mnt)</div>'
     + paretoHtml
     + '<div style="font-size:15px;font-weight:900;text-transform:uppercase;margin:16px 0 6px;color:#334155">List Up Problem Line Stop</div>'
