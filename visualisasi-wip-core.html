@@ -964,12 +964,27 @@ const WIP_SKEW_MS = 120000;
 /* Fetch server pernah berhasil per shift? Save DILARANG sebelum ini (anti dorong
    snapshot sebagian: device yg belum memuat gambar penuh tak boleh menimpa server) */
 let _wipSyncedOnce = {};
+/* MODE VIEW-ONLY mesin ini (komputer project): menarik dari server, TAK PERNAH mendorong.
+   Aktif via ?readonly=1 (tersimpan permanen di browser ini) — matikan via ?readonly=0.
+   Atau via console: localStorage.setItem('wip-readonly','1') / removeItem.
+   Device lain TANPA flag ini tetap normal (bisa input + sinkron). */
+function isReadOnlyDevice() {
+  try {
+    const q = new URLSearchParams(window.location.search).get('readonly');
+    if (q === '1') { try { localStorage.setItem('wip-readonly', '1'); } catch (e) {} return true; }
+    if (q === '0') { try { localStorage.removeItem('wip-readonly'); } catch (e) {} return false; }
+  } catch (e) {}
+  try { return localStorage.getItem('wip-readonly') === '1'; } catch (e) { return false; }
+}
+const WIP_READONLY = isReadOnlyDevice();
 
 function saveAllData() {
   const snapshot = collectWipData();
   const key = getStorageKey();
   let prev = {};
   try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
+  localStorage.setItem(key, JSON.stringify(snapshot));
+  if (WIP_READONLY) return; /* view-only: cukup simpan lokal, jangan sentuh server */
   const shift = currentShift();
   if (!_wipDirty[shift]) _wipDirty[shift] = {};
   const now = Date.now();
@@ -978,7 +993,6 @@ function saveAllData() {
     const pv = (prev[k] === undefined) ? '' : prev[k];
     if (snapshot[k] !== pv) { _wipDirty[shift][k] = now; changed = true; }
   });
-  localStorage.setItem(key, JSON.stringify(snapshot));
   /* Tak ada yg berubah + tak ada kiriman tertunda: JANGAN sentuh stempel/jadwal.
      Ini mencegah load halaman mendorong data basi ke server (meracuni device lain). */
   if (!changed && !Object.keys(_wipDirty[shift]).length) return;
@@ -987,6 +1001,7 @@ function saveAllData() {
 }
 
 function scheduleWipSave() {
+  if (WIP_READONLY) return; /* view-only: tak pernah menjadwalkan kirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
   if (!_wipSyncedOnce[shift]) return; /* belum tahu keadaan server: tunda push, data tetap aman lokal */
@@ -997,6 +1012,7 @@ function scheduleWipSave() {
 }
 
 async function syncWipSave(snapshot) {
+  if (WIP_READONLY) return; /* view-only: tak pernah mengirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   try {
     const res = await Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data });
@@ -1067,6 +1083,7 @@ function mergeWipData(shift, server) {
   const merged = Object.assign({}, local);
   Object.keys(server).forEach(k => {
     if (k === 'updatedAt') return;
+    if (WIP_READONLY) { merged[k] = server[k]; return; } /* view-only: cerminkan server apa adanya */
     const sv = server[k];
     if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
     if (sv === undefined || sv === '') return; /* server kosong: jangan hapus lokal */
@@ -1226,6 +1243,8 @@ async function loadMachines() {
     if (list && list.length) {
       MACHINES = list;
       renderMachineOptions();
+    } else if (WIP_READONLY) {
+      renderMachineOptions(); /* view-only: pakai default lokal, jangan seed daftar ke server */
     } else {
       // Seed: belum ada konfigurasi → simpan daftar default sekali supaya
       // Data OEE & Visualisasi WIP memakai daftar master yang sama.
@@ -1557,7 +1576,7 @@ function renderReadiness() {
           barW = halfW;
           left = `calc(50% - ${halfW}px)`;
           bg = '#8b0000';
-        } else {
+    } else {
           barW = Math.min(Math.abs(v.pct), halfW);
           left = v.diff >= 0 ? '50%' : `calc(50% - ${barW}px)`;
           bg = barColor(v.ratio, v.act, v.actCC, v.actFR);
@@ -1981,6 +2000,7 @@ function collectOeePayload() {
 }
 
 function saveOeeDataToBackend(url) {
+  if (WIP_READONLY) return; /* view-only: jangan tulis dokumen OEE live */
   try {
     fetch(url, {
       method: 'POST',
@@ -2248,6 +2268,12 @@ bindPanelNav();
 
 wipSyncFromServer();
 if (window.Sync) setInterval(wipSyncFromServer, Sync.pollMs);
+if (WIP_READONLY) {
+  const b = document.createElement('div');
+  b.textContent = 'VIEW ONLY — tidak mengirim ke server';
+  b.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9999;font-size:11px;font-weight:700;color:#fff;background:#64748b;padding:4px 10px;border-radius:999px;pointer-events:none';
+  document.body.appendChild(b);
+}
 
 renderMachineOptions();
 loadMachines();
