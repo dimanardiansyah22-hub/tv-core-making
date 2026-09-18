@@ -961,6 +961,9 @@ let _wipLastTs = {};
 let _wipDirty = {};
 /* Toleransi beda jam device vs server: lindungi ketikan < 2 mnt dari snapshot basi */
 const WIP_SKEW_MS = 120000;
+/* Fetch server pernah berhasil per shift? Save DILARANG sebelum ini (anti dorong
+   snapshot sebagian: device yg belum memuat gambar penuh tak boleh menimpa server) */
+let _wipSyncedOnce = {};
 
 function saveAllData() {
   const snapshot = collectWipData();
@@ -986,6 +989,7 @@ function saveAllData() {
 function scheduleWipSave() {
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
+  if (!_wipSyncedOnce[shift]) return; /* belum tahu keadaan server: tunda push, data tetap aman lokal */
   _wipPendingSave[shift] = true;
   clearTimeout(_wipSaveTimer);
   const snapshot = { shift, data: collectWipData() };
@@ -1084,6 +1088,7 @@ async function wipSyncFromServer() {
   try {
     const res = await Sync.get('wip', { shift, action: 'get' });
     if (currentShift() !== shift) return; /* pindah shift saat fetch: buang respons agar pagi/malam tak tercampur */
+    if (res && res.ok) _wipSyncedOnce[shift] = true; /* keadaan server diketahui: push diizinkan */
     const data = (res && res.ok && res.data) ? res.data : null;
     if (!data || !data.updatedAt) return;
     if (data.updatedAt !== _wipLastTs[shift]) {
