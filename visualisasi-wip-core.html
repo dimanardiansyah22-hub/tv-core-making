@@ -1113,8 +1113,10 @@ function mergeWipData(shift, server) {
     if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
     if (sv === undefined || sv === '') {
       /* server kehilangan kunci yg lokal pegang (timpa snapshot bersamaan):
-         tandai agar terdorong balik — tanpa ini divergen permanen */
-      if (lv !== undefined && lv !== '') {
+         tandai agar terdorong balik — tanpa ini divergen permanen.
+         KECUALI kunci ini berpenanda hapus: biar pass penghapusan yg memutuskan
+         (jangan kotori dirty agar cek waktu penghapusan tetap jujur). */
+      if (delMap[k] === undefined && lv !== undefined && lv !== '') {
         if (!_wipDirty[shift]) _wipDirty[shift] = {};
         _wipDirty[shift][k] = Date.now();
       }
