@@ -1015,12 +1015,13 @@ async function syncWipSave(snapshot) {
   if (WIP_READONLY) return; /* view-only: tak pernah mengirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   try {
-    const res = await Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data });
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
+    const res = await Promise.race([Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data }), timeout]);
     if (res && res.updatedAt) _wipLastTs[snapshot.shift] = res.updatedAt;
     _wipDirty[snapshot.shift] = {};
     _wipPendingSave[snapshot.shift] = false;
   } catch (e) {
-    _wipPendingSave[snapshot.shift] = false;
+    _wipPendingSave[snapshot.shift] = false; /* gagal/timeout: buka kunci agar poll penarik tetap jalan, data kotor tetap dilindungi */
   }
 }
 
