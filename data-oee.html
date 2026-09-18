@@ -404,12 +404,12 @@ class="w-full bg-background border border-outline-variant text-on-background fon
 <!-- CSS Pareto Bars + garis kumulatif (sumbu %) -->
 <div class="relative">
 <div id="paretoMinAxis" class="absolute left-0 top-0 bottom-0 w-10 pointer-events-none font-data-mono"></div>
-<div id="paretoPlot" class="h-64 flex items-end gap-2 border-b border-l border-outline-variant relative pl-12 pr-9 pt-[18px]"></div>
+<div id="paretoPlot" class="h-64 flex items-end gap-0 border-b border-l border-outline-variant relative pl-12 pr-9 pt-[18px]"></div>
 <svg id="paretoSvg" class="absolute inset-0 w-full h-full pointer-events-none" style="overflow:visible"></svg>
 <div id="paretoPctAxis" class="absolute top-0 bottom-0 right-0 w-7 pointer-events-none font-data-mono"></div>
 </div>
 <!-- X-Axis labels -->
-<div id="paretoAxis" class="flex gap-2 pl-12 pr-9 font-label-caps text-[10px] text-secondary uppercase tracking-wider mt-1"></div>
+<div id="paretoAxis" class="flex gap-0 pl-12 pr-9 font-label-caps text-[10px] text-secondary uppercase tracking-wider mt-1"></div>
 <!-- Empty / loading state -->
 <div id="paretoEmpty" class="hidden mt-4 py-6 text-center font-data-mono text-[12px] text-secondary"></div>
 </section>
@@ -1119,7 +1119,7 @@ function asakaiParetoHtml() {
   arr.forEach(function (o) { cum += o.minutes; o.pct = Math.round(cum / total * 100); });
   var W = 700, H = 244, TOP = 26, LEFT = 56, RIGHT = 44, LAB = 24;
   var plotW = W - LEFT - RIGHT, plotH = H - TOP - LAB, base = H - LAB;
-  var n = arr.length, colW = plotW / n, barW = Math.min(colW - 8, 46);
+  var n = arr.length, colW = plotW / n, barW = colW;
   var yMin = function (v) { return base - (v / total) * plotH; };
   var yPct = function (p) { return base - (p / 100) * plotH; };
   var f1 = function (x) { return Math.round(x * 10) / 10; };
