@@ -1109,9 +1109,17 @@ function mergeWipData(shift, server) {
   Object.keys(server).forEach(k => {
     if (k === 'updatedAt' || k === '_deleted') return;
     const sv = server[k];
-    if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
-    if (sv === undefined || sv === '') return; /* server kosong: jangan hapus lokal */
     const lv = local[k];
+    if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
+    if (sv === undefined || sv === '') {
+      /* server kehilangan kunci yg lokal pegang (timpa snapshot bersamaan):
+         tandai agar terdorong balik — tanpa ini divergen permanen */
+      if (lv !== undefined && lv !== '') {
+        if (!_wipDirty[shift]) _wipDirty[shift] = {};
+        _wipDirty[shift][k] = Date.now();
+      }
+      return;
+    }
     if ((lv !== undefined && lv !== '') && (dirty[k] || localTs > serverTs)) {
       if (!_wipDirty[shift]) _wipDirty[shift] = {};
       _wipDirty[shift][k] = Math.max(dirty[k] || 0, localTs); /* pastikan ikut terdorong ke server */
