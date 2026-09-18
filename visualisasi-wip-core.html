@@ -959,6 +959,12 @@ let _wipLastTs = {};
    hanya bila perubahan lokal LEBIH BARU drpd updatedAt server (last-write-wins
    antar device). Dibersihkan setelah save terkonfirmasi server. */
 let _wipDirty = {};
+/* Penanda HAPUS eksplisit per shift: kunci -> waktu hapus (ms). Ikut terkirim ke
+   server agar penghapusan sengaja merambat ke device lain (bedakan dari "belum diisi").
+   Dibersihkan setelah save terkonfirmasi. Hanya di memori (sementara). */
+let _wipDeleted = {};
+/* Kunci yg diputuskan terhapus oleh merge terakhir per shift (utk applyWipData). */
+let _wipCleared = {};
 /* Toleransi beda jam device vs server: lindungi ketikan < 2 mnt dari snapshot basi */
 const WIP_SKEW_MS = 120000;
 /* Fetch server pernah berhasil per shift? Save DILARANG sebelum ini (anti dorong
@@ -991,7 +997,15 @@ function saveAllData() {
   let changed = false;
   Object.keys(snapshot).forEach(k => {
     const pv = (prev[k] === undefined) ? '' : prev[k];
-    if (snapshot[k] !== pv) { _wipDirty[shift][k] = now; changed = true; }
+    if (snapshot[k] !== pv) {
+      _wipDirty[shift][k] = now; changed = true;
+      if (snapshot[k] === '' && pv !== '') {
+        if (!_wipDeleted[shift]) _wipDeleted[shift] = {};
+        _wipDeleted[shift][k] = now; /* transisi berisi -> kosong = hapus sengaja */
+      } else if (snapshot[k] !== '') {
+        if (_wipDeleted[shift]) delete _wipDeleted[shift][k]; /* diisi lagi: batalkan tanda hapus */
+      }
+    }
   });
   /* Tak ada yg berubah + tak ada kiriman tertunda: JANGAN sentuh stempel/jadwal.
      Ini mencegah load halaman mendorong data basi ke server (meracuni device lain). */
@@ -1008,6 +1022,9 @@ function scheduleWipSave() {
   _wipPendingSave[shift] = true;
   clearTimeout(_wipSaveTimer);
   const snapshot = { shift, data: collectWipData() };
+  if (_wipDeleted[shift] && Object.keys(_wipDeleted[shift]).length) {
+    snapshot.data._deleted = Object.assign({}, _wipDeleted[shift]); /* sertakan penanda hapus */
+  }
   _wipSaveTimer = setTimeout(() => syncWipSave(snapshot), 800);
 }
 
@@ -1018,6 +1035,9 @@ async function syncWipSave(snapshot) {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
     const res = await Promise.race([Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data }), timeout]);
     if (res && res.updatedAt) _wipLastTs[snapshot.shift] = res.updatedAt;
+    if (snapshot.data && snapshot.data._deleted) {
+      Object.keys(snapshot.data._deleted).forEach(k => { if (_wipDeleted[snapshot.shift]) delete _wipDeleted[snapshot.shift][k]; });
+    }
     _wipDirty[snapshot.shift] = {};
     _wipPendingSave[snapshot.shift] = false;
   } catch (e) {
@@ -1035,6 +1055,8 @@ function applyWipData(data) {
   const focusEl = document.activeElement;
   const focusedId = (focusEl && focusEl.id) ? focusEl.id : null;
   const focusedCell = (focusEl && focusEl.classList && focusEl.classList.contains('cell-input')) ? focusEl : null;
+  const shift = currentShift();
+  const cleared = _wipCleared[shift] || {};
   document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
     if (el === focusedCell) return;
     const slot = el.dataset.slot;
@@ -1042,6 +1064,7 @@ function applyWipData(data) {
     const key = `${slot}_${idx}`;
     const v = data[key];
     if (v !== undefined && v !== '') el.value = v;
+    else if (cleared[key]) el.value = ''; /* dihapus device lain: kosongkan */
   });
   document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
     const slot = el.dataset.slot;
@@ -1065,8 +1088,12 @@ function setPanelValSafe(data, id) {
   if (el === document.activeElement) return; /* sedang diketik: jangan timpa */
   const k = (typeof PANEL_KEYS !== 'undefined') ? PANEL_KEYS[id] : undefined;
   const v = (k && data[k] !== undefined) ? data[k] : data[id];
-  if (v !== undefined && v !== '') el.value = v;
-  /* nilai kosong/tak ada: biarkan apa adanya (jangan pernah hapus) */
+  if (v !== undefined && v !== '') { el.value = v; return; }
+  /* nilai kosong/tak ada: biarkan — KECUALI dihapus eksplisit device lain */
+  if (k) {
+    const cleared = _wipCleared[currentShift()] || {};
+    if (cleared[k]) el.value = '';
+  }
 }
 
 /* Gabung snapshot server ke data lokal (last-write-wins antar device):
@@ -1082,8 +1109,10 @@ function mergeWipData(shift, server) {
   let serverTs = 0;
   try { serverTs = new Date(server.updatedAt).getTime() || 0; } catch (e) {}
   const merged = Object.assign({}, local);
+  _wipCleared[shift] = {};
+  const delMap = (server._deleted && typeof server._deleted === 'object') ? server._deleted : {};
   Object.keys(server).forEach(k => {
-    if (k === 'updatedAt') return;
+    if (k === 'updatedAt' || k === '_deleted') return;
     if (WIP_READONLY) { merged[k] = server[k]; return; } /* view-only: cerminkan server apa adanya */
     const sv = server[k];
     if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
@@ -1095,6 +1124,16 @@ function mergeWipData(shift, server) {
       return;
     }
     merged[k] = sv;
+  });
+  /* Terapkan penanda HAPUS dari device lain: hapus nilai lokal hanya bila penghapusan
+     LEBIH BARU drpd sentuhan lokal terakhir utk kunci itu (last-write-wins). */
+  Object.keys(delMap).forEach(k => {
+    if (WIP_READONLY) { merged[k] = ''; _wipCleared[shift][k] = true; return; }
+    const dts = Number(delMap[k]) || 0;
+    const lv = local[k];
+    if (lv === undefined || lv === '') return;
+    const localTime = Math.max(dirty[k] || 0, 0);
+    if (dts > localTime) { merged[k] = ''; _wipCleared[shift][k] = true; }
   });
   return merged;
 }
