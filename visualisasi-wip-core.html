@@ -967,12 +967,19 @@ function saveAllData() {
   const key = getStorageKey();
   let prev = {};
   try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
-  localStorage.setItem(key, JSON.stringify(snapshot));
   const shift = currentShift();
-  const now = Date.now();
-  try { localStorage.setItem('wip-core-ts-' + shift, String(now)); } catch (e) {}
   if (!_wipDirty[shift]) _wipDirty[shift] = {};
-  Object.keys(snapshot).forEach(k => { if (snapshot[k] !== prev[k]) _wipDirty[shift][k] = now; });
+  const now = Date.now();
+  let changed = false;
+  Object.keys(snapshot).forEach(k => {
+    const pv = (prev[k] === undefined) ? '' : prev[k];
+    if (snapshot[k] !== pv) { _wipDirty[shift][k] = now; changed = true; }
+  });
+  localStorage.setItem(key, JSON.stringify(snapshot));
+  /* Tak ada yg berubah + tak ada kiriman tertunda: JANGAN sentuh stempel/jadwal.
+     Ini mencegah load halaman mendorong data basi ke server (meracuni device lain). */
+  if (!changed && !Object.keys(_wipDirty[shift]).length) return;
+  if (changed) { try { localStorage.setItem('wip-core-ts2-' + shift, String(now)); } catch (e) {} }
   scheduleWipSave();
 }
 
@@ -1050,7 +1057,7 @@ function mergeWipData(shift, server) {
   try { local = JSON.parse(localStorage.getItem(getStorageKey()) || '{}'); } catch (e) { local = {}; }
   const dirty = _wipDirty[shift] || {};
   let localTs = 0;
-  try { localTs = Number(localStorage.getItem('wip-core-ts-' + shift)) || 0; } catch (e) {}
+  try { localTs = Number(localStorage.getItem('wip-core-ts2-' + shift)) || 0; } catch (e) {}
   let serverTs = 0;
   try { serverTs = new Date(server.updatedAt).getTime() || 0; } catch (e) {}
   const merged = Object.assign({}, local);
