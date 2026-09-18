@@ -1068,7 +1068,7 @@ function asakaiOeeChartHtml() {
     return r && ((showPagi && r.pagi) || (showMalam && r.malam));
   });
   if (!hasAny) return head + '<div style="font-size:12px;color:#64748b">Tidak ada data OEE pada periode ini sesuai filter.</div>';
-  var gW = plotW / days.length, barW = Math.max(2, Math.min(8, (gW - 4) / 2));
+  var gW = plotW / days.length, barGap = 1;
   var yOf = function (v) { return base - (v / 100) * plotH; };
   var f1 = function (x) { return Math.round(x * 10) / 10; };
   var h = '<div style="position:relative;width:' + W + 'px;height:' + H + 'px;background:#ffffff">';
@@ -1077,27 +1077,28 @@ function asakaiOeeChartHtml() {
   [0, 20, 40, 60, 80, 100].forEach(function (v) {
     var y = yOf(v);
     h += '<div style="position:absolute;left:' + LEFT + 'px;right:' + RIGHT + 'px;top:' + f1(y) + 'px;height:1px;background:#e2e8f0"></div>';
-    h += '<div style="position:absolute;left:0;width:' + (LEFT - 5) + 'px;top:' + f1(y - 7) + 'px;text-align:right;font-size:10px;color:#64748b">' + v + '%</div>';
+    h += '<div style="position:absolute;left:0;width:' + (LEFT - 5) + 'px;top:' + f1(y - 7) + 'px;text-align:right;font-size:12px;color:#64748b">' + v + '%</div>';
   });
   h += '<div style="position:absolute;left:' + LEFT + 'px;right:' + RIGHT + 'px;top:' + f1(yOf(96)) + 'px;border-top:2px dashed #dc2626"></div>';
-  h += '<div style="position:absolute;right:' + RIGHT + 'px;top:' + f1(yOf(96) - 14) + 'px;font-size:10px;font-weight:700;color:#dc2626;white-space:nowrap">Target OEE 96%</div>';
+  h += '<div style="position:absolute;right:' + RIGHT + 'px;top:' + f1(yOf(96) - 14) + 'px;font-size:12px;font-weight:700;color:#dc2626;white-space:nowrap">Target OEE 96%</div>';
   for (var di = 0; di < days.length; di++) {
     var dd = days[di].dd;
     var cx = LEFT + gW * (di + 0.5);
     var bars = [];
     var rec = OEE_STORE[dd];
-    if (showPagi && rec && rec.pagi) bars.push({ v: Math.max(0, Math.min(100, rec.pagi.oee || 0)), c: '#bd0014', t: 'Pagi' });
-    if (showMalam && rec && rec.malam) bars.push({ v: Math.max(0, Math.min(100, rec.malam.oee || 0)), c: '#2f3131', t: 'Malam' });
-    var off = -(bars.length * (barW + 2)) / 2;
+    if (showPagi && rec && rec.pagi) bars.push({ v: Math.max(0, Math.min(100, rec.pagi.oee || 0)), c: '#0284c7', t: 'Pagi' });
+    if (showMalam && rec && rec.malam) bars.push({ v: Math.max(0, Math.min(100, rec.malam.oee || 0)), c: '#0284c7', t: 'Malam' });
+    var barW = Math.max(3, Math.min(bars.length > 1 ? 14 : 18, (gW - 1) / Math.max(1, bars.length)));
+    var off = -(bars.length * (barW + barGap)) / 2;
     bars.forEach(function (b) {
       var bh = Math.max(2, b.v / 100 * plotH);
       h += '<div title="' + asakaiEsc(dd) + ' ' + b.t + ' ' + Math.round(b.v) + '%" style="position:absolute;left:' + f1(cx + off) + 'px;top:' + f1(base - bh) + 'px;width:' + barW + 'px;height:' + f1(bh) + 'px;background:' + b.c + '"></div>';
-      off += barW + 2;
+      off += barW + barGap;
     });
-    h += '<div style="position:absolute;left:' + f1(cx - gW / 2) + 'px;width:' + f1(gW) + 'px;top:' + (base + 3) + 'px;text-align:center;font-size:8px;color:#64748b;white-space:nowrap;overflow:hidden">' + asakaiEsc(days[di].label) + '</div>';
+    h += '<div style="position:absolute;left:' + f1(cx - gW / 2) + 'px;width:' + f1(gW) + 'px;top:' + (base + 3) + 'px;text-align:center;font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden">' + asakaiEsc(days[di].label) + '</div>';
   }
-  h += '<div style="position:absolute;left:' + LEFT + 'px;top:2px;font-size:10px;font-weight:700;color:#bd0014">P = Pagi</div>';
-  h += '<div style="position:absolute;left:' + (LEFT + 62) + 'px;top:2px;font-size:10px;font-weight:700;color:#2f3131">M = Malam</div>';
+  h += '<div style="position:absolute;left:' + LEFT + 'px;top:2px;font-size:12px;font-weight:700;color:#0284c7">P = Pagi</div>';
+  h += '<div style="position:absolute;left:' + (LEFT + 72) + 'px;top:2px;font-size:12px;font-weight:700;color:#0284c7">M = Malam</div>';
   h += '</div>';
   return head + h;
 }
