@@ -970,19 +970,6 @@ const WIP_SKEW_MS = 120000;
 /* Fetch server pernah berhasil per shift? Save DILARANG sebelum ini (anti dorong
    snapshot sebagian: device yg belum memuat gambar penuh tak boleh menimpa server) */
 let _wipSyncedOnce = {};
-/* MODE VIEW-ONLY mesin ini (komputer project): menarik dari server, TAK PERNAH mendorong.
-   Aktif via ?readonly=1 (tersimpan permanen di browser ini) — matikan via ?readonly=0.
-   Atau via console: localStorage.setItem('wip-readonly','1') / removeItem.
-   Device lain TANPA flag ini tetap normal (bisa input + sinkron). */
-function isReadOnlyDevice() {
-  try {
-    const q = new URLSearchParams(window.location.search).get('readonly');
-    if (q === '1') { try { localStorage.setItem('wip-readonly', '1'); } catch (e) {} return true; }
-    if (q === '0') { try { localStorage.removeItem('wip-readonly'); } catch (e) {} return false; }
-  } catch (e) {}
-  try { return localStorage.getItem('wip-readonly') === '1'; } catch (e) { return false; }
-}
-const WIP_READONLY = isReadOnlyDevice();
 
 function saveAllData() {
   const snapshot = collectWipData();
@@ -990,7 +977,6 @@ function saveAllData() {
   let prev = {};
   try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
   localStorage.setItem(key, JSON.stringify(snapshot));
-  if (WIP_READONLY) return; /* view-only: cukup simpan lokal, jangan sentuh server */
   const shift = currentShift();
   if (!_wipDirty[shift]) _wipDirty[shift] = {};
   const now = Date.now();
@@ -1019,7 +1005,6 @@ function saveAllData() {
 }
 
 function scheduleWipSave() {
-  if (WIP_READONLY) return; /* view-only: tak pernah menjadwalkan kirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
   if (!_wipSyncedOnce[shift]) return; /* belum tahu keadaan server: tunda push, data tetap aman lokal */
@@ -1034,7 +1019,6 @@ function scheduleWipSave() {
 }
 
 async function syncWipSave(snapshot) {
-  if (WIP_READONLY) return; /* view-only: tak pernah mengirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   try {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
@@ -1124,7 +1108,6 @@ function mergeWipData(shift, server) {
   const delMap = (server._deleted && typeof server._deleted === 'object') ? server._deleted : {};
   Object.keys(server).forEach(k => {
     if (k === 'updatedAt' || k === '_deleted') return;
-    if (WIP_READONLY) { merged[k] = server[k]; return; } /* view-only: cerminkan server apa adanya */
     const sv = server[k];
     if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
     if (sv === undefined || sv === '') return; /* server kosong: jangan hapus lokal */
@@ -1139,7 +1122,6 @@ function mergeWipData(shift, server) {
   /* Terapkan penanda HAPUS dari device lain: hapus nilai lokal hanya bila penghapusan
      LEBIH BARU drpd sentuhan lokal terakhir utk kunci itu (last-write-wins). */
   Object.keys(delMap).forEach(k => {
-    if (WIP_READONLY) { merged[k] = ''; _wipCleared[shift][k] = true; return; }
     const dts = Number(delMap[k]) || 0;
     const lv = local[k];
     if (lv === undefined || lv === '') return;
@@ -1296,8 +1278,6 @@ async function loadMachines() {
     if (list && list.length) {
       MACHINES = list;
       renderMachineOptions();
-    } else if (WIP_READONLY) {
-      renderMachineOptions(); /* view-only: pakai default lokal, jangan seed daftar ke server */
     } else {
       // Seed: belum ada konfigurasi → simpan daftar default sekali supaya
       // Data OEE & Visualisasi WIP memakai daftar master yang sama.
@@ -2053,7 +2033,6 @@ function collectOeePayload() {
 }
 
 function saveOeeDataToBackend(url) {
-  if (WIP_READONLY) return; /* view-only: jangan tulis dokumen OEE live */
   try {
     fetch(url, {
       method: 'POST',
@@ -2321,12 +2300,6 @@ bindPanelNav();
 
 wipSyncFromServer();
 if (window.Sync) setInterval(wipSyncFromServer, Sync.pollMs);
-if (WIP_READONLY) {
-  const b = document.createElement('div');
-  b.textContent = 'VIEW ONLY — tidak mengirim ke server';
-  b.style.cssText = 'position:fixed;top:8px;right:8px;z-index:9999;font-size:11px;font-weight:700;color:#fff;background:#64748b;padding:4px 10px;border-radius:999px;pointer-events:none';
-  document.body.appendChild(b);
-}
 
 renderMachineOptions();
 loadMachines();
