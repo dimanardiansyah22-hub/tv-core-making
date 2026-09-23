@@ -955,6 +955,26 @@ function setPanelVal(data, id, fallback) {
 let _wipSaveTimer = null;
 let _wipPendingSave = {};
 let _wipLastTs = {};
+/* Stempel server terakhir yg terlihat + waktu sinkron terakhir, PERSISTEN per shift.
+   Ini bukti tertulisnya: bila stempel server sama dgn yg terakhir terlihat,
+   berarti TAK ADA yg berubah di mana pun -> diam total (tak gabung, tak dorong).
+   Tanpa ini, setiap buka halaman berisiko mendorong data basi. */
+function getLastTs(shift) {
+  if (_wipLastTs[shift] === undefined) {
+    try { _wipLastTs[shift] = localStorage.getItem('wip-core-lasts-' + shift) || null; } catch (e) { _wipLastTs[shift] = null; }
+  }
+  return _wipLastTs[shift];
+}
+function setLastTs(shift, ts) {
+  _wipLastTs[shift] = ts;
+  try { localStorage.setItem('wip-core-lasts-' + shift, ts); } catch (e) {}
+}
+function getSyncedAt(shift) {
+  try { return Number(localStorage.getItem('wip-core-synced-' + shift)) || 0; } catch (e) { return 0; }
+}
+function setSyncedAt(shift, t) {
+  try { localStorage.setItem('wip-core-synced-' + shift, String(t)); } catch (e) {}
+}
 /* Kunci yg diubah lokal beserta WAKTU ubahnya (ms). Menang atas snapshot server
    hanya bila perubahan lokal LEBIH BARU drpd updatedAt server (last-write-wins
    antar device). Dibersihkan setelah save terkonfirmasi server. */
@@ -1024,7 +1044,8 @@ async function syncWipSave(snapshot) {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
     const res = await Promise.race([Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data }), timeout]);
     if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
-    if (res && res.updatedAt) _wipLastTs[snapshot.shift] = res.updatedAt;
+    if (res && res.updatedAt) setLastTs(snapshot.shift, res.updatedAt);
+    setSyncedAt(snapshot.shift, Date.now()); /* titik konvergensi: server == yg baru dikirim */
     if (snapshot.data && snapshot.data._deleted) {
       Object.keys(snapshot.data._deleted).forEach(k => { if (_wipDeleted[snapshot.shift]) delete _wipDeleted[snapshot.shift][k]; });
     }
@@ -1153,12 +1174,19 @@ async function wipSyncFromServer() {
     const data = (res && res.ok && res.data) ? res.data : null;
     const needPush = () => Object.keys(_wipDirty[shift] || {}).length || Object.keys(_wipDeleted[shift] || {}).length;
     if (!data || !data.updatedAt) { if (needPush()) scheduleWipSave(); return; }
-    if (data.updatedAt !== _wipLastTs[shift]) {
-      _wipLastTs[shift] = data.updatedAt;
-      const values = mergeWipData(shift, data);
-      localStorage.setItem(getStorageKey(), JSON.stringify(values));
-      applyWipData(values);
+    if (data.updatedAt === getLastTs(shift)) {
+      /* Server TAK BERUBAH sejak terakhir terlihat: bukti pasti tak ada yg baru
+         di mana pun -> diam total (jangan gabung, jangan dorong basi).
+         KECUALI simpanan lokal lebih baru drpd sinkron terakhir -> dorong susulan. */
+      let localTs = 0;
+      try { localTs = Number(localStorage.getItem('wip-core-ts2-' + shift)) || 0; } catch (e) {}
+      if (localTs > getSyncedAt(shift)) scheduleWipSave();
+      return;
     }
+    setLastTs(shift, data.updatedAt);
+    const values = mergeWipData(shift, data);
+    localStorage.setItem(getStorageKey(), JSON.stringify(values));
+    applyWipData(values);
     if (needPush()) scheduleWipSave();
   } catch (e) {}
 }
