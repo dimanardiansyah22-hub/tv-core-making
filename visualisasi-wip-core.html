@@ -955,6 +955,19 @@ function setPanelVal(data, id, fallback) {
 let _wipSaveTimer = null;
 let _wipPendingSave = {};
 let _wipLastTs = {};
+/* Peran TAMU = view-only penuh: boleh menarik, TAK BOLEH mendorong apa pun.
+   Deteksi sama seperti guest-lock.js: ?role=guest atau sesi parent.
+   (guest-lock hanya mengunci input di layar; pengaman inilah yg menutup mesinnya.) */
+function isGuestMode() {
+  try {
+    if (new URLSearchParams(window.location.search).get('role') === 'guest') return true;
+  } catch (e) {}
+  try {
+    const ps = window.parent && window.parent.tvcSession && window.parent.tvcSession();
+    if (ps && ps.role === 'guest') return true;
+  } catch (e) {}
+  return false;
+}
 /* Stempel server terakhir yg terlihat + waktu sinkron terakhir, PERSISTEN per shift.
    Ini bukti tertulisnya: bila stempel server sama dgn yg terakhir terlihat,
    berarti TAK ADA yg berubah di mana pun -> diam total (tak gabung, tak dorong).
@@ -1025,6 +1038,7 @@ function saveAllData() {
 }
 
 function scheduleWipSave() {
+  if (isGuestMode()) return; /* tamu: tak pernah menjadwalkan kirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   const shift = currentShift();
   if (!_wipSyncedOnce[shift]) return; /* belum tahu keadaan server: tunda push, data tetap aman lokal */
@@ -1039,6 +1053,7 @@ function scheduleWipSave() {
 }
 
 async function syncWipSave(snapshot) {
+  if (isGuestMode()) return; /* tamu: tak pernah mengirim */
   if (!window.Sync || !Sync.hasUrl()) return;
   try {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
@@ -1316,6 +1331,8 @@ async function loadMachines() {
     if (list && list.length) {
       MACHINES = list;
       renderMachineOptions();
+    } else if (isGuestMode()) {
+      renderMachineOptions(); /* tamu: pakai default lokal, jangan seed daftar ke server */
     } else {
       // Seed: belum ada konfigurasi → simpan daftar default sekali supaya
       // Data OEE & Visualisasi WIP memakai daftar master yang sama.
@@ -2071,6 +2088,7 @@ function collectOeePayload() {
 }
 
 function saveOeeDataToBackend(url) {
+  if (isGuestMode()) return; /* tamu: jangan tulis dokumen OEE live */
   try {
     fetch(url, {
       method: 'POST',
