@@ -2192,16 +2192,20 @@ async function viewWipPdf(id) {
 }
 
 /* ── Generate PDF otomatis terjadwal (senyap: tanpa modal/QR) ──
-   Jadwal tersimpan lokal: [{id, shift, time:'HH:MM', enabled, lastFired:'YYYY-MM-DD'}].
-   Syarat jalan: halaman terbuka, komputer menyala. Device tamu dilewati. */
-function getAutoPdfSchedules() {
+   Jadwal TETAP di kode (minta user): Pagi 20:00, Malam 07:30 WIB.
+   Modal hanya MENAMPILKAN (+ status terakhir jalan). */
+const AUTO_PDF_SCHEDULES = [
+  { id: 'pagi', shift: 'pagi', time: '20:00' },
+  { id: 'malam', shift: 'malam', time: '07:30' }
+];
+function getAutoPdfFired() {
   try {
-    const a = JSON.parse(localStorage.getItem('wip-autopdf') || '[]');
-    return Array.isArray(a) ? a : [];
-  } catch (e) { return []; }
+    const o = JSON.parse(localStorage.getItem('wip-autopdf-fired') || '{}');
+    return (o && typeof o === 'object') ? o : {};
+  } catch (e) { return {}; }
 }
-function setAutoPdfSchedules(a) {
-  try { localStorage.setItem('wip-autopdf', JSON.stringify(a)); } catch (e) {}
+function setAutoPdfFired(o) {
+  try { localStorage.setItem('wip-autopdf-fired', JSON.stringify(o)); } catch (e) {}
 }
 function wibHM(d) {
   return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
@@ -2209,52 +2213,23 @@ function wibHM(d) {
 function renderAutoPdfList() {
   const box = document.getElementById('autoPdfList');
   if (!box) return;
-  const list = getAutoPdfSchedules();
-  if (!list.length) { box.innerHTML = '<div style="font-size:11px;color:#9ca3af">Belum ada jadwal.</div>'; return; }
-  box.innerHTML = list.map(en =>
+  const fired = getAutoPdfFired();
+  box.innerHTML = AUTO_PDF_SCHEDULES.map(en =>
     '<div style="display:flex;gap:6px;align-items:center;font-size:12px">'
-    + '<input type="checkbox" ' + (en.enabled === false ? '' : 'checked') + ' onchange="autoPdfToggle(\'' + en.id + '\', this.checked)" title="Aktif">'
     + '<b style="text-transform:capitalize">' + (en.shift === 'malam' ? 'Malam' : 'Pagi') + '</b>'
-    + '<span style="font-family:monospace">' + pdfEsc(en.time || '') + '</span>'
-    + '<button onclick="autoPdfDel(\'' + en.id + '\')" style="margin-left:auto;border:1px solid #d1d5db;background:#fff;color:#b91c1c;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer">Hapus</button>'
+    + '<span style="font-family:monospace">' + en.time + ' WIB</span>'
+    + '<span style="color:#6b7280;font-size:11px">terakhir: ' + (fired[en.id] ? pdfEsc(fired[en.id]) : '—') + '</span>'
     + '</div>').join('');
 }
-function autoPdfAdd() {
-  const sh = ((document.getElementById('autoPdfShift') || {}).value) || 'pagi';
-  const tm = ((document.getElementById('autoPdfTime') || {}).value) || '';
-  if (!/^\d{2}:\d{2}$/.test(tm)) return;
-  const list = getAutoPdfSchedules();
-  const now = wibNow(), today = fmtYMD(now);
-  list.push({
-    id: 'a' + Date.now().toString(36) + Math.floor(Math.random() * 1e4),
-    shift: (sh === 'malam' ? 'malam' : 'pagi'), time: tm, enabled: true,
-    lastFired: (wibHM(now) >= tm ? today : '')
-  });
-  setAutoPdfSchedules(list);
-  renderAutoPdfList();
-}
-function autoPdfToggle(id, on) {
-  const list = getAutoPdfSchedules();
-  const en = list.find(x => x && x.id === id);
-  if (en) { en.enabled = !!on; setAutoPdfSchedules(list); }
-}
-function autoPdfDel(id) {
-  setAutoPdfSchedules(getAutoPdfSchedules().filter(x => x && x.id !== id));
-  renderAutoPdfList();
-}
 function checkAutoPdf() {
-  const list = getAutoPdfSchedules();
-  if (!list.length) return;
   const now = wibNow(), today = fmtYMD(now), hm = wibHM(now);
+  const fired = getAutoPdfFired();
   let changed = false;
-  list.forEach(en => {
-    if (!en || en.enabled === false) return;
-    if (!/^\d{2}:\d{2}$/.test(en.time || '')) return;
-    if (en.shift !== 'malam' && en.shift !== 'pagi') en.shift = 'pagi';
-    if (en.lastFired === today) return;
-    if (hm >= en.time) { en.lastFired = today; changed = true; fireAutoPdf(en); }
+  AUTO_PDF_SCHEDULES.forEach(en => {
+    if (fired[en.id] === today) return;
+    if (hm >= en.time) { fired[en.id] = today; changed = true; fireAutoPdf(en); }
   });
-  if (changed) setAutoPdfSchedules(list);
+  if (changed) setAutoPdfFired(fired);
 }
 let _autoBusy = false;
 const _autoRetried = {};
@@ -2597,12 +2572,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') noteClose();
     <div style="margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;text-align:left">
       <div style="font-size:12px;font-weight:800;color:#111827;margin-bottom:6px">Generate otomatis (senyap, tanpa QR)</div>
       <div id="autoPdfList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
-        <label style="font-size:11px;font-weight:700;color:#374151">Shift<br><select id="autoPdfShift" style="margin-top:2px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit"><option value="pagi">Pagi</option><option value="malam">Malam</option></select></label>
-        <label style="font-size:11px;font-weight:700;color:#374151">Jam (WIB)<br><input type="time" id="autoPdfTime" value="19:05" style="margin-top:2px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit"></label>
-        <button id="autoPdfAddBtn" onclick="autoPdfAdd()" style="border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">Tambah</button>
-      </div>
-      <div style="font-size:11px;color:#6b7280;margin-top:6px">Halaman harus terbuka &amp; komputer menyala. Tersimpan ke Drive + catat OEE (device non-tamu).</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:6px">Jadwal tetap: Pagi 20:00, Malam 07:30 WIB. Halaman harus terbuka &amp; komputer menyala. Tersimpan ke Drive + catat OEE (device non-tamu).</div>
     </div>
     <div id="pdfStatus" class="pdf-status">Menyusun ringkasan...</div>
     <div id="pdfQrBox"><span style="font-size:12px;color:#9ca3af">Menyiapkan QR code...</span></div>
