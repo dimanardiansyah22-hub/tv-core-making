@@ -2184,6 +2184,28 @@ function parseHistName(name) {
   if (!m) return null;
   return { shift: m[1].toLowerCase(), date: m[4] + '-' + m[3] + '-' + m[2] };
 }
+/* Dialog tanggal Save As (modal custom agar tidak keluar fullscreen) */
+function promptSaveAsDate(infoText, defaultDate) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('saveAsModal');
+    document.getElementById('saveAsText').textContent = infoText;
+    const inp = document.getElementById('saveAsDate');
+    inp.value = defaultDate;
+    modal.classList.add('on');
+    let resolved = false;
+    const done = (val) => {
+      if (resolved) return;
+      resolved = true;
+      modal.classList.remove('on');
+      resolve(val);
+    };
+    document.getElementById('saveAsYes').onclick = () => done(inp.value);
+    document.getElementById('saveAsNo').onclick = () => done(null);
+    modal.querySelector('.confirm-box').onclick = (e) => e.stopPropagation();
+    modal.onclick = () => done(null);
+    setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
+  });
+}
 async function saveAsOee(id) {
   const url = (window.Sync && Sync.getUrl()) || '';
   if (!url) { histStatus('URL Apps Script belum diatur.', true); return; }
@@ -2203,7 +2225,7 @@ async function saveAsOee(id) {
       histStatus('Tidak ada data problem untuk ' + src.date + ' shift ' + src.shift + ' (mungkin PDF sementara yg tak menyimpan data).', true);
       return;
     }
-    const tdate = window.prompt('Simpan ' + nProb + ' problem ke Data OEE tanggal (YYYY-MM-DD):', src.date);
+    const tdate = await promptSaveAsDate('Simpan ' + nProb + ' problem ke Data OEE tanggal:', src.date);
     if (tdate === null) { histStatus('Dibatalkan.'); return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test((tdate || '').trim())) { histStatus('Format tanggal salah — gunakan YYYY-MM-DD.', true); return; }
     const target = tdate.trim();
@@ -2489,6 +2511,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') noteClose();
     <div class="confirm-actions">
       <button class="btn-yes" id="confirmYes">Hapus</button>
       <button class="btn-no" id="confirmNo">Batal</button>
+    </div>
+  </div>
+</div>
+<div class="confirm-modal" id="saveAsModal">
+  <div class="confirm-box">
+    <p id="saveAsText">Simpan ke tanggal:</p>
+    <input type="date" id="saveAsDate" style="width:100%;box-sizing:border-box;border:1.5px solid #d1d5db;border-radius:8px;padding:9px 12px;font-size:15px;font-weight:600;margin-bottom:18px;outline:none">
+    <div class="confirm-actions">
+      <button class="btn-yes" id="saveAsYes" style="background:#16a34a">Simpan</button>
+      <button class="btn-no" id="saveAsNo">Batal</button>
     </div>
   </div>
 </div>
