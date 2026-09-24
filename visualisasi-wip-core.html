@@ -2191,11 +2191,160 @@ async function viewWipPdf(id) {
   }
 }
 
+/* ── Generate PDF otomatis terjadwal (senyap: tanpa modal/QR) ──
+   Jadwal tersimpan lokal: [{id, shift, time:'HH:MM', enabled, lastFired:'YYYY-MM-DD'}].
+   Syarat jalan: halaman terbuka, komputer menyala. Device tamu dilewati. */
+function getAutoPdfSchedules() {
+  try {
+    const a = JSON.parse(localStorage.getItem('wip-autopdf') || '[]');
+    return Array.isArray(a) ? a : [];
+  } catch (e) { return []; }
+}
+function setAutoPdfSchedules(a) {
+  try { localStorage.setItem('wip-autopdf', JSON.stringify(a)); } catch (e) {}
+}
+function wibHM(d) {
+  return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+}
+function renderAutoPdfList() {
+  const box = document.getElementById('autoPdfList');
+  if (!box) return;
+  const list = getAutoPdfSchedules();
+  if (!list.length) { box.innerHTML = '<div style="font-size:11px;color:#9ca3af">Belum ada jadwal.</div>'; return; }
+  box.innerHTML = list.map(en =>
+    '<div style="display:flex;gap:6px;align-items:center;font-size:12px">'
+    + '<input type="checkbox" ' + (en.enabled === false ? '' : 'checked') + ' onchange="autoPdfToggle(\'' + en.id + '\', this.checked)" title="Aktif">'
+    + '<b style="text-transform:capitalize">' + (en.shift === 'malam' ? 'Malam' : 'Pagi') + '</b>'
+    + '<span style="font-family:monospace">' + pdfEsc(en.time || '') + '</span>'
+    + '<button onclick="autoPdfDel(\'' + en.id + '\')" style="margin-left:auto;border:1px solid #d1d5db;background:#fff;color:#b91c1c;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;cursor:pointer">Hapus</button>'
+    + '</div>').join('');
+}
+function autoPdfAdd() {
+  const sh = ((document.getElementById('autoPdfShift') || {}).value) || 'pagi';
+  const tm = ((document.getElementById('autoPdfTime') || {}).value) || '';
+  if (!/^\d{2}:\d{2}$/.test(tm)) return;
+  const list = getAutoPdfSchedules();
+  const now = wibNow(), today = fmtYMD(now);
+  list.push({
+    id: 'a' + Date.now().toString(36) + Math.floor(Math.random() * 1e4),
+    shift: (sh === 'malam' ? 'malam' : 'pagi'), time: tm, enabled: true,
+    lastFired: (wibHM(now) >= tm ? today : '')
+  });
+  setAutoPdfSchedules(list);
+  renderAutoPdfList();
+}
+function autoPdfToggle(id, on) {
+  const list = getAutoPdfSchedules();
+  const en = list.find(x => x && x.id === id);
+  if (en) { en.enabled = !!on; setAutoPdfSchedules(list); }
+}
+function autoPdfDel(id) {
+  setAutoPdfSchedules(getAutoPdfSchedules().filter(x => x && x.id !== id));
+  renderAutoPdfList();
+}
+function checkAutoPdf() {
+  const list = getAutoPdfSchedules();
+  if (!list.length) return;
+  const now = wibNow(), today = fmtYMD(now), hm = wibHM(now);
+  let changed = false;
+  list.forEach(en => {
+    if (!en || en.enabled === false) return;
+    if (!/^\d{2}:\d{2}$/.test(en.time || '')) return;
+    if (en.shift !== 'malam' && en.shift !== 'pagi') en.shift = 'pagi';
+    if (en.lastFired === today) return;
+    if (hm >= en.time) { en.lastFired = today; changed = true; fireAutoPdf(en); }
+  });
+  if (changed) setAutoPdfSchedules(list);
+}
+let _autoBusy = false;
+const _autoRetried = {};
+async function fireAutoPdf(en) {
+  const tag = '[AutoPDF ' + en.shift + ' ' + en.time + ']';
+  if (_autoBusy) {
+    console.warn(tag, 'sibuk, tunda 5 menit');
+    setTimeout(() => fireAutoPdf(en), 5 * 60 * 1000);
+    return;
+  }
+  if (isGuestMode()) { console.log(tag, 'mode tamu: lewati'); return; }
+  const modal = document.getElementById('pdfModal');
+  if (modal && modal.classList.contains('on')) {
+    console.warn(tag, 'modal terbuka, tunda 5 menit');
+    setTimeout(() => fireAutoPdf(en), 5 * 60 * 1000);
+    return;
+  }
+  _autoBusy = true;
+  try {
+    if (en.shift !== currentShift()) {
+      switchShift(en.shift);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    _pdfDateStr = fmtYMD(productionDate());
+    _pdfShift = en.shift;
+    const sheet = buildSummarySheet();
+    document.body.appendChild(sheet);
+    await new Promise(r => setTimeout(r, 80));
+    let canvas;
+    try {
+      canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false });
+    } finally {
+      sheet.remove();
+    }
+    const MX = 5, MY = 10;
+    const pdf = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const cw = pw - 2 * MX;
+    const chAvail = ph - 2 * MY;
+    const pxPerPage = Math.max(1, Math.floor(canvas.width * chAvail / cw));
+    let y = 0, first = true;
+    while (y < canvas.height) {
+      if (!first) pdf.addPage();
+      const h = Math.min(pxPerPage, canvas.height - y);
+      const part = document.createElement('canvas');
+      part.width = canvas.width; part.height = h;
+      const ctx = part.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, h);
+      ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+      pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', MX, MY, cw, h * cw / canvas.width);
+      y += h; first = false;
+    }
+    _pdfB64 = pdf.output('datauristring').split(',')[1];
+    const tgl = _pdfDateStr.slice(8, 10) + '-' + _pdfDateStr.slice(5, 7) + '-' + _pdfDateStr.slice(0, 4);
+    _pdfName = 'Report Daily Production Core Making (shift ' +
+               (pdfShift() === 'malam' ? 'Malam' : 'Pagi') + '), (' + tgl + ').pdf';
+    _pdfTemp = isWipTempWindow();
+    await uploadWipPdfSilent();
+    console.log(tag, 'tersimpan:', _pdfName);
+  } catch (err) {
+    console.warn(tag, 'gagal:', err && err.message);
+    const rk = fmtYMD(wibNow()) + ':' + en.id;
+    if (!_autoRetried[rk]) {
+      _autoRetried[rk] = true;
+      setTimeout(() => { delete _autoRetried[rk]; fireAutoPdf(en); }, 5 * 60 * 1000);
+    }
+  } finally {
+    _autoBusy = false;
+  }
+}
+async function uploadWipPdfSilent() {
+  const url = (window.Sync && Sync.getUrl()) || '';
+  if (!url) throw new Error('URL Apps Script belum diatur');
+  if (!_pdfTemp) saveOeeDataToBackend(url);
+  const res = await fetch(url, {
+    method: 'POST',
+    body: JSON.stringify({ app: 'wipreport', action: 'savepdf', name: _pdfName, b64: _pdfB64, temp: _pdfTemp }),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    redirect: 'follow'
+  }).then(r => r.json());
+  if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
+  return res;
+}
 async function generatePdf(skipPrefill) {
   const btn = document.getElementById('generatePdfBtn');
   const rebuildBtn = document.getElementById('pdfRebuildBtn');
   btn.disabled = true;
   if (rebuildBtn) rebuildBtn.disabled = true;
+  renderAutoPdfList();
   if (!skipPrefill) {
     const di = document.getElementById('pdfDateInput');
     const si = document.getElementById('pdfShiftInput');
@@ -2401,6 +2550,8 @@ bindPanelNav();
 
 wipSyncFromServer();
 if (window.Sync) setInterval(wipSyncFromServer, Sync.pollMs);
+setInterval(checkAutoPdf, 30000);
+setTimeout(checkAutoPdf, 5000);
 
 renderMachineOptions();
 loadMachines();
@@ -2443,6 +2594,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') noteClose();
       <button id="pdfRebuildBtn" onclick="generatePdf(true)" style="border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">Buat ulang</button>
     </div>
     <div id="pdfDateWarn" style="display:none;font-size:11px;font-weight:600;color:#b45309;margin-top:6px">Tanggal berbeda dari hari ini — pastikan isian tabel masih data tanggal tersebut.</div>
+    <div style="margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;text-align:left">
+      <div style="font-size:12px;font-weight:800;color:#111827;margin-bottom:6px">Generate otomatis (senyap, tanpa QR)</div>
+      <div id="autoPdfList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px;align-items:flex-end;flex-wrap:wrap">
+        <label style="font-size:11px;font-weight:700;color:#374151">Shift<br><select id="autoPdfShift" style="margin-top:2px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit"><option value="pagi">Pagi</option><option value="malam">Malam</option></select></label>
+        <label style="font-size:11px;font-weight:700;color:#374151">Jam (WIB)<br><input type="time" id="autoPdfTime" value="19:05" style="margin-top:2px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit"></label>
+        <button id="autoPdfAddBtn" onclick="autoPdfAdd()" style="border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">Tambah</button>
+      </div>
+      <div style="font-size:11px;color:#6b7280;margin-top:6px">Halaman harus terbuka &amp; komputer menyala. Tersimpan ke Drive + catat OEE (device non-tamu).</div>
+    </div>
     <div id="pdfStatus" class="pdf-status">Menyusun ringkasan...</div>
     <div id="pdfQrBox"><span style="font-size:12px;color:#9ca3af">Menyiapkan QR code...</span></div>
     <div class="pdf-actions">
