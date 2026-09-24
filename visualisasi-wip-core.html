@@ -674,7 +674,7 @@
 <span class="material-symbols-outlined text-base">folder_open</span>
 <span>History</span>
 </button>
-<button onclick="generatePdf()" class="no-print flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors border border-red-700" id="generatePdfBtn" title="Cetak / simpan dashboard sebagai PDF">
+<button onclick="generatePdf(false)" class="no-print flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors border border-red-700" id="generatePdfBtn" title="Cetak / simpan dashboard sebagai PDF">
 <span class="material-symbols-outlined text-base">picture_as_pdf</span>
 <span>Generate to PDF</span>
 </button>
@@ -1707,7 +1707,7 @@ function pdfEsc(s) {
 }
 
 function buildSummarySheet() {
-  const isMalam = currentShift() === 'malam';
+  const isMalam = pdfShift() === 'malam';
   const slots = isMalam ? nightSlots : daySlots;
   // Kunci slot di tabel = string jam tanpa spasi & titik dua ("0720-0800")
   const slotIdx = {}; slots.forEach((s, i) => {
@@ -1763,7 +1763,7 @@ function buildSummarySheet() {
   const machines = Object.keys(lsRows).sort((a,b) =>
     (lsRows[b].AV+lsRows[b].PE+lsRows[b].RQ) - (lsRows[a].AV+lsRows[a].PE+lsRows[a].RQ));
 
-  const now = productionDate();
+  const now = pdfProductionDate();
   const HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const dd = ('0' + now.getDate()).slice(-2);
@@ -1957,6 +1957,22 @@ function productionDate() {
   }
   return d;
 }
+/* Tanggal + shift PRODUKSI yg dicetak/diarsipkan (diatur di modal PDF;
+   default = tebakan otomatis; bisa diubah utk generate susulan) */
+let _pdfDateStr = '', _pdfShift = '';
+function fmtYMD(d) {
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+}
+function pdfProductionDate() {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(_pdfDateStr)) {
+    const p = _pdfDateStr.split('-');
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+  return productionDate();
+}
+function pdfShift() {
+  return (_pdfShift === 'malam' || _pdfShift === 'pagi') ? _pdfShift : currentShift();
+}
 /* Jendela PDF sementara (WIB): 23:45-01:15 & 11:30-13:45 */
 function isWipTempWindow() {
   const d = wibNow();
@@ -2051,7 +2067,7 @@ function uploadWipPdf() {
 /* ── Kumpulkan payload data OEE + problem line stop untuk histori ── */
 function collectOeePayload() {
   const { av, pe, rq, oee, ls, pt } = computeOee();
-  const dNow = productionDate();
+  const dNow = pdfProductionDate();
   const date = dNow.getFullYear() + '-' +
     ('0' + (dNow.getMonth() + 1)).slice(-2) + '-' +
     ('0' + dNow.getDate()).slice(-2);
@@ -2086,7 +2102,7 @@ function collectOeePayload() {
     app: 'oeedata',
     action: 'save',
     date,
-    shift: currentShift(),
+    shift: pdfShift(),
     oee: Math.round(oee),
     av: Math.round(av),
     pe: Math.round(pe),
@@ -2175,11 +2191,30 @@ async function viewWipPdf(id) {
   }
 }
 
-async function generatePdf() {
+async function generatePdf(skipPrefill) {
   const btn = document.getElementById('generatePdfBtn');
+  const rebuildBtn = document.getElementById('pdfRebuildBtn');
   btn.disabled = true;
+  if (rebuildBtn) rebuildBtn.disabled = true;
+  if (!skipPrefill) {
+    const di = document.getElementById('pdfDateInput');
+    const si = document.getElementById('pdfShiftInput');
+    if (di) di.value = fmtYMD(productionDate());
+    if (si) si.value = currentShift();
+  }
+  _pdfDateStr = ((document.getElementById('pdfDateInput') || {}).value) || '';
+  _pdfShift = ((document.getElementById('pdfShiftInput') || {}).value) || '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(_pdfDateStr)) _pdfDateStr = fmtYMD(productionDate());
+  if (_pdfShift !== 'malam' && _pdfShift !== 'pagi') _pdfShift = currentShift();
+  const isBackdated = _pdfDateStr !== fmtYMD(productionDate());
+  const warn = document.getElementById('pdfDateWarn');
+  if (warn) warn.style.display = isBackdated ? 'block' : 'none';
   openPdfModal('Menyusun ringkasan...');
   try {
+    if (_pdfShift !== currentShift()) {
+      switchShift(_pdfShift);
+      await new Promise(r => setTimeout(r, 350));
+    }
     const sheet = buildSummarySheet();
     document.body.appendChild(sheet);
     await new Promise(r => setTimeout(r, 80));
@@ -2207,11 +2242,10 @@ async function generatePdf() {
       y += h; first = false;
     }
     _pdfB64 = pdf.output('datauristring').split(',')[1];
-    const dNow = productionDate();
-    const tgl = ('0' + dNow.getDate()).slice(-2) + '-' + ('0' + (dNow.getMonth() + 1)).slice(-2) + '-' + dNow.getFullYear();
+    const tgl = _pdfDateStr.slice(8, 10) + '-' + _pdfDateStr.slice(5, 7) + '-' + _pdfDateStr.slice(0, 4);
     _pdfName = 'Report Daily Production Core Making (shift ' +
-               (currentShift() === 'malam' ? 'Malam' : 'Pagi') + '), (' + tgl + ').pdf';
-    _pdfTemp = isWipTempWindow();
+               (pdfShift() === 'malam' ? 'Malam' : 'Pagi') + '), (' + tgl + ').pdf';
+    _pdfTemp = isWipTempWindow() && !isBackdated; /* susulan bertanggal lampau selalu arsip final */
     // Otomatis simpan ke Drive lalu tampilkan QR unduhan
     setPdfStatus(_pdfTemp
       ? 'Mengunggah ke Drive (mode sementara, 1 jam)...'
@@ -2221,6 +2255,7 @@ async function generatePdf() {
     setPdfStatus('Gagal membuat PDF: ' + err.message, true);
   } finally {
     btn.disabled = false;
+    if (rebuildBtn) rebuildBtn.disabled = false;
   }
 }
 
@@ -2402,6 +2437,12 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') noteClose();
   <div class="pdf-box">
     <h3>Ringkasan WIP Core (PDF)</h3>
     <div style="font-size:12px;color:#6b7280;margin-top:2px">PDF otomatis tersimpan di Drive — scan QR dengan HP untuk mengunduh</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;justify-content:center;margin-top:10px;flex-wrap:wrap">
+      <label style="font-size:11px;font-weight:700;color:#374151;text-align:left">Tanggal produksi<br><input type="date" id="pdfDateInput" style="margin-top:2px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit"></label>
+      <label style="font-size:11px;font-weight:700;color:#374151;text-align:left">Shift<br><select id="pdfShiftInput" style="margin-top:2px;border:1px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit"><option value="pagi">Pagi</option><option value="malam">Malam</option></select></label>
+      <button id="pdfRebuildBtn" onclick="generatePdf(true)" style="border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">Buat ulang</button>
+    </div>
+    <div id="pdfDateWarn" style="display:none;font-size:11px;font-weight:600;color:#b45309;margin-top:6px">Tanggal berbeda dari hari ini — pastikan isian tabel masih data tanggal tersebut.</div>
     <div id="pdfStatus" class="pdf-status">Menyusun ringkasan...</div>
     <div id="pdfQrBox"><span style="font-size:12px;color:#9ca3af">Menyiapkan QR code...</span></div>
     <div class="pdf-actions">
