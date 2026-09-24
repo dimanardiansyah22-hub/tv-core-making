@@ -84,7 +84,8 @@
     if (!syncUrl) return Promise.reject(new Error('URL Apps Script belum diatur. Buka Pengaturan.'));
     var qs = '?app=' + encodeURIComponent(app);
     for (var k in (params || {})) qs += '&' + k + '=' + encodeURIComponent(params[k]);
-    return fetch(syncUrl + qs, { redirect: 'follow' }).then(function (res) {
+    qs += '&_=' + Date.now();
+    return fetch(syncUrl + qs, { redirect: 'follow', cache: 'no-store' }).then(function (res) {
       if (res.status !== 200) throw new Error('HTTP ' + res.status + ' dari server.');
       return res.json();
     });
