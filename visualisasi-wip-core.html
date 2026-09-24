@@ -931,6 +931,7 @@ function collectWipData() {
   data._prod_2tr_plan = document.getElementById('prod-2tr-plan') ? document.getElementById('prod-2tr-plan').value : '';
   data._prod_2tr_act = document.getElementById('prod-2tr-act') ? document.getElementById('prod-2tr-act').value : '';
   data._ct = document.getElementById('ct-input') ? document.getElementById('ct-input').value : '';
+  data._planMode = (typeof planMode !== 'undefined' && planMode === 'all2tr') ? 'all2tr' : 'ratio';
   return data;
 }
 
@@ -1109,6 +1110,7 @@ function applyWipData(data) {
   setPanelValSafe(data, 'prod-2tr-plan');
   setPanelValSafe(data, 'prod-2tr-act');
   setPanelValSafe(data, 'ct-input');
+  applyServerPlanMode(data);
   renderReadiness();
   updateEfficiency();
 }
@@ -1233,6 +1235,7 @@ function loadSavedData() {
     setPanelValSafe(data, 'prod-2tr-plan');
     setPanelValSafe(data, 'prod-2tr-act');
     setPanelValSafe(data, 'ct-input');
+    applyServerPlanMode(data);
   } catch(e) {}
 }
 
@@ -1383,7 +1386,7 @@ function renderMachineList() {
 
 let planMode = (() => { try { return localStorage.getItem('wip-plan-mode') || 'ratio'; } catch (e) { return 'ratio'; } })();
 
-function setPlanMode(mode) {
+function applyPlanMode(mode, save) {
   planMode = mode === 'all2tr' ? 'all2tr' : 'ratio';
   const ratioBtn = document.getElementById('btn-ratio');
   const all2trBtn = document.getElementById('btn-all2tr');
@@ -1399,7 +1402,13 @@ function setPlanMode(mode) {
   if (row1tr) row1tr.classList.toggle('wip-row-dim', planMode === 'all2tr');
   try { localStorage.setItem('wip-plan-mode', planMode); } catch (e) {}
   updateEfficiency();
-  saveAllData();
+  if (save) saveAllData();
+}
+function setPlanMode(mode) { applyPlanMode(mode, true); }
+/* Terapkan mode dari snapshot server (tanpa memicu save ulang -> anti loop) */
+function applyServerPlanMode(data) {
+  const m = data && (data._planMode === 'all2tr' ? 'all2tr' : (data._planMode === 'ratio' ? 'ratio' : null));
+  if (m && m !== planMode) applyPlanMode(m, false);
 }
 
 function computeOee() {
