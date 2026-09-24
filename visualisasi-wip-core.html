@@ -1142,23 +1142,24 @@ function mergeWipData(shift, server) {
   const merged = Object.assign({}, local);
   _wipCleared[shift] = {};
   const delMap = (server._deleted && typeof server._deleted === 'object') ? server._deleted : {};
+  const guest = isGuestMode(); /* tamu = pengikut murni: selalu ikut server terbaru */
   Object.keys(server).forEach(k => {
     if (k === 'updatedAt' || k === '_deleted') return;
     const sv = server[k];
     const lv = local[k];
-    if (dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
+    if (!guest && dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
     if (sv === undefined || sv === '') {
       /* server kehilangan kunci yg lokal pegang (timpa snapshot bersamaan):
          tandai agar terdorong balik — tanpa ini divergen permanen.
          KECUALI kunci ini berpenanda hapus: biar pass penghapusan yg memutuskan
          (jangan kotori dirty agar cek waktu penghapusan tetap jujur). */
-      if (delMap[k] === undefined && lv !== undefined && lv !== '') {
+      if (!guest && delMap[k] === undefined && lv !== undefined && lv !== '') {
         if (!_wipDirty[shift]) _wipDirty[shift] = {};
         _wipDirty[shift][k] = Date.now();
       }
       return;
     }
-    if ((lv !== undefined && lv !== '') && (dirty[k] || localTs > serverTs)) {
+    if (!guest && (lv !== undefined && lv !== '') && (dirty[k] || localTs > serverTs)) {
       if (!_wipDirty[shift]) _wipDirty[shift] = {};
       _wipDirty[shift][k] = Math.max(dirty[k] || 0, localTs); /* pastikan ikut terdorong ke server */
       return;
