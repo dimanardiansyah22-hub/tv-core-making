@@ -457,6 +457,8 @@
     .hist-name .d { font-size:11px; color:#6b7280; }
     .badge-temp { background:#fef3c7; color:#92400e; font-size:10px; font-weight:800; padding:2px 8px; border-radius:999px; flex:none; }
     .hist-view { border:none; background:#2563eb; color:#fff; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; flex:none; }
+    .hist-saveas { border:none; background:#16a34a; color:#fff; padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; flex:none; }
+    .hist-saveas:disabled { opacity:.55; cursor:not-allowed; }
     #pdfDriveBtn { border:none; background:#2563eb; color:#fff; }
     #pdfDriveBtn:disabled { opacity:.55; cursor:not-allowed; }
     #pdfDownloadBtn { border:1px solid #d1d5db; background:#fff; color:#374151; display:none; }
@@ -2156,6 +2158,7 @@ async function loadHistoryList() {
     const j = await r.json();
     if (!j || !j.ok) throw new Error((j && j.error) || 'Server menolak');
     const items = j.reports || [];
+    _histItems = items;
     histStatus(items.length ? ('Total ' + items.length + ' file PDF tersimpan.') : 'Belum ada PDF tersimpan.');
     if (!items.length) return;
     listEl.innerHTML = items.map(it => {
@@ -2165,11 +2168,69 @@ async function loadHistoryList() {
         + '<span class="n">' + pdfEsc(it.name) + '</span>'
         + '<span class="d">' + d + ' • ' + fmtBytes(it.size) + '</span></div>'
         + (it.temp ? '<span class="badge-temp">sementara</span>' : '')
+        + '<button class="hist-saveas" onclick="saveAsOee(\'' + it.id + '\')" title="Salin data problem PDF ini ke Data OEE dengan tanggal pilihan (isi PDF tidak diubah)">Save As</button>'
         + '<button class="hist-view" onclick="viewWipPdf(\'' + it.id + '\')">Buka</button>'
         + '</div>';
     }).join('');
   } catch (e) {
     histStatus('Gagal memuat daftar: ' + e.message, true);
+  }
+}
+/* Save As arsip History -> Data OEE Core beda tanggal.
+   PDF TIDAK diubah; hanya data problem-nya disalin ke tanggal yg seharusnya. */
+let _histItems = [];
+function parseHistName(name) {
+  const m = String(name || '').match(/\(shift (Pagi|Malam)\), \((\d{2})-(\d{2})-(\d{4})\)(-TEMP-\d+)?\.pdf$/i);
+  if (!m) return null;
+  return { shift: m[1].toLowerCase(), date: m[4] + '-' + m[3] + '-' + m[2] };
+}
+async function saveAsOee(id) {
+  const url = (window.Sync && Sync.getUrl()) || '';
+  if (!url) { histStatus('URL Apps Script belum diatur.', true); return; }
+  const it = (_histItems || []).find(x => x.id === id);
+  if (!it) { histStatus('Item arsip tidak ditemukan.', true); return; }
+  const src = parseHistName(it.name);
+  if (!src) { histStatus('Nama file tidak berpola tanggal/shift — tidak bisa dipetakan.', true); return; }
+  histStatus('Membaca data OEE ' + src.date + ' shift ' + src.shift + '...');
+  try {
+    const r = await fetch(url + '?app=oeedata&action=list', { redirect: 'follow' });
+    const j = await r.json();
+    if (!j || !j.ok) throw new Error((j && j.error) || 'Server menolak');
+    const store = j.store || {};
+    const rec = store[src.date] && store[src.date][src.shift];
+    const nProb = rec && Array.isArray(rec.problems) ? rec.problems.length : 0;
+    if (!rec || !nProb) {
+      histStatus('Tidak ada data problem untuk ' + src.date + ' shift ' + src.shift + ' (mungkin PDF sementara yg tak menyimpan data).', true);
+      return;
+    }
+    const tdate = window.prompt('Simpan ' + nProb + ' problem ke Data OEE tanggal (YYYY-MM-DD):', src.date);
+    if (tdate === null) { histStatus('Dibatalkan.'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test((tdate || '').trim())) { histStatus('Format tanggal salah — gunakan YYYY-MM-DD.', true); return; }
+    const target = tdate.trim();
+    if (target === src.date) { histStatus('Tanggal sama — tidak ada yg disalin.'); return; }
+    const doSave = async () => {
+      histStatus('Menyimpan ke Data OEE ' + target + ' shift ' + src.shift + '...');
+      const body = {
+        app: 'oeedata', action: 'save', date: target, shift: src.shift,
+        oee: rec.oee, av: rec.av, pe: rec.pe, rq: rec.rq,
+        plannedMinutes: rec.plannedMinutes, machines: rec.machines || [], problems: rec.problems || []
+      };
+      const rs = await fetch(url, {
+        method: 'POST', body: JSON.stringify(body),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow'
+      }).then(x => x.json());
+      if (!rs || !rs.ok) throw new Error((rs && rs.error) || 'Server menolak');
+      histStatus('Berhasil: ' + nProb + ' problem disalin ke Data OEE ' + target + ' shift ' + src.shift + '. PDF tidak diubah.');
+    };
+    const tex = store[target] && store[target][src.shift];
+    const tnProb = tex && Array.isArray(tex.problems) ? tex.problems.length : 0;
+    if (tex && tnProb) {
+      confirmAction('Tanggal ' + target + ' shift ' + src.shift + ' sudah punya ' + tnProb + ' problem. Timpa dengan ' + nProb + ' problem dari arsip?', () => { doSave().catch(e => histStatus('Gagal menyimpan: ' + e.message, true)); });
+    } else {
+      doSave().catch(e => histStatus('Gagal menyimpan: ' + e.message, true));
+    }
+  } catch (e) {
+    histStatus('Gagal: ' + e.message, true);
   }
 }
 async function viewWipPdf(id) {
