@@ -2288,13 +2288,28 @@ async function fireAutoPdf(en) {
   const prevShift = currentShift();
   const needSwitch = en.shift !== prevShift;
   try {
+    /* Gerbang produksi: lewati bila 11 jam terakhir TAK ADA input di shift ini,
+       baik lokal maupun server — berarti tidak produksi (OEE akan salah). */
+    let localTs = 0;
+    try { localTs = Number(localStorage.getItem('wip-core-ts2-' + en.shift)) || 0; } catch (e) {}
+    let serverTs = 0;
+    try {
+      const rs = await Sync.get('wip', { shift: en.shift, action: 'get' });
+      if (rs && rs.ok && rs.data && rs.data.updatedAt) serverTs = new Date(rs.data.updatedAt).getTime() || 0;
+    } catch (e) {}
+    const IDLE_MS = 11 * 3600 * 1000;
+    if (Date.now() - localTs > IDLE_MS && Date.now() - serverTs > IDLE_MS) {
+      console.log(tag, 'tidak ada input 11 jam — lewati (tidak produksi)');
+      return;
+    }
     if (needSwitch) {
       showAutoOverlay(
         'Generate PDF otomatis Shift ' + (en.shift === 'malam' ? 'Malam' : 'Pagi') + ' sedang berjalan…',
         'Tampilan kembali seperti semula setelah selesai. Mohon jangan menutup halaman.'
       );
       switchShift(en.shift);
-      await new Promise(r => setTimeout(r, 2000));
+      try { await wipSyncFromServer(); } catch (e) {}
+      await new Promise(r => setTimeout(r, 800));
     }
     _pdfDateStr = fmtYMD(productionDate());
     _pdfShift = en.shift;
@@ -2595,7 +2610,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') noteClose();
     <div style="margin-top:12px;border-top:1px solid #e5e7eb;padding-top:10px;text-align:left">
       <div style="font-size:12px;font-weight:800;color:#111827;margin-bottom:6px">Generate otomatis (senyap, tanpa QR)</div>
       <div id="autoPdfList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-      <div style="font-size:11px;color:#6b7280;margin-top:6px">Jadwal tetap: Pagi 20:00, Malam 07:30 WIB. Halaman harus terbuka &amp; komputer menyala. Tersimpan ke Drive + catat OEE (device non-tamu).</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:6px">Jadwal tetap: Pagi 20:00, Malam 07:30 WIB. Halaman harus terbuka &amp; komputer menyala. Tersimpan ke Drive + catat OEE (device non-tamu). Dilewati bila 11 jam tanpa input (tidak produksi).</div>
     </div>
     <div id="pdfStatus" class="pdf-status">Menyusun ringkasan...</div>
     <div id="pdfQrBox"><span style="font-size:12px;color:#9ca3af">Menyiapkan QR code...</span></div>
