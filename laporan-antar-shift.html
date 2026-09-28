@@ -26,7 +26,7 @@ body {
 .kop-right { flex: 25; padding: 10px 12px; font-size: 14px; display: flex; flex-direction: column; gap: 9px; justify-content: center; }
 .kop-rrow { display: flex; align-items: center; gap: 6px; font-weight: 600; }
 .kop-rlab { min-width: 64px; }
-.kop-rrow input[type="date"] { border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 6px; font: inherit; }
+.kop-rrow input[type="text"] { border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 6px; font: inherit; }
 .kop-rrow input[type="checkbox"] { width: 16px; height: 16px; accent-color: #16a34a; cursor: pointer; }
 .kop-rrow label { display: flex; align-items: center; gap: 4px; font-weight: 600; cursor: pointer; }
 .lap-sec { border-top: 2px solid #111; padding: 10px 12px; }
@@ -41,7 +41,7 @@ body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
 body.night .kop { border-bottom-color: #e8e8f0; }
 body.night .kop-left, body.night .kop-center { border-right-color: #777; }
-body.night .kop-right input[type="date"] { background: #2d2d44; color: #f5f5ff; border-color: #555; }
+body.night .kop-right input[type="text"] { background: #2d2d44; color: #f5f5ff; border-color: #555; }
 body.night .lap-sec { border-top-color: #e8e8f0; }
 body.night .shift-box { border-color: #777; }
 body.night .shift-row:first-child { border-bottom-color: #777; }
@@ -77,7 +77,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
     <div class="kop-right">
       <div class="kop-rrow"><span class="kop-rlab">Hari :</span><span id="lapHari" style="min-height:1.2em"></span></div>
-      <div class="kop-rrow"><span class="kop-rlab">Tanggal :</span><input type="date" id="lapTanggal"></div>
+      <div class="kop-rrow"><span class="kop-rlab">Tanggal :</span><input type="text" id="lapTanggal" placeholder="DD-MM-YYYY" inputmode="numeric"></div>
       <div class="kop-rrow"><span class="kop-rlab">PIC :</span>
         <label><input type="checkbox" class="pic-chk" value="Darno"> Darno,</label>
         <label><input type="checkbox" class="pic-chk" value="Sutarto"> Sutarto</label>
@@ -101,13 +101,20 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
 <script>
 (function () {
   var HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  function parseTanggal(str) {
+    var m = String(str || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return { y: +m[3], m: +m[2], d: +m[1] };
+    m = String(str || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return { y: +m[1], m: +m[2], d: +m[3] };
+    return null;
+  }
   function updateHari() {
     var inp = document.getElementById('lapTanggal');
     var out = document.getElementById('lapHari');
     if (!inp || !out) return;
-    var p = String(inp.value || '').split('-');
-    if (p.length !== 3 || !p[0]) { out.textContent = ''; return; }
-    var dt = new Date(+p[0], +p[1] - 1, +p[2]);
+    var p = parseTanggal(inp.value);
+    if (!p) { out.textContent = ''; return; }
+    var dt = new Date(p.y, p.m - 1, p.d);
     out.textContent = isNaN(dt) ? '' : HARI[dt.getDay()];
   }
   var inp = document.getElementById('lapTanggal');
