@@ -162,6 +162,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     el.addEventListener('input', updateKehadiran);
   });
   updateKehadiran();
+  document.querySelectorAll('.pic-chk').forEach(function (el) {
     el.addEventListener('change', function () {
       if (el.checked) document.querySelectorAll('.pic-chk').forEach(function (o) { if (o !== el) o.checked = false; });
     });
