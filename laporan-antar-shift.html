@@ -36,6 +36,15 @@ body {
 .shift-row:first-child { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #d1d5db; }
 .shift-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
 .shift-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer; }
+/* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
+body.night { background: #2d2d44; color: #e8e8f0; }
+body.night #lapReport { background: #383855; border-color: #555; }
+body.night .kop { border-bottom-color: #e8e8f0; }
+body.night .kop-left, body.night .kop-center { border-right-color: #777; }
+body.night .kop-right input[type="date"] { background: #2d2d44; color: #f5f5ff; border-color: #555; }
+body.night .lap-sec { border-top-color: #e8e8f0; }
+body.night .shift-box { border-color: #777; }
+body.night .shift-row:first-child { border-bottom-color: #777; }
 .placeholder {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -116,7 +125,12 @@ body {
   });
   document.querySelectorAll('.shift-time').forEach(function (el) {
     el.addEventListener('change', function () {
-      if (el.checked) document.querySelectorAll('.shift-time').forEach(function (o) { if (o !== el) o.checked = false; });
+      if (el.checked) {
+        document.querySelectorAll('.shift-time').forEach(function (o) { if (o !== el) o.checked = false; });
+        document.body.classList.toggle('night', el.value === 'Night');
+      } else {
+        document.body.classList.remove('night');
+      }
     });
   });
 })();
