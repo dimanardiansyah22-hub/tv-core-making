@@ -36,6 +36,14 @@ body {
 .shift-row:first-child { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #d1d5db; }
 .shift-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
 .shift-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer; }
+.absen-box { border: 1px solid #9ca3af; border-radius: 8px; padding: 10px 14px; }
+.absen-row { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 14px; font-weight: 600; }
+.absen-lab { min-width: 130px; }
+.absen-sub { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin: 12px 0 2px; }
+.absen-in { flex: 1; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 8px; font: inherit; background: #fff; color: inherit; }
+body.night .absen-box { border-color: #777; }
+body.night .absen-sub { color: #b0b0d0; }
+body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
@@ -95,6 +103,22 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       <label><input type="checkbox" class="shift-time" value="Day"> Day</label>
       <label><input type="checkbox" class="shift-time" value="Night"> Night</label>
     </div>
+    </div>
+  </div>
+  <div class="lap-sec">
+    <div class="lap-sec-title">2.ABSENSI</div>
+    <div class="absen-box">
+      <div class="absen-row"><span class="absen-lab">M/P</span><input class="absen-in" data-k="mp" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">Absen</span><input class="absen-in" data-k="absen" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">% Kehadiran</span><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal"></div>
+      <div class="absen-sub">Keterangan</div>
+      <div class="absen-row"><span class="absen-lab">Cuti</span><input class="absen-in" data-k="cuti" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">Sakit</span><input class="absen-in" data-k="sakit" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">Izin</span><input class="absen-in" data-k="izin" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">TD</span><input class="absen-in" data-k="td" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">PC</span><input class="absen-in" data-k="pc" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">Training</span><input class="absen-in" data-k="training" autocomplete="off"></div>
+      <div class="absen-row"><span class="absen-lab">Lain-lain</span><input class="absen-in" data-k="lain" autocomplete="off"></div>
     </div>
   </div>
 </div>
