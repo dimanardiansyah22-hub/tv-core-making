@@ -110,7 +110,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="absen-box">
       <div class="absen-row"><span class="absen-lab">M/P</span><input class="absen-in" data-k="mp" autocomplete="off"></div>
       <div class="absen-row"><span class="absen-lab">Absen</span><input class="absen-in" data-k="absen" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">% Kehadiran</span><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal"></div>
+      <div class="absen-row"><span class="absen-lab">% Kehadiran</span><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (M/P − Absen) ÷ M/P"></div>
       <div class="absen-sub">Keterangan</div>
       <div class="absen-row"><span class="absen-lab">Cuti</span><input class="absen-in" data-k="cuti" autocomplete="off"></div>
       <div class="absen-row"><span class="absen-lab">Sakit</span><input class="absen-in" data-k="sakit" autocomplete="off"></div>
@@ -144,7 +144,24 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   var inp = document.getElementById('lapTanggal');
   if (inp) inp.addEventListener('change', updateHari);
   updateHari();
-  document.querySelectorAll('.pic-chk').forEach(function (el) {
+  function parseNum(str) {
+    var v = parseFloat(String(str || '').replace(',', '.'));
+    return isNaN(v) ? 0 : v;
+  }
+  function updateKehadiran() {
+    var mpEl = document.querySelector('.absen-in[data-k="mp"]');
+    var abEl = document.querySelector('.absen-in[data-k="absen"]');
+    var out = document.querySelector('.absen-in[data-k="kehadiran"]');
+    if (!mpEl || !abEl || !out) return;
+    var mp = parseNum(mpEl.value), ab = parseNum(abEl.value);
+    if (mp <= 0) { out.value = ''; return; }
+    var pct = (mp - ab) / mp * 100;
+    out.value = (Math.round(pct * 10) / 10).toString().replace('.', ',') + '%';
+  }
+  document.querySelectorAll('.absen-in[data-k="mp"], .absen-in[data-k="absen"]').forEach(function (el) {
+    el.addEventListener('input', updateKehadiran);
+  });
+  updateKehadiran();
     el.addEventListener('change', function () {
       if (el.checked) document.querySelectorAll('.pic-chk').forEach(function (o) { if (o !== el) o.checked = false; });
     });
