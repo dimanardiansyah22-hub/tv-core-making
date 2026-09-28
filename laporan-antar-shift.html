@@ -36,11 +36,11 @@ body {
 .shift-row:first-child { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #d1d5db; }
 .shift-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
 .shift-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer; }
-.absen-box { border: 1px solid #9ca3af; border-radius: 8px; padding: 10px 14px; width: 25%; }
-.absen-row { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 14px; font-weight: 600; }
-.absen-lab { min-width: 130px; }
+.absen-box { border: 1px solid #9ca3af; border-radius: 8px; padding: 10px 14px; width: 25%; box-sizing: border-box; overflow: hidden; }
+.absen-row { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 14px; font-weight: 600; flex-wrap: wrap; }
+.absen-lab { flex: 1 1 100px; min-width: 0; }
 .absen-sub { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin: 12px 0 2px; }
-.absen-in { flex: 1; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 8px; font: inherit; background: #fff; color: inherit; }
+.absen-in { flex: 3 1 130px; min-width: 0; max-width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 8px; font: inherit; background: #fff; color: inherit; box-sizing: border-box; }
 body.night .absen-box { border-color: #777; }
 body.night .absen-sub { color: #b0b0d0; }
 body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; }
