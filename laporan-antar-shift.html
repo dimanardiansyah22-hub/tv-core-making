@@ -60,11 +60,29 @@ body {
     </div>
     <div class="kop-right">
       <label>Tanggal: <input type="date" id="lapTanggal"></label>
+      <div id="lapHari" style="font-size:12px;color:#6b7280;font-weight:600;margin:-4px 0 0 2px"></div>
       <label>PIC <input type="checkbox" class="pic-chk" value="Darno"> Darno</label>
       <label class="pic-indent"><input type="checkbox" class="pic-chk" value="Sutarto"> Sutarto</label>
     </div>
   </div>
 </div>
+<script>
+(function () {
+  var HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  function updateHari() {
+    var inp = document.getElementById('lapTanggal');
+    var out = document.getElementById('lapHari');
+    if (!inp || !out) return;
+    var p = String(inp.value || '').split('-');
+    if (p.length !== 3 || !p[0]) { out.textContent = ''; return; }
+    var dt = new Date(+p[0], +p[1] - 1, +p[2]);
+    out.textContent = isNaN(dt) ? '' : HARI[dt.getDay()];
+  }
+  var inp = document.getElementById('lapTanggal');
+  if (inp) inp.addEventListener('change', updateHari);
+  updateHari();
+})();
+</script>
 <script src="guest-lock.js"></script>
 </body>
 </html>
