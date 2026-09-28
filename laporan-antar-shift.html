@@ -18,7 +18,7 @@ body {
     padding: 24px 12px;
 }
 #lapReport { margin: 0 auto; background: #fff; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; }
-.kop { display: flex; align-items: stretch; }
+.kop { display: flex; align-items: stretch; border-bottom: 2px solid #111; }
 .kop-left { flex: 25; padding: 10px 12px; font-weight: 700; font-size: 14px; line-height: 1.6; border-right: 1px solid #d1d5db; text-align: center; display: flex; flex-direction: column; justify-content: center; }
 .kop-center { flex: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; border-right: 1px solid #d1d5db; }
 .kop-center .t1 { font-size: 28px; font-weight: 800; letter-spacing: .02em; }
@@ -47,6 +47,7 @@ body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; 
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
+body.night .kop { border-bottom-color: #e8e8f0; }
 body.night .kop-left, body.night .kop-center { border-right-color: #777; }
 body.night .kop-right input[type="text"] { background: #2d2d44; color: #f5f5ff; border-color: #555; }
 body.night .shift-box { border-color: #777; }
