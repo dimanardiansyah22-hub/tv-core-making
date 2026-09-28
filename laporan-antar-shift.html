@@ -29,6 +29,11 @@ body {
 .kop-rrow input[type="date"] { border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 6px; font: inherit; }
 .kop-rrow input[type="checkbox"] { width: 16px; height: 16px; accent-color: #16a34a; cursor: pointer; }
 .kop-rrow label { display: flex; align-items: center; gap: 4px; font-weight: 600; cursor: pointer; }
+.lap-sec { border-top: 2px solid #111; padding: 10px 12px; }
+.lap-sec-title { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
+.shift-row { display: flex; align-items: center; gap: 18px; font-size: 14px; font-weight: 600; margin: 6px 0; }
+.shift-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.shift-row input[type="checkbox"] { width: 17px; height: 17px; accent-color: #16a34a; cursor: pointer; }
 .placeholder {
     background: #fff;
     border: 1px solid #e5e7eb;
@@ -68,6 +73,17 @@ body {
       </div>
     </div>
   </div>
+  <div class="lap-sec">
+    <div class="lap-sec-title">1.SHIFT</div>
+    <div class="shift-row">
+      <label><input type="checkbox" class="shift-core" value="Red"> Red</label>
+      <label><input type="checkbox" class="shift-core" value="White"> White</label>
+    </div>
+    <div class="shift-row">
+      <label><input type="checkbox" class="shift-time" value="Day"> Day</label>
+      <label><input type="checkbox" class="shift-time" value="Night"> Night</label>
+    </div>
+  </div>
 </div>
 <script>
 (function () {
@@ -87,6 +103,16 @@ body {
   document.querySelectorAll('.pic-chk').forEach(function (el) {
     el.addEventListener('change', function () {
       if (el.checked) document.querySelectorAll('.pic-chk').forEach(function (o) { if (o !== el) o.checked = false; });
+    });
+  });
+  document.querySelectorAll('.shift-core').forEach(function (el) {
+    el.addEventListener('change', function () {
+      if (el.checked) document.querySelectorAll('.shift-core').forEach(function (o) { if (o !== el) o.checked = false; });
+    });
+  });
+  document.querySelectorAll('.shift-time').forEach(function (el) {
+    el.addEventListener('change', function () {
+      if (el.checked) document.querySelectorAll('.shift-time').forEach(function (o) { if (o !== el) o.checked = false; });
     });
   });
 })();
