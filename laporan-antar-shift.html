@@ -81,9 +81,9 @@ body.night .mode-title { color: #b0b0d0; }
 .prob-table .absen-subrow { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; padding: 7px 6px; }
 .absen-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
 .absen-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
-td.td-unit { white-space: nowrap; }
-td.td-unit .absen-in { display: inline-block; width: calc(100% - 24px); vertical-align: middle; }
-.unit-jp { display: inline-block; font-size: 13px; font-weight: 700; color: #6b7280; vertical-align: middle; }
+td.td-unit { white-space: nowrap; position: relative; }
+td.td-unit .absen-in { display: block; width: 100%; }
+.unit-jp { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; color: #6b7280; pointer-events: none; }
 body.night .unit-jp { color: #b0b0d0; }
 body.night .absen-subrow { color: #b0b0d0; }
 body.night .absen-in { color: #f5f5ff; }
