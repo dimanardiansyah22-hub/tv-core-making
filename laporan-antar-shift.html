@@ -54,6 +54,8 @@ body.night .lap-btn.primary { background: #bd0014; border-color: #bd0014; color:
 .kop-rrow { display: flex; align-items: center; gap: 6px; font-weight: 600; }
 .kop-rlab { min-width: 64px; }
 .kop-rrow input[type="text"] { border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 6px; font: inherit; }
+#lapCalBtn { background: transparent; border: none; cursor: pointer; color: inherit; padding: 2px; display: inline-flex; align-items: center; }
+#lapCalBtn .material-symbols-outlined { font-size: 20px; }
 .kop-rrow input[type="checkbox"] { width: 16px; height: 16px; accent-color: #16a34a; cursor: pointer; }
 .kop-rrow label { display: flex; align-items: center; gap: 4px; font-weight: 600; cursor: pointer; }
 .lap-sec { padding: 10px 12px; }
@@ -119,7 +121,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
     <div class="kop-right">
       <div class="kop-rrow"><span class="kop-rlab">Hari :</span><span id="lapHari" style="min-height:1.2em"></span></div>
-      <div class="kop-rrow"><span class="kop-rlab">Tanggal :</span><input type="text" id="lapTanggal" placeholder="DD-MM-YYYY" inputmode="numeric"></div>
+      <div class="kop-rrow"><span class="kop-rlab">Tanggal :</span><input type="text" id="lapTanggal" placeholder="DD-MM-YYYY" inputmode="numeric"><input type="date" id="lapTanggalPick" tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"><button type="button" id="lapCalBtn" title="Pilih dari kalender"><span class="material-symbols-outlined">calendar_month</span></button></div>
       <div class="kop-rrow"><span class="kop-rlab">PIC :</span>
         <label><input type="checkbox" class="pic-chk" value="Darno"> Darno,</label>
         <label><input type="checkbox" class="pic-chk" value="Sutarto"> Sutarto</label>
@@ -196,6 +198,31 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     el.addEventListener('input', updateKehadiran);
   });
   updateKehadiran();
+  (function () {
+    function pad2(n) { return ('0' + n).slice(-2); }
+    var calBtn = document.getElementById('lapCalBtn');
+    if (calBtn) calBtn.addEventListener('click', function () {
+      var pick = document.getElementById('lapTanggalPick');
+      var t = document.getElementById('lapTanggal');
+      if (!pick || !t) return;
+      var m = String(t.value || '').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (m) { pick.value = m[3] + '-' + m[2] + '-' + m[1]; }
+      else { var n = new Date(); pick.value = n.getFullYear() + '-' + pad2(n.getMonth() + 1) + '-' + pad2(n.getDate()); }
+      try {
+        if (pick.showPicker) pick.showPicker();
+        else { pick.focus(); pick.click(); }
+      } catch (e) { try { pick.focus(); } catch (_e) {} }
+    });
+    var pick0 = document.getElementById('lapTanggalPick');
+    if (pick0) pick0.addEventListener('change', function () {
+      var m = String(pick0.value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      var t = document.getElementById('lapTanggal');
+      if (!m || !t) return;
+      t.value = m[3] + '-' + m[2] + '-' + m[1];
+      t.dispatchEvent(new Event('input', { bubbles: true }));
+      t.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  })();
   document.querySelectorAll('.pic-chk').forEach(function (el) {
     el.addEventListener('change', function () {
       if (el.checked) document.querySelectorAll('.pic-chk').forEach(function (o) { if (o !== el) o.checked = false; });
