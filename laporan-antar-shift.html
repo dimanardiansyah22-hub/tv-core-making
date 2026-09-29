@@ -200,8 +200,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   updateKehadiran();
   (function () {
     function pad2(n) { return ('0' + n).slice(-2); }
-    var calBtn = document.getElementById('lapCalBtn');
-    if (calBtn) calBtn.addEventListener('click', function () {
+    function openLapCalendar() {
       var pick = document.getElementById('lapTanggalPick');
       var t = document.getElementById('lapTanggal');
       if (!pick || !t) return;
@@ -212,7 +211,11 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
         if (pick.showPicker) pick.showPicker();
         else { pick.focus(); pick.click(); }
       } catch (e) { try { pick.focus(); } catch (_e) {} }
-    });
+    }
+    var calBtn = document.getElementById('lapCalBtn');
+    if (calBtn) calBtn.addEventListener('click', openLapCalendar);
+    var tInput = document.getElementById('lapTanggal');
+    if (tInput) tInput.addEventListener('click', openLapCalendar);
     var pick0 = document.getElementById('lapTanggalPick');
     if (pick0) pick0.addEventListener('change', function () {
       var m = String(pick0.value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
