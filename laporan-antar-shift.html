@@ -18,6 +18,32 @@ body {
     padding: 24px 12px;
 }
 #lapReport { margin: 0 auto; background: #fff; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; }
+.lap-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+.lap-header h1 { font-size: 20px; font-weight: 800; }
+.lap-header p { font-size: 12px; color: #6b7280; font-weight: 600; }
+.lap-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lap-btn { border: 1px solid #d1d5db; background: #fff; color: #374151; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.lap-btn:hover { background: #f3f4f6; }
+.lap-btn.primary { background: #bd0014; border-color: #bd0014; color: #fff; }
+.lap-btn.primary:hover { background: #9a0110; }
+.lap-btn:disabled { opacity: .55; cursor: not-allowed; }
+#lapPdfStatus { font-size: 12px; color: #6b7280; font-weight: 600; }
+body.night .lap-header p { color: #b0b0d0; }
+body.night .lap-btn { background: #3a3a58; color: #e8e8f0; border-color: #555; }
+body.night .lap-btn:hover { background: #4a4a6a; }
+body.night .lap-btn.primary { background: #bd0014; border-color: #bd0014; color: #fff; }
+.lap-modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.5); }
+.lap-modal.on { display: flex; }
+.lap-box { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.4); padding: 22px 26px; width: min(92vw,480px); }
+.lap-box h3 { margin: 0 0 4px; font-size: 17px; font-weight: 800; color: #111827; }
+.lap-box .sub { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+.lap-box .row-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+.lap-list { max-height: 56vh; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+.lap-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+.lap-item:last-child { border-bottom: none; }
+.lap-item .nm { flex: 1; min-width: 0; }
+.lap-item .nm .n { display: block; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lap-item .nm .d { font-size: 11px; color: #6b7280; }
 .kop { display: flex; align-items: stretch; border-bottom: 2px solid #111; }
 .kop-left { flex: 25; padding: 10px 12px; font-weight: 700; font-size: 14px; line-height: 1.6; border-right: 1px solid #d1d5db; text-align: center; display: flex; flex-direction: column; justify-content: center; }
 .kop-center { flex: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; border-right: 1px solid #d1d5db; }
@@ -71,6 +97,18 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
 </style>
 </head>
 <body>
+  <div class="lap-header" id="lapHeader">
+    <div>
+      <h1>Laporan Antar Shift</h1>
+      <p>Core Making &bull; milik shift Day / Night masing-masing</p>
+    </div>
+    <div class="lap-actions">
+      <span id="lapPdfStatus"></span>
+      <button type="button" class="lap-btn" id="lapClearBtn">Bersihkan Form</button>
+      <button type="button" class="lap-btn" id="lapArchiveBtn">Arsip Laporan Antar Shift</button>
+      <button type="button" class="lap-btn primary" id="lapPdfBtn">Buat PDF</button>
+    </div>
+  </div>
 <div id="lapReport">
   <div class="kop">
     <div class="kop-left">
@@ -436,9 +474,172 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   }
   lapSyncFromServer();
   if (window.Sync) setInterval(lapSyncFromServer, Sync.pollMs);
+
+  /* ── Header: Bersihkan Form / Arsip / Buat PDF ── */
+  function lapConfirm(message) {
+    return new Promise(resolve => {
+      const modal = document.getElementById('lapConfirmModal');
+      document.getElementById('lapConfirmText').textContent = message;
+      modal.classList.add('on');
+      let done = false;
+      const fin = (ok) => {
+        if (done) return;
+        done = true;
+        modal.classList.remove('on');
+        resolve(ok);
+      };
+      document.getElementById('lapConfirmYes').onclick = () => fin(true);
+      document.getElementById('lapConfirmNo').onclick = () => fin(false);
+      modal.onclick = (e) => { if (e.target === modal) fin(false); };
+    });
+  }
+  function lapPdfStatus(msg, isErr) {
+    const el = document.getElementById('lapPdfStatus');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.style.color = isErr ? '#dc2626' : '';
+  }
+  document.getElementById('lapClearBtn').addEventListener('click', async () => {
+    const ok = await lapConfirm('Hapus semua isian form (kecuali pilihan Day/Night)?');
+    if (!ok) return;
+    document.querySelectorAll('.absen-in').forEach(el => { el.value = ''; });
+    const t = document.getElementById('lapTanggal');
+    if (t) t.value = '';
+    document.querySelectorAll('.pic-chk, .shift-core').forEach(el => { el.checked = false; });
+    updateHari();
+    updateKehadiran();
+    saveLapData();
+    lapPdfStatus('');
+  });
+  function lapFileName() {
+    let d = (document.getElementById('lapTanggal') || {}).value || '';
+    if (!/^\d{2}-\d{2}-\d{4}$/.test(d)) {
+      const n = new Date();
+      d = ('0' + n.getDate()).slice(-2) + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-' + n.getFullYear();
+    }
+    const sh = lapActiveStore === 'night' ? 'Night' : 'Day';
+    return 'Laporan Antar Shift (' + sh + ', ' + d + ').pdf';
+  }
+  document.getElementById('lapPdfBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('lapPdfBtn');
+    btn.disabled = true;
+    lapPdfStatus('Menyusun PDF…');
+    try {
+      if (typeof html2canvas === 'undefined') throw new Error('Pustaka render belum termuat');
+      const sheet = document.getElementById('lapReport');
+      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false });
+      const MX = 10, MY = 10;
+      const pdf = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pw = pdf.internal.pageSize.getWidth();
+      const ph = pdf.internal.pageSize.getHeight();
+      const cw = pw - 2 * MX;
+      const chAvail = ph - 2 * MY;
+      const pxPerPage = Math.max(1, Math.floor(canvas.width * chAvail / cw));
+      let y = 0, first = true;
+      while (y < canvas.height) {
+        if (!first) pdf.addPage();
+        const h = Math.min(pxPerPage, canvas.height - y);
+        const part = document.createElement('canvas');
+        part.width = canvas.width; part.height = h;
+        const ctx = part.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, h);
+        ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+        pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', MX, MY, cw, h * cw / canvas.width);
+        y += h; first = false;
+      }
+      const b64 = pdf.output('datauristring').split(',')[1];
+      const fname = lapFileName();
+      lapPdfStatus('Mengunggah ke Drive…');
+      const url = (window.Sync && Sync.getUrl()) || '';
+      if (!url) throw new Error('URL Apps Script belum diatur');
+      const res = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ app: 'lapshiftreport', action: 'savepdf', name: fname, b64: b64 }),
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        redirect: 'follow'
+      }).then(r => r.json());
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
+      lapPdfStatus('Tersimpan di Drive ✓ (' + fname + ')');
+    } catch (err) {
+      lapPdfStatus('Gagal: ' + err.message, true);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  document.getElementById('lapArchiveBtn').addEventListener('click', async () => {
+    const modal = document.getElementById('lapArchiveModal');
+    const listEl = document.getElementById('lapArchiveList');
+    const st = document.getElementById('lapArchiveStatus');
+    modal.classList.add('on');
+    listEl.innerHTML = '';
+    st.textContent = 'Memuat daftar...';
+    const url = (window.Sync && Sync.getUrl()) || '';
+    if (!url) { st.textContent = 'URL Apps Script belum diatur.'; return; }
+    try {
+      const r = await fetch(url + '?app=lapshiftreport&action=list', { redirect: 'follow' });
+      const j = await r.json();
+      if (!j || !j.ok) throw new Error((j && j.error) || 'Server menolak');
+      const items = j.reports || [];
+      st.textContent = items.length ? ('Total ' + items.length + ' file PDF tersimpan.') : 'Belum ada PDF tersimpan.';
+      listEl.innerHTML = items.map(it => {
+        const d = new Date(it.ts).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const sz = it.size > 1048576 ? (it.size / 1048576).toFixed(1) + ' MB' : Math.round(it.size / 1024) + ' KB';
+        return '<div class="lap-item"><div class="nm"><span class="n">' + it.name.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>'
+          + '<span class="d">' + d + ' • ' + sz + '</span></div>'
+          + '<button type="button" class="lap-btn" data-open="' + it.id + '">Buka</button></div>';
+      }).join('');
+      listEl.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', async () => {
+        b.disabled = true;
+        try {
+          const r2 = await fetch(url + '?app=lapshiftreport&action=getpdf&id=' + encodeURIComponent(b.getAttribute('data-open')), { redirect: 'follow' });
+          const j2 = await r2.json();
+          if (!j2 || !j2.ok || !j2.b64) throw new Error((j2 && j2.error) || 'Gagal membuka');
+          const bin = atob(j2.b64);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          const u = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
+          window.open(u, '_blank');
+        } catch (e) {
+          st.textContent = 'Gagal membuka: ' + e.message;
+        } finally {
+          b.disabled = false;
+        }
+      }));
+    } catch (e) {
+      st.textContent = 'Gagal memuat: ' + e.message;
+    }
+  });
+  document.getElementById('lapArchiveClose').addEventListener('click', () => {
+    document.getElementById('lapArchiveModal').classList.remove('on');
+  });
+  document.getElementById('lapArchiveModal').addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'lapArchiveModal') e.target.classList.remove('on');
+  });
 })();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="sync-core.js"></script>
 <script src="guest-lock.js"></script>
+<div class="lap-modal" id="lapConfirmModal">
+  <div class="lap-box" style="width:min(92vw,380px)">
+    <h3 id="lapConfirmTitle">Konfirmasi</h3>
+    <p class="sub" id="lapConfirmText"></p>
+    <div class="row-actions">
+      <button type="button" class="lap-btn" id="lapConfirmNo">Batal</button>
+      <button type="button" class="lap-btn primary" id="lapConfirmYes">Ya</button>
+    </div>
+  </div>
+</div>
+<div class="lap-modal" id="lapArchiveModal">
+  <div class="lap-box" style="width:min(92vw,560px)">
+    <h3>Arsip Laporan Antar Shift</h3>
+    <p class="sub" id="lapArchiveStatus">Memuat daftar...</p>
+    <div class="lap-list" id="lapArchiveList"></div>
+    <div class="row-actions">
+      <button type="button" class="lap-btn" id="lapArchiveClose">Tutup</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

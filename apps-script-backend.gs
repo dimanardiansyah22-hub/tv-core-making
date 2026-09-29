@@ -83,6 +83,10 @@ function doGet(e) {
     if (action === 'list') result = listWipPdfs_();
     else if (action === 'getpdf') result = getWipPdf_(p.id);
     else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'lapshiftreport') {
+    if (action === 'list') result = listLapshiftPdfs_();
+    else if (action === 'getpdf') result = getWipPdf_(p.id);
+    else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'oeedata') {
     if (action === 'list') result = listOeeData_(p);
     else if (action === 'delete') result = deleteOeeData_(p);
@@ -130,6 +134,8 @@ function doPost(e) {
     result = saveWipPdf_(body);
   } else if (app === 'asakaireport' && action === 'savepdf') {
     result = saveAsakaiPdf_(body);
+  } else if (app === 'lapshiftreport' && action === 'savepdf') {
+    result = saveLapshiftPdf_(body);
   } else if (app === 'bnf' && action === 'savepdf') {
     result = saveBnfPdf_(body);
   } else if (app === 'oeedata' && action === 'save') {
