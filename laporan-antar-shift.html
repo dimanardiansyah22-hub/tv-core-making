@@ -61,6 +61,15 @@ body.night .lap-btn.primary { background: #bd0014; border-color: #bd0014; color:
 .lap-sec { padding: 10px 12px; }
 .lap-sec-title { font-size: 15px; font-weight: 800; margin-bottom: 8px; }
 .shift-box { border: 1px solid #9ca3af; border-radius: 8px; padding: 10px 14px; width: 20%; }
+.shift-wrap { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.mode-box { border: 1px solid #9ca3af; border-radius: 8px; padding: 10px 14px; width: 20%; }
+.mode-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 8px; text-align: center; }
+.mode-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.mode-btn { flex: 1; background: #1d4ed8; color: #fff; border: 1px solid #1e40af; border-radius: 8px; padding: 6px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; cursor: pointer; white-space: nowrap; }
+.mode-btn.dim { opacity: .35; filter: saturate(.3); }
+.mode-btn.active { background: #16a34a; border-color: #15803d; }
+body.night .mode-box { border-color: #777; }
+body.night .mode-title { color: #b0b0d0; }
 .shift-row { display: flex; align-items: center; justify-content: center; gap: 22px; font-size: 15px; font-weight: 600; margin: 8px 0; text-align: center; }
 .shift-row:first-child { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #d1d5db; }
 .shift-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
@@ -130,6 +139,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   </div>
   <div class="lap-sec">
     <div class="lap-sec-title">1.SHIFT</div>
+    <div class="shift-wrap">
     <div class="shift-box">
     <div class="shift-row">
       <label><input type="checkbox" class="shift-core" value="Red"> Red</label>
@@ -138,6 +148,14 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="shift-row">
       <label><input type="checkbox" class="shift-time" value="Day"> Day</label>
       <label><input type="checkbox" class="shift-time" value="Night"> Night</label>
+    </div>
+    </div>
+    <div class="mode-box">
+      <div class="mode-title">Mode Produksi</div>
+      <div class="mode-btns">
+        <button type="button" class="mode-btn active" id="lapModeRatio" onclick="setLapMode('ratio')">Ratio</button>
+        <button type="button" class="mode-btn dim" id="lapModeAll2tr" onclick="setLapMode('all2tr')">All 2 TR</button>
+      </div>
     </div>
     </div>
   </div>
@@ -236,6 +254,30 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       if (el.checked) document.querySelectorAll('.shift-core').forEach(function (o) { if (o !== el) o.checked = false; });
     });
   });
+  /* Mode Produksi — TERHUBUNG dgn Visualisasi WIP Core via kunci yg sama.
+     Dibaca/ditulis ke localStorage 'wip-plan-mode' + ikut snapshot server. */
+  var lapPlanMode = 'ratio';
+  try { lapPlanMode = localStorage.getItem('wip-plan-mode') || 'ratio'; } catch (e) {}
+  if (lapPlanMode !== 'all2tr') lapPlanMode = 'ratio';
+  function paintLapMode() {
+    var r = document.getElementById('lapModeRatio');
+    var a = document.getElementById('lapModeAll2tr');
+    if (r) { r.classList.toggle('active', lapPlanMode === 'ratio'); r.classList.toggle('dim', lapPlanMode !== 'ratio'); }
+    if (a) { a.classList.toggle('active', lapPlanMode === 'all2tr'); a.classList.toggle('dim', lapPlanMode !== 'all2tr'); }
+  }
+  function setLapMode(mode, save) {
+    lapPlanMode = (mode === 'all2tr') ? 'all2tr' : 'ratio';
+    try { localStorage.setItem('wip-plan-mode', lapPlanMode); } catch (e) {}
+    paintLapMode();
+    if (save === false) return;
+    saveLapData();
+  }
+  window.setLapMode = setLapMode;
+  function applyServerLapMode(data) {
+    var m = data && (data._wmode === 'all2tr' ? 'all2tr' : (data._wmode === 'ratio' ? 'ratio' : null));
+    if (m && m !== lapPlanMode) setLapMode(m, false);
+  }
+  paintLapMode();
   document.querySelectorAll('.shift-time').forEach(function (el) {
     el.addEventListener('change', function () {
       if (el.checked) {
@@ -308,6 +350,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     data.pic = chk('pic-chk');
     data.shiftCore = chk('shift-core');
     data.shiftTime = chk('shift-time');
+    data._wmode = (lapPlanMode === 'all2tr') ? 'all2tr' : 'ratio';
     document.querySelectorAll('.absen-in').forEach(function (el) {
       if (el.dataset.k) data[el.dataset.k] = el.value;
     });
@@ -330,6 +373,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       setLapCheck('shift-time', data.shiftTime);
       document.body.classList.toggle('night', data.shiftTime === 'Night');
     }
+    applyServerLapMode(data);
     var cleared = _lapCleared[lapActiveStore] || {};
     document.querySelectorAll('.absen-in').forEach(function (e2) {
       if (e2 === focusEl) return;
