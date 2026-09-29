@@ -77,14 +77,13 @@ body.night .mode-title { color: #b0b0d0; }
 .shift-row:first-child { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #d1d5db; }
 .shift-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
 .shift-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: #16a34a; cursor: pointer; }
-.absen-box { border: 1px solid #9ca3af; border-radius: 8px; padding: 10px 14px; width: 25%; box-sizing: border-box; overflow: hidden; }
-.absen-row { display: flex; align-items: center; gap: 5px; margin: 7px 0; font-size: 14px; font-weight: 600; flex-wrap: nowrap; }
-.absen-lab { flex: none; width: 95px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.absen-sub { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin: 12px 0 2px; }
-.absen-in { flex: 1 1 auto; width: auto; min-width: 0; max-width: 175px; border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 8px; font: inherit; background: #fff; color: inherit; box-sizing: border-box; }
-body.night .absen-box { border-color: #777; }
-body.night .absen-sub { color: #b0b0d0; }
-body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; }
+.prob-wrap.absen-wrap { width: 25%; }
+.prob-table .absen-subrow { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; padding: 7px 6px; }
+.absen-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
+.absen-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
+body.night .absen-subrow { color: #b0b0d0; }
+body.night .absen-in { color: #f5f5ff; }
+body.night .absen-in:focus { background: #2d2d44; }
 .prob-wrap { border: 1px solid #9ca3af; border-radius: 8px; overflow-x: auto; }
 .prob-wrap.mat-wrap { width: 30%; }
 .prob-table.fixed { table-layout: fixed; width: 100%; }
@@ -188,20 +187,26 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   </div>
   <div class="lap-sec">
     <div class="lap-sec-title">2.ABSENSI</div>
-    <div class="absen-box">
-      <div class="absen-row"><span class="absen-lab">M/P</span><input class="absen-in" data-k="mp" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">Absen</span><input class="absen-in" data-k="absen" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">% Kehadiran</span><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (M/P − Absen) ÷ M/P"></div>
-      <div class="absen-sub">Keterangan</div>
-      <div class="absen-row"><span class="absen-lab">Cuti</span><input class="absen-in" data-k="cuti" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">Sakit</span><input class="absen-in" data-k="sakit" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">Izin</span><input class="absen-in" data-k="izin" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">TD</span><input class="absen-in" data-k="td" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">PC</span><input class="absen-in" data-k="pc" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">Training</span><input class="absen-in" data-k="training" autocomplete="off"></div>
-      <div class="absen-row"><span class="absen-lab">Lain-lain</span><input class="absen-in" data-k="lain" autocomplete="off"></div>
+    <div class="prob-wrap absen-wrap">
+    <table class="prob-table fixed">
+      <thead><tr><th>Item</th><th>Isian</th></tr></thead>
+      <tbody>
+<tr><td class="mat-lab">M/P</td><td><input class="absen-in" data-k="mp" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Absen</td><td><input class="absen-in" data-k="absen" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">% Kehadiran</td><td><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (M/P − Absen) ÷ M/P"></td></tr>
+<tr><td colspan="2" class="absen-subrow">Keterangan</td></tr>
+<tr><td class="mat-lab">Cuti</td><td><input class="absen-in" data-k="cuti" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Sakit</td><td><input class="absen-in" data-k="sakit" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Izin</td><td><input class="absen-in" data-k="izin" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">TD</td><td><input class="absen-in" data-k="td" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">PC</td><td><input class="absen-in" data-k="pc" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Training</td><td><input class="absen-in" data-k="training" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Lain-lain</td><td><input class="absen-in" data-k="lain" autocomplete="off"></td></tr>
+      </tbody>
+    </table>
     </div>
   </div>
+
   <div class="lap-sec">
     <div class="lap-sec-title">4.MATERIAL</div>
     <div class="prob-wrap mat-wrap">
