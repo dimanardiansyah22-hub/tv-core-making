@@ -92,6 +92,7 @@ body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; 
 .prob-table td { border-bottom: 1px solid #e5e7eb; padding: 0; }
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
+.prob-table .mat-lab { font-weight: 700; font-size: 13px; white-space: nowrap; }
 .prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
 .prob-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
 body.night .prob-wrap { border-color: #777; }
@@ -195,6 +196,20 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       <div class="absen-row"><span class="absen-lab">PC</span><input class="absen-in" data-k="pc" autocomplete="off"></div>
       <div class="absen-row"><span class="absen-lab">Training</span><input class="absen-in" data-k="training" autocomplete="off"></div>
       <div class="absen-row"><span class="absen-lab">Lain-lain</span><input class="absen-in" data-k="lain" autocomplete="off"></div>
+    </div>
+  </div>
+  <div class="lap-sec">
+    <div class="lap-sec-title">4.MATERIAL</div>
+    <div class="prob-wrap">
+    <table class="prob-table">
+      <thead><tr><th></th><th>Awal</th><th>Bon</th><th>Akhir</th></tr></thead>
+      <tbody>
+<tr><td class="mat-lab">SEPAROL</td><td><input class="mat-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">RHEOTEC XLC</td><td><input class="mat-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">WS 200</td><td><input class="mat-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">CHAPLET</td><td><input class="mat-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+      </tbody>
+    </table>
     </div>
   </div>
   <div class="lap-sec">
@@ -416,6 +431,9 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     document.querySelectorAll('.prob-in').forEach(function (el) {
       data['prob_' + el.dataset.r + '_' + el.dataset.k] = el.value;
     });
+    document.querySelectorAll('.mat-in').forEach(function (el) {
+      data['mat_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
     return data;
   }
   function setLapCheck(cls, val) {
@@ -452,11 +470,18 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       if (v !== undefined && v !== '') e2.value = v;
       else if (cleared[k]) e2.value = '';
     });
+    document.querySelectorAll('.mat-in').forEach(function (e2) {
+      if (e2 === focusEl) return;
+      var k = 'mat_' + e2.dataset.r + '_' + e2.dataset.k;
+      var v = data[k];
+      if (v !== undefined && v !== '') e2.value = v;
+      else if (cleared[k]) e2.value = '';
+    });
     updateHari();
     updateKehadiran();
   }
   function clearLapForm() {
-    document.querySelectorAll('.absen-in, .prob-in').forEach(function (el) { el.value = ''; });
+    document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(function (el) { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) { el.checked = false; });
@@ -607,7 +632,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   /* binding simpan: semua isian + checkbox */
   document.getElementById('lapTanggal').addEventListener('input', function () { saveLapData(); });
   document.getElementById('lapTanggal').addEventListener('change', function () { saveLapData(); });
-  document.querySelectorAll('.absen-in, .prob-in').forEach(function (el) {
+  document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(function (el) {
     el.addEventListener('input', function () { saveLapData(); });
   });
   document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) {
@@ -651,7 +676,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   document.getElementById('lapClearBtn').addEventListener('click', async () => {
     const ok = await lapConfirm('Hapus semua isian form (kecuali pilihan Day/Night)?');
     if (!ok) return;
-    document.querySelectorAll('.absen-in, .prob-in').forEach(el => { el.value = ''; });
+    document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(el => { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core').forEach(el => { el.checked = false; });
