@@ -85,6 +85,21 @@ body.night .mode-title { color: #b0b0d0; }
 body.night .absen-box { border-color: #777; }
 body.night .absen-sub { color: #b0b0d0; }
 body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; }
+.prob-wrap { border: 1px solid #9ca3af; border-radius: 8px; overflow-x: auto; }
+.prob-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+.prob-table th { background: #f3f4f6; font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: .04em; padding: 7px 6px; border-bottom: 2px solid #9ca3af; text-align: left; white-space: nowrap; }
+.prob-table td { border-bottom: 1px solid #e5e7eb; padding: 0; }
+.prob-table tr:last-child td { border-bottom: none; }
+.prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
+.prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
+.prob-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
+body.night .prob-wrap { border-color: #777; }
+body.night .prob-table { background: #383855; }
+body.night .prob-table th { background: #3a3a58; }
+body.night .prob-table td { border-bottom-color: #555; }
+body.night .prob-no { color: #b0b0d0; }
+body.night .prob-in { color: #f5f5ff; }
+body.night .prob-in:focus { background: #2d2d44; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
@@ -179,9 +194,33 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       <div class="absen-row"><span class="absen-lab">Training</span><input class="absen-in" data-k="training" autocomplete="off"></div>
       <div class="absen-row"><span class="absen-lab">Lain-lain</span><input class="absen-in" data-k="lain" autocomplete="off"></div>
     </div>
+  <div class="lap-sec">
+    <div class="lap-sec-title">6.LINE STOP / PROBLEM</div>
+    <div class="prob-wrap">
+    <table class="prob-table">
+      <thead><tr><th style="width:34px">No</th><th>TYPE</th><th>DIE/MESIN</th><th>MASALAH</th><th>PENANGGULANGAN</th><th>DURASI</th><th>PIC</th></tr></thead>
+      <tbody>
+<tr><td class="prob-no">1</td><td style="width:80px"><input class="prob-in" data-r="0" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="0" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="0" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="0" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">2</td><td style="width:80px"><input class="prob-in" data-r="1" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="1" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="1" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="1" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">3</td><td style="width:80px"><input class="prob-in" data-r="2" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="2" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="2" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="2" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">4</td><td style="width:80px"><input class="prob-in" data-r="3" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="3" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="3" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="3" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">5</td><td style="width:80px"><input class="prob-in" data-r="4" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="4" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="4" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="4" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">6</td><td style="width:80px"><input class="prob-in" data-r="5" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="5" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="5" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="5" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">7</td><td style="width:80px"><input class="prob-in" data-r="6" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="6" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="6" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="6" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">8</td><td style="width:80px"><input class="prob-in" data-r="7" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="7" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="7" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="7" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">9</td><td style="width:80px"><input class="prob-in" data-r="8" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="8" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="8" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="8" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="8" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="8" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">10</td><td style="width:80px"><input class="prob-in" data-r="9" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="9" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="9" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="9" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="9" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="9" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">11</td><td style="width:80px"><input class="prob-in" data-r="10" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="10" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="10" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="10" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="10" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="10" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">12</td><td style="width:80px"><input class="prob-in" data-r="11" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="11" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="11" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="11" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="11" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="11" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">13</td><td style="width:80px"><input class="prob-in" data-r="12" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="12" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="12" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="12" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="12" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="12" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">14</td><td style="width:80px"><input class="prob-in" data-r="13" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="13" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="13" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="13" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="13" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="13" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">15</td><td style="width:80px"><input class="prob-in" data-r="14" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="14" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="14" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="14" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="14" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="14" data-k="pic" autocomplete="off"></td></tr>
+<tr><td class="prob-no">16</td><td style="width:80px"><input class="prob-in" data-r="15" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="15" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="15" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="15" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="15" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="15" data-k="pic" autocomplete="off"></td></tr>
+      </tbody>
+    </table>
+    </div>
   </div>
-</div>
-<script>
+</div><script>
 (function () {
   var HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   function parseTanggal(str) {
@@ -371,6 +410,9 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     document.querySelectorAll('.absen-in').forEach(function (el) {
       if (el.dataset.k) data[el.dataset.k] = el.value;
     });
+    document.querySelectorAll('.prob-in').forEach(function (el) {
+      data['prob_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
     return data;
   }
   function setLapCheck(cls, val) {
@@ -400,11 +442,18 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       if (v !== undefined && v !== '') e2.value = v;
       else if (cleared[k]) e2.value = '';
     });
+    document.querySelectorAll('.prob-in').forEach(function (e2) {
+      if (e2 === focusEl) return;
+      var k = 'prob_' + e2.dataset.r + '_' + e2.dataset.k;
+      var v = data[k];
+      if (v !== undefined && v !== '') e2.value = v;
+      else if (cleared[k]) e2.value = '';
+    });
     updateHari();
     updateKehadiran();
   }
   function clearLapForm() {
-    document.querySelectorAll('.absen-in').forEach(function (el) { el.value = ''; });
+    document.querySelectorAll('.absen-in, .prob-in').forEach(function (el) { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) { el.checked = false; });
@@ -555,7 +604,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   /* binding simpan: semua isian + checkbox */
   document.getElementById('lapTanggal').addEventListener('input', function () { saveLapData(); });
   document.getElementById('lapTanggal').addEventListener('change', function () { saveLapData(); });
-  document.querySelectorAll('.absen-in').forEach(function (el) {
+  document.querySelectorAll('.absen-in, .prob-in').forEach(function (el) {
     el.addEventListener('input', function () { saveLapData(); });
   });
   document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) {
@@ -599,7 +648,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   document.getElementById('lapClearBtn').addEventListener('click', async () => {
     const ok = await lapConfirm('Hapus semua isian form (kecuali pilihan Day/Night)?');
     if (!ok) return;
-    document.querySelectorAll('.absen-in').forEach(el => { el.value = ''; });
+    document.querySelectorAll('.absen-in, .prob-in').forEach(el => { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core').forEach(el => { el.checked = false; });
