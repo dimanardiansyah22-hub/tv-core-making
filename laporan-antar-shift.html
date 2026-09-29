@@ -606,11 +606,13 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       st.textContent = 'Gagal memuat: ' + e.message;
     }
   });
-  document.getElementById('lapArchiveClose').addEventListener('click', () => {
-    document.getElementById('lapArchiveModal').classList.remove('on');
-  });
-  document.getElementById('lapArchiveModal').addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'lapArchiveModal') e.target.classList.remove('on');
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('lapArchiveClose').addEventListener('click', () => {
+      document.getElementById('lapArchiveModal').classList.remove('on');
+    });
+    document.getElementById('lapArchiveModal').addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'lapArchiveModal') e.target.classList.remove('on');
+    });
   });
 })();
 </script>
