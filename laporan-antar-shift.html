@@ -89,7 +89,7 @@ body.night .absen-subrow { color: #b0b0d0; }
 body.night .absen-in { color: #f5f5ff; }
 body.night .absen-in:focus { background: #2d2d44; }
 .prob-wrap { border: 1px solid #9ca3af; border-radius: 8px; overflow-x: auto; }
-.prob-wrap.mat-wrap { width: 30%; }
+.prob-wrap.mat-wrap { width: 40%; }
 .prob-table.fixed { table-layout: fixed; width: 100%; }
 .prob-table.fixed th:first-child, .prob-table.fixed td:first-child { width: 34%; }
 .prob-table.fixed .mat-in { min-width: 0; }
@@ -100,6 +100,8 @@ body.night .absen-in:focus { background: #2d2d44; }
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
 .prob-table .mat-lab { font-weight: 700; font-size: 13px; white-space: nowrap; padding-left: 1em; }
+.prob-table .mat-unit { font-size: 11px; font-weight: 600; color: #6b7280; }
+body.night .prob-table .mat-unit { color: #b0b0d0; }
 .prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
 .mat-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
 .prob-in:focus, .mat-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
@@ -217,10 +219,10 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <table class="prob-table fixed">
       <thead><tr><th></th><th>Awal</th><th>Bon</th><th>Pakai</th><th>Akhir</th></tr></thead>
       <tbody>
-<tr><td class="mat-lab">SEPAROL</td><td><input class="mat-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">RHEOTEC XLC</td><td><input class="mat-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">WS 200</td><td><input class="mat-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">CHAPLET</td><td><input class="mat-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">SEPAROL <span class="mat-unit">(Kg)</span></td><td><input class="mat-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">RHEOTEC XLC <span class="mat-unit">(Kg)</span></td><td><input class="mat-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">WS 200 <span class="mat-unit">(Kg)</span></td><td><input class="mat-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">CHAPLET <span class="mat-unit">(pcs)</span></td><td><input class="mat-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
       </tbody>
     </table>
     </div>
