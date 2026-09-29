@@ -312,7 +312,14 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     updateHari();
     updateKehadiran();
   }
+  function clearLapForm() {
+    document.querySelectorAll('.absen-in').forEach(function (el) { el.value = ''; });
+    const t = document.getElementById('lapTanggal');
+    if (t) t.value = '';
+    document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) { el.checked = false; });
+  }
   function loadSavedLap() {
+    clearLapForm();
     var raw = null;
     try { raw = localStorage.getItem(lapKey(lapActiveStore)); } catch (e) {}
     var data = {};
