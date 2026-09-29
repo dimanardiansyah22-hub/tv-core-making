@@ -737,8 +737,8 @@
 <div class="mt-auto pt-2 border-t prod-table">
 <div class="ef-label text-[15px] font-bold uppercase tracking-widest text-center">Planning Produksi</div>
 <div class="flex gap-2 mt-1.5">
-<button type="button" id="btn-ratio" onclick="setPlanMode('ratio')" class="btn-wip-dd active" title="Mode hitung: Actual 1TR + Actual 2TR digabung (ratio)">Ratio</button>
-<button type="button" id="btn-all2tr" onclick="setPlanMode('all2tr')" class="btn-wip-dd dim" title="Mode hitung: berdasarkan Actual 2TR saja">All 2 TR</button>
+<button type="button" id="btn-ratio" onclick="userSetPlanMode('ratio')" class="btn-wip-dd active" title="Mode hitung: Actual 1TR + Actual 2TR digabung (ratio)">Ratio</button>
+<button type="button" id="btn-all2tr" onclick="userSetPlanMode('all2tr')" class="btn-wip-dd dim" title="Mode hitung: berdasarkan Actual 2TR saja">All 2 TR</button>
 </div>
 <table class="w-full text-xs mt-1.5 border-collapse">
 <thead>
@@ -1405,6 +1405,16 @@ function applyPlanMode(mode, save) {
   if (save) saveAllData();
 }
 function setPlanMode(mode) { applyPlanMode(mode, true); }
+/* Klik operator: selain logika biasa, siarkan mode ke dokumen kanonis agar
+   semua halaman (termasuk Laporan) mengikuti. Dipanggil HANYA dari klik. */
+function userSetPlanMode(mode) {
+  setPlanMode(mode);
+  try {
+    if (window.Sync && Sync.hasUrl()) {
+      Sync.save('wmode', { action: 'save', data: { mode: planMode } }).catch(() => {});
+    }
+  } catch (e) {}
+}
 /* Terapkan mode dari snapshot server (tanpa memicu save ulang -> anti loop) */
 function applyServerPlanMode(data) {
   const m = data && (data._planMode === 'all2tr' ? 'all2tr' : (data._planMode === 'ratio' ? 'ratio' : null));

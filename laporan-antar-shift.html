@@ -275,6 +275,18 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     var m = data && (data._wmode === 'all2tr' ? 'all2tr' : (data._wmode === 'ratio' ? 'ratio' : null));
     if (m && m !== lapPlanMode) { lapPlanMode = m; paintLapMode(); }
   }
+  /* Mode kanonis dari dokumen wmode (ditulis tiap klik operator di Visualisasi).
+     Ini sumber utama lintas device; kunci lokal + snapshot hanya cadangan. */
+  async function lapSyncMode() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    try {
+      const res = await Sync.get('wmode', { action: 'get' });
+      const m = res && res.ok && res.data && res.data.mode;
+      if (m !== 'all2tr' && m !== 'ratio') return;
+      try { localStorage.setItem('wip-plan-mode', m); } catch (e) {}
+      if (m !== lapPlanMode) { lapPlanMode = m; paintLapMode(); }
+    } catch (e) {}
+  }
   syncLapModeFromKey();
   paintLapMode();
   window.addEventListener('storage', function (e) {
@@ -553,6 +565,8 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   }
   lapSyncFromServer();
   if (window.Sync) setInterval(lapSyncFromServer, Sync.pollMs);
+  lapSyncMode();
+  if (window.Sync) setInterval(lapSyncMode, Sync.pollMs);
 
   /* ── Header: Bersihkan Form / Arsip / Buat PDF ── */
   function lapConfirm(message) {

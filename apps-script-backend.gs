@@ -59,7 +59,8 @@ var DOC_NAMES = {
   capability_red: 'capability-red.json',
   capability_white: 'capability-white.json',
   lapshift_day: 'lapshift-day.json',
-  lapshift_night: 'lapshift-night.json'
+  lapshift_night: 'lapshift-night.json',
+  wmode: 'wmode.json'
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -86,6 +87,9 @@ function doGet(e) {
   } else if (app === 'lapshiftreport') {
     if (action === 'list') result = listLapshiftPdfs_();
     else if (action === 'getpdf') result = getWipPdf_(p.id);
+    else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'wmode') {
+    if (action === 'get') result = docGet_('wmode');
     else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'oeedata') {
     if (action === 'list') result = listOeeData_(p);
@@ -146,6 +150,8 @@ function doPost(e) {
     result = appSave_('mapping', body.core, body.data);
   } else if (app === 'machines' && action === 'save') {
     result = appSave_('machines', null, body.data);
+  } else if (app === 'wmode' && action === 'save') {
+    result = appSave_('wmode', null, body.data);
   } else if (app === 'wip') {
     result = appSave_('wip', body.shift, body.data);
   } else if (app === 'lapshift') {
@@ -170,6 +176,7 @@ function doPost(e) {
 function appKey_(app, variant) {
   if (app === 'mapping') return (variant === 'white') ? DOC_NAMES.mapping_white : DOC_NAMES.mapping_red;
   if (app === 'wip') return (variant === 'malam') ? DOC_NAMES.wip_malam : DOC_NAMES.wip_pagi;
+  if (app === 'wmode') return DOC_NAMES.wmode;
   if (app === 'lapshift') return (variant === 'night') ? DOC_NAMES.lapshift_night : DOC_NAMES.lapshift_day;
   if (app === 'planning') return (variant === 'white') ? DOC_NAMES.planning_white : DOC_NAMES.planning_red;
   if (app === 'machines') return DOC_NAMES.machines;
