@@ -89,10 +89,14 @@ body.night .absen-subrow { color: #b0b0d0; }
 body.night .absen-in { color: #f5f5ff; }
 body.night .absen-in:focus { background: #2d2d44; }
 .prob-wrap { border: 1px solid #9ca3af; border-radius: 8px; overflow-x: auto; }
-.prob-wrap.mat-wrap { width: 40%; }
+.prob-wrap.mat-wrap { width: 100%; }
+.sec-row { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.sec-row > .lap-sec { min-width: 0; }
+#secMaterial { flex: none; width: 40%; }
+#secKwh { flex: 1; min-width: 260px; }
 .prob-table.fixed { table-layout: fixed; width: 100%; }
 .prob-table.fixed th:first-child, .prob-table.fixed td:first-child { width: 34%; }
-.prob-table.fixed .mat-in { min-width: 0; }
+.prob-table.fixed .mat-in, .prob-table.fixed .kwh-in { min-width: 0; }
 .prob-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
 .prob-table th { background: #f3f4f6; font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; padding: 7px 6px; border-bottom: 2px solid #9ca3af; text-align: center; white-space: nowrap; }
 .prob-table th + th, .prob-table td + td { border-left: 1px solid #d1d5db; }
@@ -103,16 +107,16 @@ body.night .absen-in:focus { background: #2d2d44; }
 .prob-table .mat-unit { font-size: 11px; font-weight: 600; color: #6b7280; }
 body.night .prob-table .mat-unit { color: #b0b0d0; }
 .prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
-.mat-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
-.prob-in:focus, .mat-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
+.mat-in, .kwh-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
+.prob-in:focus, .mat-in:focus, .kwh-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
 body.night .prob-wrap { border-color: #777; }
 body.night .prob-table { background: #383855; }
 body.night .prob-table th { background: #3a3a58; }
 body.night .prob-table th + th, body.night .prob-table td + td { border-left-color: #555; }
 body.night .prob-table td { border-bottom-color: #555; }
 body.night .prob-no { color: #b0b0d0; }
-body.night .prob-in, body.night .mat-in { color: #f5f5ff; }
-body.night .prob-in:focus, body.night .mat-in:focus { background: #2d2d44; }
+body.night .prob-in, body.night .mat-in, body.night .kwh-in { color: #f5f5ff; }
+body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { background: #2d2d44; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
@@ -213,7 +217,8 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
   </div>
 
-  <div class="lap-sec">
+<div class="sec-row">
+  <div class="lap-sec" id="secMaterial">
     <div class="lap-sec-title">4.MATERIAL</div>
     <div class="prob-wrap mat-wrap">
     <table class="prob-table fixed">
@@ -227,7 +232,23 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </table>
     </div>
   </div>
-  <div class="lap-sec">
+  <div class="lap-sec" id="secKwh">
+    <div class="lap-sec-title">5.KWH</div>
+    <div class="prob-wrap">
+    <table class="prob-table fixed">
+      <thead><tr><th>No</th><th>Item</th><th>Awal</th><th>Akhir</th><th>Pakai</th></tr></thead>
+      <tbody>
+<tr><td class="prob-no">1</td><td class="mat-lab">PD 5-1</td><td><input class="kwh-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="prob-no">2</td><td class="mat-lab">PD 2-1</td><td><input class="kwh-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="prob-no">3</td><td class="mat-lab">PD - 06</td><td><input class="kwh-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="prob-no">4</td><td class="mat-lab">PD 2-2</td><td><input class="kwh-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="prob-no">5</td><td class="mat-lab">PD - 13</td><td><input class="kwh-in" data-r="4" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="4" data-k="akhir" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="4" data-k="pakai" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="prob-no">6</td><td class="mat-lab">LPG C/C</td><td><input class="kwh-in" data-r="5" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="5" data-k="akhir" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="5" data-k="pakai" autocomplete="off" inputmode="decimal"></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>  <div class="lap-sec">
     <div class="lap-sec-title">6.LINE STOP / PROBLEM</div>
     <div class="prob-wrap">
     <table class="prob-table">
@@ -473,6 +494,9 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     document.querySelectorAll('.mat-in').forEach(function (el) {
       data['mat_' + el.dataset.r + '_' + el.dataset.k] = el.value;
     });
+    document.querySelectorAll('.kwh-in').forEach(function (el) {
+      data['kwh_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
     return data;
   }
   function setLapCheck(cls, val) {
@@ -516,12 +540,19 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       if (v !== undefined && v !== '') e2.value = v;
       else if (cleared[k]) e2.value = '';
     });
+    document.querySelectorAll('.kwh-in').forEach(function (e2) {
+      if (e2 === focusEl) return;
+      var k = 'kwh_' + e2.dataset.r + '_' + e2.dataset.k;
+      var v = data[k];
+      if (v !== undefined && v !== '') e2.value = v;
+      else if (cleared[k]) e2.value = '';
+    });
     updateHari();
     updateKehadiran();
     updatePakaiAll();
   }
   function clearLapForm() {
-    document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(function (el) { el.value = ''; });
+    document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) { el.checked = false; });
@@ -672,7 +703,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   /* binding simpan: semua isian + checkbox */
   document.getElementById('lapTanggal').addEventListener('input', function () { saveLapData(); });
   document.getElementById('lapTanggal').addEventListener('change', function () { saveLapData(); });
-  document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(function (el) {
+  document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) {
     el.addEventListener('input', function () { saveLapData(); });
   });
   document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) {
@@ -716,7 +747,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   document.getElementById('lapClearBtn').addEventListener('click', async () => {
     const ok = await lapConfirm('Hapus semua isian form (kecuali pilihan Day/Night)?');
     if (!ok) return;
-    document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(el => { el.value = ''; });
+    document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(el => { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core').forEach(el => { el.checked = false; });
