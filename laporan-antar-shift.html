@@ -87,6 +87,9 @@ body.night .absen-sub { color: #b0b0d0; }
 body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; }
 .prob-wrap { border: 1px solid #9ca3af; border-radius: 8px; overflow-x: auto; }
 .prob-wrap.mat-wrap { width: 30%; }
+.prob-table.fixed { table-layout: fixed; width: 100%; }
+.prob-table.fixed th:first-child, .prob-table.fixed td:first-child { width: 34%; }
+.prob-table.fixed .mat-in { min-width: 0; }
 .prob-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
 .prob-table th { background: #f3f4f6; font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; padding: 7px 6px; border-bottom: 2px solid #9ca3af; text-align: center; white-space: nowrap; }
 .prob-table th + th, .prob-table td + td { border-left: 1px solid #d1d5db; }
@@ -94,16 +97,16 @@ body.night .absen-in { background: #2d2d44; color: #f5f5ff; border-color: #555; 
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
 .prob-table .mat-lab { font-weight: 700; font-size: 13px; white-space: nowrap; }
-.prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
-.prob-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
+.prob-in, .mat-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
+.prob-in:focus, .mat-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
 body.night .prob-wrap { border-color: #777; }
 body.night .prob-table { background: #383855; }
 body.night .prob-table th { background: #3a3a58; }
 body.night .prob-table th + th, body.night .prob-table td + td { border-left-color: #555; }
 body.night .prob-table td { border-bottom-color: #555; }
 body.night .prob-no { color: #b0b0d0; }
-body.night .prob-in { color: #f5f5ff; }
-body.night .prob-in:focus { background: #2d2d44; }
+body.night .prob-in, body.night .mat-in { color: #f5f5ff; }
+body.night .prob-in:focus, body.night .mat-in:focus { background: #2d2d44; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
@@ -202,7 +205,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   <div class="lap-sec">
     <div class="lap-sec-title">4.MATERIAL</div>
     <div class="prob-wrap mat-wrap">
-    <table class="prob-table">
+    <table class="prob-table fixed">
       <thead><tr><th></th><th>Awal</th><th>Bon</th><th>Akhir</th></tr></thead>
       <tbody>
 <tr><td class="mat-lab">SEPAROL</td><td><input class="mat-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
