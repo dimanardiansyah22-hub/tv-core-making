@@ -81,6 +81,10 @@ body.night .mode-title { color: #b0b0d0; }
 .prob-table .absen-subrow { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; padding: 7px 6px; }
 .absen-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
 .absen-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
+td.td-unit { white-space: nowrap; }
+td.td-unit .absen-in { display: inline-block; width: calc(100% - 24px); vertical-align: middle; }
+.unit-jp { display: inline-block; font-size: 13px; font-weight: 700; color: #6b7280; vertical-align: middle; }
+body.night .unit-jp { color: #b0b0d0; }
 body.night .absen-subrow { color: #b0b0d0; }
 body.night .absen-in { color: #f5f5ff; }
 body.night .absen-in:focus { background: #2d2d44; }
@@ -191,8 +195,8 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="prob-wrap absen-wrap">
     <table class="prob-table fixed">
       <tbody>
-<tr><td class="mat-lab">M/P</td><td><input class="absen-in" data-k="mp" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Absen</td><td><input class="absen-in" data-k="absen" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">M/P</td><td class="td-unit"><input class="absen-in" data-k="mp" autocomplete="off"><span class="unit-jp">人</span></td></tr>
+<tr><td class="mat-lab">Absen</td><td class="td-unit"><input class="absen-in" data-k="absen" autocomplete="off"><span class="unit-jp">人</span></td></tr>
 <tr><td class="mat-lab">% Kehadiran</td><td><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (M/P − Absen) ÷ M/P"></td></tr>
 <tr><td colspan="2" class="absen-subrow">Keterangan</td></tr>
 <tr><td class="mat-lab">Cuti</td><td><input class="absen-in" data-k="cuti" autocomplete="off"></td></tr>
