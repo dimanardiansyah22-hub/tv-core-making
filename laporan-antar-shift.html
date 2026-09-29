@@ -214,10 +214,10 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <table class="prob-table fixed">
       <thead><tr><th></th><th>Awal</th><th>Bon</th><th>Pakai</th><th>Akhir</th></tr></thead>
       <tbody>
-<tr><td class="mat-lab">SEPAROL</td><td><input class="mat-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">RHEOTEC XLC</td><td><input class="mat-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">WS 200</td><td><input class="mat-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">CHAPLET</td><td><input class="mat-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">SEPAROL</td><td><input class="mat-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">RHEOTEC XLC</td><td><input class="mat-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">WS 200</td><td><input class="mat-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">CHAPLET</td><td><input class="mat-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="bon" autocomplete="off" inputmode="decimal"></td><td><input class="mat-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (Awal + Bon) − Akhir"></td><td><input class="mat-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
       </tbody>
     </table>
     </div>
@@ -274,6 +274,26 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     var v = parseFloat(String(str || '').replace(',', '.'));
     return isNaN(v) ? 0 : v;
   }
+  function fmtNumID(v) {
+    var r = Math.round(v * 100) / 100;
+    return String(r).replace('.', ',');
+  }
+  function updatePakaiRow(r) {
+    function val(k) {
+      var el = document.querySelector('.mat-in[data-r="' + r + '"][data-k="' + k + '"]');
+      return el ? parseNum(el.value) : 0;
+    }
+    var out = document.querySelector('.mat-in[data-r="' + r + '"][data-k="pakai"]');
+    if (!out) return;
+    var a = document.querySelector('.mat-in[data-r="' + r + '"][data-k="awal"]');
+    var b = document.querySelector('.mat-in[data-r="' + r + '"][data-k="bon"]');
+    var c = document.querySelector('.mat-in[data-r="' + r + '"][data-k="akhir"]');
+    if (a && b && c && !a.value && !b.value && !c.value) { out.value = ''; return; }
+    out.value = fmtNumID(val('awal') + val('bon') - val('akhir'));
+  }
+  function updatePakaiAll() {
+    for (var r = 0; r < 4; r++) updatePakaiRow(r);
+  }
   function updateKehadiran() {
     var mpEl = document.querySelector('.absen-in[data-k="mp"]');
     var abEl = document.querySelector('.absen-in[data-k="absen"]');
@@ -288,6 +308,10 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     el.addEventListener('input', updateKehadiran);
   });
   updateKehadiran();
+  document.querySelectorAll('.mat-in[data-k="awal"], .mat-in[data-k="bon"], .mat-in[data-k="akhir"]').forEach(function (el) {
+    el.addEventListener('input', function () { updatePakaiRow(el.dataset.r); });
+  });
+  updatePakaiAll();
   (function () {
     function pad2(n) { return ('0' + n).slice(-2); }
     function openLapCalendar() {
@@ -489,6 +513,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     });
     updateHari();
     updateKehadiran();
+    updatePakaiAll();
   }
   function clearLapForm() {
     document.querySelectorAll('.absen-in, .prob-in, .mat-in').forEach(function (el) { el.value = ''; });
