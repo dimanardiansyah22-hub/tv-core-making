@@ -18,7 +18,7 @@ body {
     padding: 24px 12px;
 }
 #lapReport { margin: 0 auto; background: #fff; border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; }
-.lap-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+.lap-header { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
 .lap-header h1 { font-size: 20px; font-weight: 800; }
 .lap-header p { font-size: 12px; color: #6b7280; font-weight: 600; }
 .lap-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -27,6 +27,7 @@ body {
 .lap-btn.primary { background: #bd0014; border-color: #bd0014; color: #fff; }
 .lap-btn.primary:hover { background: #9a0110; }
 .lap-btn:disabled { opacity: .55; cursor: not-allowed; }
+.lap-btn .material-symbols-outlined { font-size: 17px; vertical-align: -3px; }
 #lapPdfStatus { font-size: 12px; color: #6b7280; font-weight: 600; }
 body.night .lap-header p { color: #b0b0d0; }
 body.night .lap-btn { background: #3a3a58; color: #e8e8f0; border-color: #555; }
@@ -98,15 +99,11 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
 </head>
 <body>
   <div class="lap-header" id="lapHeader">
-    <div>
-      <h1>Laporan Antar Shift</h1>
-      <p>Core Making &bull; milik shift Day / Night masing-masing</p>
-    </div>
     <div class="lap-actions">
       <span id="lapPdfStatus"></span>
-      <button type="button" class="lap-btn" id="lapClearBtn">Bersihkan Form</button>
-      <button type="button" class="lap-btn" id="lapArchiveBtn">Arsip Laporan Antar Shift</button>
-      <button type="button" class="lap-btn primary" id="lapPdfBtn">Buat PDF</button>
+      <button type="button" class="lap-btn" id="lapClearBtn"><span class="material-symbols-outlined">delete_sweep</span> Bersihkan Form</button>
+      <button type="button" class="lap-btn" id="lapArchiveBtn"><span class="material-symbols-outlined">folder_open</span> Arsip Laporan Antar Shift</button>
+      <button type="button" class="lap-btn primary" id="lapPdfBtn"><span class="material-symbols-outlined">picture_as_pdf</span> Buat PDF</button>
     </div>
   </div>
 <div id="lapReport">
