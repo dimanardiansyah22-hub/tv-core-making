@@ -179,10 +179,266 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       } else {
         document.body.classList.remove('night');
       }
+      var next = lapStore();
+      if (next !== lapActiveStore) {
+        saveLapDataTo(lapActiveStore, lapActiveStore === 'night' ? 'Night' : 'Day');
+        lapActiveStore = next;
+        loadSavedLap();
+        lapSyncFromServer();
+      }
     });
   });
+
+  /* ── Sinkron Drive per shift Day/Night (pola = Visualisasi WIP Core) ──
+     Isi/hapus apa pun tersimpan lokal seketika + terdorong ke Drive (±800ms).
+     Last-write-wins berbasis waktu; server kosong tak menghapus; anti-campur shift. */
+  var lapActiveStore = 'day';
+  var LAP_SKEW_MS = 120000;
+  var _lapSaveTimer = {};
+  var _lapPendingSave = {};
+  var _lapLastTs = {};
+  var _lapDirty = {};
+  var _lapDeleted = {};
+  var _lapCleared = {};
+  var _lapSyncedOnce = {};
+  function isLapGuest() {
+    try {
+      if (new URLSearchParams(window.location.search).get('role') === 'guest') return true;
+    } catch (e) {}
+    try {
+      var ps = window.parent && window.parent.tvcSession && window.parent.tvcSession();
+      if (ps && ps.role === 'guest') return true;
+    } catch (e) {}
+    return false;
+  }
+  function lapStore() {
+    var n = document.querySelector('.shift-time:checked');
+    return (n && n.value === 'Night') ? 'night' : 'day';
+  }
+  function lapKey(store) { return 'lap-data-' + store; }
+  function lapGetLastTs(store) {
+    if (_lapLastTs[store] === undefined) {
+      try { _lapLastTs[store] = localStorage.getItem('lap-lasts-' + store) || null; } catch (e) { _lapLastTs[store] = null; }
+    }
+    return _lapLastTs[store];
+  }
+  function lapSetLastTs(store, ts) {
+    _lapLastTs[store] = ts;
+    try { localStorage.setItem('lap-lasts-' + store, ts); } catch (e) {}
+  }
+  function lapGetSyncedAt(store) {
+    try { return Number(localStorage.getItem('lap-synced-' + store)) || 0; } catch (e) { return 0; }
+  }
+  function lapSetSyncedAt(store, t) {
+    try { localStorage.setItem('lap-synced-' + store, String(t)); } catch (e) {}
+  }
+  function collectLapData() {
+    var data = {};
+    var t = document.getElementById('lapTanggal');
+    data.tanggal = t ? t.value : '';
+    function chk(cls) {
+      var el = document.querySelector('.' + cls + ':checked');
+      return el ? el.value : '';
+    }
+    data.pic = chk('pic-chk');
+    data.shiftCore = chk('shift-core');
+    data.shiftTime = chk('shift-time');
+    document.querySelectorAll('.absen-in').forEach(function (el) {
+      if (el.dataset.k) data[el.dataset.k] = el.value;
+    });
+    return data;
+  }
+  function setLapCheck(cls, val) {
+    document.querySelectorAll('.' + cls).forEach(function (el) {
+      if (el === document.activeElement) return;
+      el.checked = (val !== undefined && val !== '' && el.value === val);
+    });
+  }
+  function applyLapData(data) {
+    data = data || {};
+    var focusEl = document.activeElement;
+    var el = document.getElementById('lapTanggal');
+    if (el && el !== focusEl && data.tanggal !== undefined && data.tanggal !== '') el.value = data.tanggal;
+    setLapCheck('pic-chk', data.pic);
+    setLapCheck('shift-core', data.shiftCore);
+    if (data.shiftTime !== undefined && data.shiftTime !== '') {
+      setLapCheck('shift-time', data.shiftTime);
+      document.body.classList.toggle('night', data.shiftTime === 'Night');
+    }
+    var cleared = _lapCleared[lapActiveStore] || {};
+    document.querySelectorAll('.absen-in').forEach(function (e2) {
+      if (e2 === focusEl) return;
+      var k = e2.dataset.k;
+      if (!k) return;
+      var v = data[k];
+      if (v !== undefined && v !== '') e2.value = v;
+      else if (cleared[k]) e2.value = '';
+    });
+    updateHari();
+    updateKehadiran();
+  }
+  function loadSavedLap() {
+    var raw = null;
+    try { raw = localStorage.getItem(lapKey(lapActiveStore)); } catch (e) {}
+    var data = {};
+    try { data = raw ? JSON.parse(raw) : {}; } catch (e) { data = {}; }
+    applyLapData(data);
+  }
+  function saveLapDataTo(store, shiftTimeOverride) {
+    var snapshot = collectLapData();
+    if (shiftTimeOverride) snapshot.shiftTime = shiftTimeOverride;
+    var key = lapKey(store);
+    var prev = {};
+    try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
+    localStorage.setItem(key, JSON.stringify(snapshot));
+    if (isLapGuest()) return;
+    if (!_lapDirty[store]) _lapDirty[store] = {};
+    var now = Date.now(), changed = false;
+    Object.keys(snapshot).forEach(function (k) {
+      var pv = (prev[k] === undefined) ? '' : prev[k];
+      if (snapshot[k] !== pv) {
+        _lapDirty[store][k] = now; changed = true;
+        if (snapshot[k] === '' && pv !== '') {
+          if (!_lapDeleted[store]) _lapDeleted[store] = {};
+          _lapDeleted[store][k] = now;
+        } else if (snapshot[k] !== '') {
+          if (_lapDeleted[store]) delete _lapDeleted[store][k];
+        }
+      }
+    });
+    try {
+      if (_lapDeleted[store] && Object.keys(_lapDeleted[store]).length) localStorage.setItem('lap-del-' + store, JSON.stringify(_lapDeleted[store]));
+      else localStorage.removeItem('lap-del-' + store);
+    } catch (e) {}
+    if (!changed && !Object.keys(_lapDirty[store]).length) return;
+    if (changed) { try { localStorage.setItem('lap-ts2-' + store, String(now)); } catch (e) {} }
+    scheduleLapSave(store);
+  }
+  function saveLapData() { saveLapDataTo(lapActiveStore); }
+  function scheduleLapSave(store) {
+    store = store || lapActiveStore;
+    if (isLapGuest()) return;
+    if (!window.Sync || !Sync.hasUrl()) return;
+    if (!_lapSyncedOnce[store]) return;
+    if (!_lapDeleted[store]) { try { _lapDeleted[store] = JSON.parse(localStorage.getItem('lap-del-' + store) || '{}') || {}; } catch (e) { _lapDeleted[store] = {}; } }
+    _lapPendingSave[store] = true;
+    clearTimeout(_lapSaveTimer[store]);
+    var snapshot = { store: store, data: collectLapData() };
+    if (store !== lapActiveStore) snapshot.data.shiftTime = (store === 'night' ? 'Night' : 'Day');
+    if (_lapDeleted[store] && Object.keys(_lapDeleted[store]).length) {
+      snapshot.data._deleted = Object.assign({}, _lapDeleted[store]);
+    }
+    _lapSaveTimer[store] = setTimeout(function () { syncLapSave(snapshot); }, 800);
+  }
+  async function syncLapSave(snapshot) {
+    if (isLapGuest()) return;
+    if (!window.Sync || !Sync.hasUrl()) return;
+    try {
+      const timeout = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('Kirim timeout')); }, 25000); });
+      const res = await Promise.race([Sync.save('lapshift', { shift: snapshot.store, action: 'save', data: snapshot.data }), timeout]);
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
+      if (res.updatedAt) lapSetLastTs(snapshot.store, res.updatedAt);
+      lapSetSyncedAt(snapshot.store, Date.now());
+      if (snapshot.data && snapshot.data._deleted) {
+        Object.keys(snapshot.data._deleted).forEach(function (k) { if (_lapDeleted[snapshot.store]) delete _lapDeleted[snapshot.store][k]; });
+      }
+      try {
+        var dm = _lapDeleted[snapshot.store];
+        if (dm && Object.keys(dm).length) localStorage.setItem('lap-del-' + snapshot.store, JSON.stringify(dm));
+        else localStorage.removeItem('lap-del-' + snapshot.store);
+      } catch (e) {}
+      _lapDirty[snapshot.store] = {};
+      _lapPendingSave[snapshot.store] = false;
+    } catch (e) {
+      _lapPendingSave[snapshot.store] = false;
+    }
+  }
+  function mergeLapData(store, server) {
+    var local = {};
+    try { local = JSON.parse(localStorage.getItem(lapKey(store)) || '{}'); } catch (e) { local = {}; }
+    var dirty = _lapDirty[store] || {};
+    var localTs = 0;
+    try { localTs = Number(localStorage.getItem('lap-ts2-' + store)) || 0; } catch (e) {}
+    var serverTs = 0;
+    try { serverTs = new Date(server.updatedAt).getTime() || 0; } catch (e) {}
+    var guest = isLapGuest();
+    var merged = Object.assign({}, local);
+    _lapCleared[store] = {};
+    var delMap = (server._deleted && typeof server._deleted === 'object') ? server._deleted : {};
+    Object.keys(server).forEach(function (k) {
+      if (k === 'updatedAt' || k === '_deleted') return;
+      var sv = server[k];
+      var lv = local[k];
+      if (!guest && dirty[k] && (dirty[k] + LAP_SKEW_MS) > serverTs) return;
+      if (sv === undefined || sv === '') {
+        if (!guest && delMap[k] === undefined && lv !== undefined && lv !== '') {
+          if (!_lapDirty[store]) _lapDirty[store] = {};
+          _lapDirty[store][k] = Date.now();
+        }
+        return;
+      }
+      if (!guest && (lv !== undefined && lv !== '') && (dirty[k] || localTs > serverTs)) {
+        if (!_lapDirty[store]) _lapDirty[store] = {};
+        _lapDirty[store][k] = Math.max(dirty[k] || 0, localTs);
+        return;
+      }
+      merged[k] = sv;
+    });
+    Object.keys(delMap).forEach(function (k) {
+      var dts = Number(delMap[k]) || 0;
+      var lv = local[k];
+      if (lv === undefined || lv === '') return;
+      if (guest) { merged[k] = ''; _lapCleared[store][k] = true; return; }
+      var localTime = Math.max(dirty[k] || 0, 0);
+      if (dts > localTime) { merged[k] = ''; _lapCleared[store][k] = true; }
+    });
+    return merged;
+  }
+  async function lapSyncFromServer() {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    var store = lapActiveStore;
+    if (_lapPendingSave[store]) return;
+    if (!_lapDeleted[store]) { try { _lapDeleted[store] = JSON.parse(localStorage.getItem('lap-del-' + store) || '{}') || {}; } catch (e) { _lapDeleted[store] = {}; } }
+    try {
+      const res = await Sync.get('lapshift', { shift: store, action: 'get' });
+      if (lapActiveStore !== store) return;
+      if (res && res.ok) _lapSyncedOnce[store] = true;
+      const data = (res && res.ok && res.data) ? res.data : null;
+      const needPush = () => Object.keys(_lapDirty[store] || {}).length || Object.keys(_lapDeleted[store] || {}).length;
+      if (!data || !data.updatedAt) { if (needPush()) scheduleLapSave(store); return; }
+      if (data.updatedAt === lapGetLastTs(store)) {
+        let localTs = 0;
+        try { localTs = Number(localStorage.getItem('lap-ts2-' + store)) || 0; } catch (e) {}
+        if (localTs > lapGetSyncedAt(store)) scheduleLapSave(store);
+        return;
+      }
+      lapSetLastTs(store, data.updatedAt);
+      const values = mergeLapData(store, data);
+      try { localStorage.setItem(lapKey(store), JSON.stringify(values)); } catch (e) {}
+      applyLapData(values);
+      if (needPush()) scheduleLapSave(store);
+    } catch (e) {}
+  }
+  /* binding simpan: semua isian + checkbox */
+  document.getElementById('lapTanggal').addEventListener('input', function () { saveLapData(); });
+  document.getElementById('lapTanggal').addEventListener('change', function () { saveLapData(); });
+  document.querySelectorAll('.absen-in').forEach(function (el) {
+    el.addEventListener('input', function () { saveLapData(); });
+  });
+  document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) {
+    el.addEventListener('change', function () { saveLapData(); });
+  });
+  /* init */
+  lapActiveStore = lapStore();
+  loadSavedLap();
+  if (document.querySelector('.shift-time:checked')) {
+    document.body.classList.toggle('night', document.querySelector('.shift-time:checked').value === 'Night');
+  }
+  lapSyncFromServer();
+  if (window.Sync) setInterval(lapSyncFromServer, Sync.pollMs);
 })();
 </script>
+<script src="sync-core.js"></script>
 <script src="guest-lock.js"></script>
 </body>
 </html>

@@ -57,7 +57,9 @@ var DOC_NAMES = {
   planning_white: 'planning-cuti-white.json',
   machines: 'machines.json',
   capability_red: 'capability-red.json',
-  capability_white: 'capability-white.json'
+  capability_white: 'capability-white.json',
+  lapshift_day: 'lapshift-day.json',
+  lapshift_night: 'lapshift-night.json'
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -91,6 +93,8 @@ function doGet(e) {
     result = (action === 'get') ? docGet_('machines') : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'wip') {
     result = (action === 'get') ? appGet_('wip', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'lapshift') {
+    result = (action === 'get') ? appGet_('lapshift', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'planning-cuti') {
     result = (action === 'get') ? appGet_('planning', p.core) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'corecap') {
@@ -138,6 +142,8 @@ function doPost(e) {
     result = appSave_('machines', null, body.data);
   } else if (app === 'wip') {
     result = appSave_('wip', body.shift, body.data);
+  } else if (app === 'lapshift') {
+    result = appSave_('lapshift', body.shift, body.data);
   } else if (app === 'planning-cuti') {
     result = appSave_('planning', body.core, body.data);
   } else if (app === 'corecap') {
@@ -158,6 +164,7 @@ function doPost(e) {
 function appKey_(app, variant) {
   if (app === 'mapping') return (variant === 'white') ? DOC_NAMES.mapping_white : DOC_NAMES.mapping_red;
   if (app === 'wip') return (variant === 'malam') ? DOC_NAMES.wip_malam : DOC_NAMES.wip_pagi;
+  if (app === 'lapshift') return (variant === 'night') ? DOC_NAMES.lapshift_night : DOC_NAMES.lapshift_day;
   if (app === 'planning') return (variant === 'white') ? DOC_NAMES.planning_white : DOC_NAMES.planning_red;
   if (app === 'machines') return DOC_NAMES.machines;
   if (app === 'capability') return (variant === 'white') ? DOC_NAMES.capability_white : DOC_NAMES.capability_red;
