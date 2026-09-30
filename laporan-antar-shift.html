@@ -106,7 +106,7 @@ body.night #secProd4 .prob-in { background: #2d2d44; border-color: #555; color: 
 .prob-table.fixed .mat-in, .prob-table.fixed .kwh-in { min-width: 0; }
 .prob-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
 .prob-table th { background: #f3f4f6; font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; padding: 7px 6px; border-bottom: 2px solid #9ca3af; text-align: center; white-space: nowrap; }
-.prob-table th + th, .prob-table td + td { border-left: 1px solid #d1d5db; }
+.prob-table th + th, .prob-table td + td, .prob-table td.bl { border-left: 1px solid #d1d5db; }
 .prob-table td { border-bottom: 1px solid #e5e7eb; padding: 0; }
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
@@ -128,7 +128,7 @@ body.night .prob-table .mat-unit { color: #b0b0d0; }
 body.night .prob-wrap { border-color: #777; }
 body.night .prob-table { background: #383855; }
 body.night .prob-table th { background: #3a3a58; }
-body.night .prob-table th + th, body.night .prob-table td + td { border-left-color: #555; }
+body.night .prob-table th + th, body.night .prob-table td + td, body.night .prob-table td.bl { border-left-color: #555; }
 body.night .prob-table td { border-bottom-color: #555; }
 body.night .prob-no { color: #b0b0d0; }
 body.night .prob-in, body.night .mat-in, body.night .kwh-in { color: #f5f5ff; }
@@ -222,16 +222,16 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
 <tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Core</span></div></td></tr>
 <tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Nomor Die</span></div></td></tr>
 <tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start</span></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">Finish</span></div></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Finish</span></div></td></tr>
 
 
 <tr><td class="mat-lab" rowspan="2">Line Stop</td><td><div class="sub-line"><span class="sub-lab2">Die</span></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">Mesin</span></div></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Mesin</span></div></td></tr>
 
 
 <tr><td class="mat-lab" rowspan="3">Produk</td><td><div class="sub-line"><span class="sub-lab2">OK</span></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">NG</span></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">Total</span></div></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">NG</span></div></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Total</span></div></td></tr>
 
 
 
