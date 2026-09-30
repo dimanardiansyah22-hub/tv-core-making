@@ -107,6 +107,7 @@ body.night .absen-in:focus { background: #2d2d44; }
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
 .prob-table .mat-lab { font-weight: 700; font-size: 13px; white-space: nowrap; padding-left: 1em; }
+.prob-table .mat-lab.sub-lab { padding-left: 2em; font-weight: 600; }
 .prob-table .mat-unit { font-size: 11px; font-weight: 600; color: #6b7280; }
 .mat-in[data-k="note"] { text-align: left; }
 .note-line { display: flex; align-items: center; margin-left: 1em; }
@@ -212,9 +213,16 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
 <tr><td class="mat-lab">Type</td><td><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></td></tr>
 <tr><td class="mat-lab">Core</td><td><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></td></tr>
 <tr><td class="mat-lab">Nomor Die</td><td><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Prod Time</td><td><input class="prob-in" data-r="p" data-k="prodt" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Line Stop</td><td><input class="prob-in" data-r="p" data-k="linestop" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Produk</td><td><input class="prob-in" data-r="p" data-k="produk" autocomplete="off"></td></tr>
+<tr><td colspan="2" class="absen-subrow">Prod Time</td></tr>
+<tr><td class="mat-lab sub-lab">Start</td><td><input class="prob-in" data-r="p" data-k="start" autocomplete="off"></td></tr>
+<tr><td class="mat-lab sub-lab">Finish</td><td><input class="prob-in" data-r="p" data-k="finish" autocomplete="off"></td></tr>
+<tr><td colspan="2" class="absen-subrow">Line Stop</td></tr>
+<tr><td class="mat-lab sub-lab">Die</td><td><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></td></tr>
+<tr><td class="mat-lab sub-lab">Mesin</td><td><input class="prob-in" data-r="p" data-k="mesin" autocomplete="off"></td></tr>
+<tr><td colspan="2" class="absen-subrow">Produk</td></tr>
+<tr><td class="mat-lab sub-lab">OK</td><td><input class="prob-in" data-r="p" data-k="ok" autocomplete="off"></td></tr>
+<tr><td class="mat-lab sub-lab">NG</td><td><input class="prob-in" data-r="p" data-k="ng" autocomplete="off"></td></tr>
+<tr><td class="mat-lab sub-lab">Total</td><td><input class="prob-in" data-r="p" data-k="total" autocomplete="off"></td></tr>
 <tr><td class="mat-lab">Stock</td><td><input class="prob-in" data-r="p" data-k="stock" autocomplete="off"></td></tr>
 <tr><td class="mat-lab">RCS (ton)</td><td><input class="prob-in" data-r="p" data-k="rcs" autocomplete="off"></td></tr>
       </tbody>
