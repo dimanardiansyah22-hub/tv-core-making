@@ -111,6 +111,7 @@ body.night #secProd4 .prob-in { background: #2d2d44; border-color: #555; color: 
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
 .prob-table .mat-lab { font-weight: 700; font-size: 13px; white-space: nowrap; padding-left: 1em; vertical-align: middle; }
+.prob-table .merge-center { font-weight: 700; font-size: 13px; text-align: center; padding: 7px 6px; }
 .sub-line { display: flex; align-items: center; gap: 6px; margin-left: 1em; }
 .sub-line .prob-in { flex: 1; min-width: 0; }
 .sub-lab2 { font-size: 12px; font-weight: 700; color: #555; white-space: nowrap; }
@@ -218,9 +219,9 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="prob-wrap">
     <table class="prob-table">
       <tbody>
-<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Type</span></div></td></tr>
-<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Core</span></div></td></tr>
-<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Nomor Die</span></div></td></tr>
+<tr><td colspan="2" class="merge-center">Type</td></tr>
+<tr><td colspan="2" class="merge-center">Core</td></tr>
+<tr><td colspan="2" class="merge-center">Nomor Die</td></tr>
 <tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start</span></div></td></tr>
 <tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Finish</span></div></td></tr>
 
