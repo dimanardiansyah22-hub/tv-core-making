@@ -92,7 +92,9 @@ body.night .absen-in:focus { background: #2d2d44; }
 .prob-wrap.mat-wrap { width: 100%; }
 .sec-row { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
 .sec-row > .lap-sec { min-width: 0; }
-#secShiftCol { flex: none; width: 25%; }
+#secShiftCol { flex: none; width: 100%; }
+#colLeft { flex: none; width: 25%; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.prob-wrap.absen-wrap { width: 100%; }
 #secProd4 { flex: 1; min-width: 280px; }
 #secProd4 .mat-lab { text-align: center; padding: 7px 6px; }
 #secProd4 .prob-table tbody tr { height: 32px; }
@@ -192,6 +194,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
   </div>
 <div class="sec-row" id="rowTop">
+<div id="colLeft">
   <div class="lap-sec" id="secShiftCol">
     <div class="lap-sec-title">1.SHIFT</div>
     <div class="shift-wrap stack">
@@ -216,6 +219,27 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
     </div>
   </div>
+  <div class="lap-sec">
+    <div class="lap-sec-title">2.ABSENSI</div>
+    <div class="prob-wrap absen-wrap">
+    <table class="prob-table fixed">
+      <tbody>
+<tr><td class="mat-lab">M/P</td><td class="td-unit"><input class="absen-in" data-k="mp" autocomplete="off"><span class="unit-jp">人</span></td></tr>
+<tr><td class="mat-lab">Absen</td><td class="td-unit"><input class="absen-in" data-k="absen" autocomplete="off"><span class="unit-jp">人</span></td></tr>
+<tr><td class="mat-lab">% Kehadiran</td><td><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (M/P − Absen) ÷ M/P"></td></tr>
+<tr><td colspan="2" class="absen-subrow">Keterangan</td></tr>
+<tr><td class="mat-lab">Cuti</td><td><input class="absen-in" data-k="cuti" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Sakit</td><td><input class="absen-in" data-k="sakit" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Izin</td><td><input class="absen-in" data-k="izin" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">TD</td><td><input class="absen-in" data-k="td" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">PC</td><td><input class="absen-in" data-k="pc" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Training</td><td><input class="absen-in" data-k="training" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Lain-lain</td><td><input class="absen-in" data-k="lain" autocomplete="off"></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
   <div class="lap-sec" id="secProd4">
     <div class="lap-sec-title">4.PRODUKSI</div>
     <div class="prob-wrap">
@@ -249,26 +273,6 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
   </div>
 </div>
-  <div class="lap-sec">
-    <div class="lap-sec-title">2.ABSENSI</div>
-    <div class="prob-wrap absen-wrap">
-    <table class="prob-table fixed">
-      <tbody>
-<tr><td class="mat-lab">M/P</td><td class="td-unit"><input class="absen-in" data-k="mp" autocomplete="off"><span class="unit-jp">人</span></td></tr>
-<tr><td class="mat-lab">Absen</td><td class="td-unit"><input class="absen-in" data-k="absen" autocomplete="off"><span class="unit-jp">人</span></td></tr>
-<tr><td class="mat-lab">% Kehadiran</td><td><input class="absen-in" data-k="kehadiran" autocomplete="off" inputmode="decimal" readonly title="Otomatis: (M/P − Absen) ÷ M/P"></td></tr>
-<tr><td colspan="2" class="absen-subrow">Keterangan</td></tr>
-<tr><td class="mat-lab">Cuti</td><td><input class="absen-in" data-k="cuti" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Sakit</td><td><input class="absen-in" data-k="sakit" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Izin</td><td><input class="absen-in" data-k="izin" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">TD</td><td><input class="absen-in" data-k="td" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">PC</td><td><input class="absen-in" data-k="pc" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Training</td><td><input class="absen-in" data-k="training" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Lain-lain</td><td><input class="absen-in" data-k="lain" autocomplete="off"></td></tr>
-      </tbody>
-    </table>
-    </div>
-  </div>
 
 <div class="sec-row">
   <div class="lap-sec" id="secMaterial">
