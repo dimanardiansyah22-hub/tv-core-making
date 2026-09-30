@@ -715,6 +715,52 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) {
     el.addEventListener('change', function () { saveLapData(); });
   });
+  /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
+     Hanya berhenti di sel berisi input (sel label dilewati). */
+  function bindTableNav() {
+    document.querySelectorAll('#lapReport table.prob-table').forEach(function (tbl) {
+      if (tbl.__navBound) return;
+      tbl.__navBound = true;
+      tbl.addEventListener('keydown', function (e) {
+        var el = e.target;
+        if (!el || !el.classList || el.tagName !== 'INPUT' || el.type === 'checkbox') return;
+        var k = e.key;
+        if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown' && k !== 'Enter') return;
+        var rows = Array.from(tbl.querySelectorAll('tbody tr'));
+        var rIdx = -1, cIdx = -1;
+        rows.forEach(function (tr, ri) {
+          Array.from(tr.querySelectorAll('td')).forEach(function (td, ci) {
+            if (td.contains(el)) { rIdx = ri; cIdx = ci; }
+          });
+        });
+        if (rIdx === -1) return;
+        function cellInput(ri, ci) {
+          if (ri < 0 || ri >= rows.length) return null;
+          var tds = rows[ri].querySelectorAll('td');
+          if (ci < 0 || ci >= tds.length) return null;
+          return tds[ci].querySelector('input:not([type="checkbox"])');
+        }
+        var nR = rIdx, nC = cIdx, target = null;
+        if (k === 'ArrowUp') {
+          target = cellInput(nR - 1, nC);
+        } else if (k === 'ArrowDown' || k === 'Enter') {
+          target = cellInput(nR + 1, nC);
+        } else {
+          var d = (k === 'ArrowLeft') ? -1 : 1;
+          var cc = nC + d;
+          while (true) {
+            var tds = rows[nR].querySelectorAll('td');
+            if (cc < 0 || cc >= tds.length) break;
+            target = tds[cc].querySelector('input:not([type="checkbox"])');
+            if (target) break;
+            cc += d;
+          }
+        }
+        if (target) { e.preventDefault(); target.focus(); try { target.select(); } catch (err) {} }
+      });
+    });
+  }
+  bindTableNav();
   /* init */
   lapActiveStore = lapStore();
   loadSavedLap();
