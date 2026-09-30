@@ -107,7 +107,7 @@ body.night .absen-in:focus { background: #2d2d44; }
 .prob-table tr:last-child td { border-bottom: none; }
 .prob-table .prob-no { text-align: center; color: #6b7280; font-weight: 700; font-size: 12px; }
 .prob-table .mat-lab { font-weight: 700; font-size: 13px; white-space: nowrap; padding-left: 1em; vertical-align: middle; }
-.sub-line { display: flex; align-items: center; gap: 6px; }
+.sub-line { display: flex; align-items: center; gap: 6px; margin-left: 1em; }
 .sub-line .prob-in { flex: 1; min-width: 0; }
 .sub-lab2 { font-size: 12px; font-weight: 700; color: #555; white-space: nowrap; }
 body.night .sub-lab2 { color: #b0b0d0; }
@@ -214,9 +214,9 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="prob-wrap">
     <table class="prob-table">
       <tbody>
-<tr><td class="mat-lab">Type</td><td><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Core</td><td><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Nomor Die</td><td><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></td></tr>
+<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Type :</span><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Core :</span><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Nomor Die :</span><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></div></td></tr>
 <tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start :</span><input class="prob-in" data-r="p" data-k="start" autocomplete="off"></div></td></tr>
 <tr><td><div class="sub-line"><span class="sub-lab2">Finish :</span><input class="prob-in" data-r="p" data-k="finish" autocomplete="off"></div></td></tr>
 
