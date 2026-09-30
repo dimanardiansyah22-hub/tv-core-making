@@ -118,6 +118,7 @@ body.night #secProd4 .prob-in { background: #2d2d44; border-color: #555; color: 
 .sub-line { display: flex; align-items: center; gap: 6px; margin-left: 1em; }
 .sub-line .prob-in { flex: 1; min-width: 0; }
 .sub-lab2 { font-size: 12px; font-weight: 700; color: #555; white-space: nowrap; }
+.prob-table .sub-h { font-weight: 700; font-size: 12px; text-align: center; }
 body.night .sub-lab2 { color: #b0b0d0; }
 .prob-table .mat-lab.sub-lab { padding-left: 2em; font-weight: 600; }
 .prob-table .mat-unit { font-size: 11px; font-weight: 600; color: #6b7280; }
@@ -244,23 +245,23 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="prob-wrap">
     <table class="prob-table">
 <tbody>
-<tr><td colspan="2" class="merge-center">Type</td><td class="mat-lab" rowspan="3">1 TR / 2 TR</td><td><div class="sub-line"><span class="sub-lab2">C/Case</span></div></td><td class="mat-lab" rowspan="3">2 TR</td><td><div class="sub-line"><span class="sub-lab2">C/Case</span></div></td></tr>
-<tr><td colspan="2" class="merge-center">Core</td><td><div class="sub-line"><span class="sub-lab2">Fr/Re</span></div></td><td><div class="sub-line"><span class="sub-lab2">Fr/Re</span></div></td></tr>
-<tr><td colspan="2" class="merge-center">Nomor Die</td><td><div class="sub-line"><span class="sub-lab2">W/J-Sb</span></div></td><td><div class="sub-line"><span class="sub-lab2">W/J-Sb</span></div></td></tr>
-<tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Finish</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="mat-lab" rowspan="2">Line Stop</td><td><div class="sub-line"><span class="sub-lab2">Die</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Mesin</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="mat-lab" rowspan="3">Produk</td><td><div class="sub-line"><span class="sub-lab2">OK</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">NG</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Total</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="mat-lab">Stock</td><td></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="mat-lab" rowspan="5">RCS (ton)</td><td><div class="sub-line"><span class="sub-lab2">Isi ke Hopper (ton)</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">A Reguler</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">A New Sand</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">S-TR</span></div></td><td></td><td></td><td></td><td></td></tr>
-<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">TOTAL</span></div></td><td></td><td></td><td></td><td></td></tr>
-      </tbody>
+<tr><td colspan="2" class="merge-center">Type</td><td colspan="3" class="merge-center">1 TR / 2 TR</td><td colspan="3" class="merge-center">2 TR</td></tr>
+<tr><td colspan="2" class="merge-center">Core</td><td class="sub-h">C/Case</td><td class="sub-h">Fr/Re</td><td class="sub-h">W/J-Sb</td><td class="sub-h">C/Case</td><td class="sub-h">Fr/Re</td><td class="sub-h">W/J-Sb</td></tr>
+<tr><td colspan="2" class="merge-center">Nomor Die</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Finish</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="mat-lab" rowspan="2">Line Stop</td><td><div class="sub-line"><span class="sub-lab2">Die</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Mesin</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="mat-lab" rowspan="3">Produk</td><td><div class="sub-line"><span class="sub-lab2">OK</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">NG</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">Total</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="mat-lab">Stock</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="mat-lab" rowspan="5">RCS (ton)</td><td><div class="sub-line"><span class="sub-lab2">Isi ke Hopper (ton)</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">A Reguler</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">A New Sand</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">S-TR</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="bl"><div class="sub-line"><span class="sub-lab2">TOTAL</span></div></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      
     </table>
     </div>
   </div>
