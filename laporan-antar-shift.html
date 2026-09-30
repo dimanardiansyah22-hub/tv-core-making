@@ -244,12 +244,12 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <table class="prob-table fixed">
       <thead><tr><th>Item</th><th>Awal</th><th>Pakai</th><th>Akhir</th></tr></thead>
       <tbody>
-<tr><td class="mat-lab">PD 5-1</td><td><input class="kwh-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">PD 2-1</td><td><input class="kwh-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">PD - 06</td><td><input class="kwh-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">PD 2-2</td><td><input class="kwh-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">PD - 13</td><td><input class="kwh-in" data-r="4" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="4" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="4" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
-<tr><td class="mat-lab">LPG C/C</td><td><input class="kwh-in" data-r="5" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="5" data-k="pakai" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="5" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">PD 5-1</td><td><input class="kwh-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
+<tr><td class="mat-lab">PD 2-1</td><td><input class="kwh-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
+<tr><td class="mat-lab">PD - 06</td><td><input class="kwh-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
+<tr><td class="mat-lab">PD 2-2</td><td><input class="kwh-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
+<tr><td class="mat-lab">PD - 13</td><td><input class="kwh-in" data-r="4" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="4" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="4" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
+<tr><td class="mat-lab">LPG C/C</td><td><input class="kwh-in" data-r="5" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="5" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="5" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
       </tbody>
     </table>
     </div>
@@ -326,6 +326,21 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   function updatePakaiAll() {
     for (var r = 0; r < 4; r++) updatePakaiRow(r);
   }
+  function updatePakaiKwhRow(r) {
+    function val(k) {
+      var el = document.querySelector('.kwh-in[data-r="' + r + '"][data-k="' + k + '"]');
+      return el ? parseNum(el.value) : 0;
+    }
+    var out = document.querySelector('.kwh-in[data-r="' + r + '"][data-k="pakai"]');
+    if (!out) return;
+    var a = document.querySelector('.kwh-in[data-r="' + r + '"][data-k="awal"]');
+    var c = document.querySelector('.kwh-in[data-r="' + r + '"][data-k="akhir"]');
+    if (a && c && !a.value && !c.value) { out.value = ''; return; }
+    out.value = fmtNumID(val('akhir') - val('awal'));
+  }
+  function updatePakaiKwhAll() {
+    for (var r = 0; r < 6; r++) updatePakaiKwhRow(r);
+  }
   function updateKehadiran() {
     var mpEl = document.querySelector('.absen-in[data-k="mp"]');
     var abEl = document.querySelector('.absen-in[data-k="absen"]');
@@ -344,6 +359,10 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     el.addEventListener('input', function () { updatePakaiRow(el.dataset.r); });
   });
   updatePakaiAll();
+  document.querySelectorAll('.kwh-in[data-k="awal"], .kwh-in[data-k="akhir"]').forEach(function (el) {
+    el.addEventListener('input', function () { updatePakaiKwhRow(el.dataset.r); });
+  });
+  updatePakaiKwhAll();
   (function () {
     function pad2(n) { return ('0' + n).slice(-2); }
     function openLapCalendar() {
@@ -556,6 +575,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     updateHari();
     updateKehadiran();
     updatePakaiAll();
+    updatePakaiKwhAll();
   }
   function clearLapForm() {
     document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
