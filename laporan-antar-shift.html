@@ -94,6 +94,10 @@ body.night .absen-in:focus { background: #2d2d44; }
 .sec-row > .lap-sec { min-width: 0; }
 #secShiftCol { flex: none; width: 25%; }
 #secProd4 { flex: 1; min-width: 280px; }
+#secProd4 .mat-lab { text-align: center; padding: 7px 6px; }
+#secProd4 .prob-in { border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+#secProd4 .prob-in:focus { outline: 2px solid #2563eb; }
+body.night #secProd4 .prob-in { background: #2d2d44; border-color: #555; color: #f5f5ff; }
 .shift-wrap.stack { width: 100%; flex-direction: column; }
 #secMaterial { flex: 1; min-width: 0; }
 #secKwh { flex: 1; min-width: 0; }
@@ -214,20 +218,20 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="prob-wrap">
     <table class="prob-table">
       <tbody>
-<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Type :</span><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></div></td></tr>
-<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Core :</span><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></div></td></tr>
-<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Nomor Die :</span><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></div></td></tr>
-<tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start :</span><input class="prob-in" data-r="p" data-k="start" autocomplete="off"></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">Finish :</span><input class="prob-in" data-r="p" data-k="finish" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Type</span><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Core</span><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab"></td><td><div class="sub-line"><span class="sub-lab2">Nomor Die</span><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab" rowspan="2">Prod Time</td><td><div class="sub-line"><span class="sub-lab2">Start</span><input class="prob-in" data-r="p" data-k="start" autocomplete="off"></div></td></tr>
+<tr><td><div class="sub-line"><span class="sub-lab2">Finish</span><input class="prob-in" data-r="p" data-k="finish" autocomplete="off"></div></td></tr>
 
 
-<tr><td class="mat-lab" rowspan="2">Line Stop</td><td><div class="sub-line"><span class="sub-lab2">Die :</span><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">Mesin :</span><input class="prob-in" data-r="p" data-k="mesin" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab" rowspan="2">Line Stop</td><td><div class="sub-line"><span class="sub-lab2">Die</span><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></div></td></tr>
+<tr><td><div class="sub-line"><span class="sub-lab2">Mesin</span><input class="prob-in" data-r="p" data-k="mesin" autocomplete="off"></div></td></tr>
 
 
-<tr><td class="mat-lab" rowspan="3">Produk</td><td><div class="sub-line"><span class="sub-lab2">OK :</span><input class="prob-in" data-r="p" data-k="ok" autocomplete="off"></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">NG :</span><input class="prob-in" data-r="p" data-k="ng" autocomplete="off"></div></td></tr>
-<tr><td><div class="sub-line"><span class="sub-lab2">Total :</span><input class="prob-in" data-r="p" data-k="total" autocomplete="off"></div></td></tr>
+<tr><td class="mat-lab" rowspan="3">Produk</td><td><div class="sub-line"><span class="sub-lab2">OK</span><input class="prob-in" data-r="p" data-k="ok" autocomplete="off"></div></td></tr>
+<tr><td><div class="sub-line"><span class="sub-lab2">NG</span><input class="prob-in" data-r="p" data-k="ng" autocomplete="off"></div></td></tr>
+<tr><td><div class="sub-line"><span class="sub-lab2">Total</span><input class="prob-in" data-r="p" data-k="total" autocomplete="off"></div></td></tr>
 
 
 
