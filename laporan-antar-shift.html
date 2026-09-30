@@ -92,6 +92,9 @@ body.night .absen-in:focus { background: #2d2d44; }
 .prob-wrap.mat-wrap { width: 100%; }
 .sec-row { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
 .sec-row > .lap-sec { min-width: 0; }
+#secShiftCol { flex: none; width: 25%; }
+#secProd4 { flex: 1; min-width: 280px; }
+.shift-wrap.stack { width: 100%; flex-direction: column; }
 #secMaterial { flex: 1; min-width: 0; }
 #secKwh { flex: 1; min-width: 0; }
 .prob-table.fixed { table-layout: fixed; width: 100%; }
@@ -176,9 +179,10 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       </div>
     </div>
   </div>
-  <div class="lap-sec">
+<div class="sec-row" id="rowTop">
+  <div class="lap-sec" id="secShiftCol">
     <div class="lap-sec-title">1.SHIFT</div>
-    <div class="shift-wrap">
+    <div class="shift-wrap stack">
     <div class="shift-box">
     <div class="shift-cols">
     <div class="shift-row">
@@ -200,6 +204,24 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
     </div>
   </div>
+  <div class="lap-sec" id="secProd4">
+    <div class="lap-sec-title">4.PRODUKSI</div>
+    <div class="prob-wrap">
+    <table class="prob-table">
+      <tbody>
+<tr><td class="mat-lab">Type</td><td><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Core</td><td><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Nomor Die</td><td><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Prod Time</td><td><input class="prob-in" data-r="p" data-k="prodt" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Line Stop</td><td><input class="prob-in" data-r="p" data-k="linestop" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Produk</td><td><input class="prob-in" data-r="p" data-k="produk" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">Stock</td><td><input class="prob-in" data-r="p" data-k="stock" autocomplete="off"></td></tr>
+<tr><td class="mat-lab">RCS (ton)</td><td><input class="prob-in" data-r="p" data-k="rcs" autocomplete="off"></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</div>
   <div class="lap-sec">
     <div class="lap-sec-title">2.ABSENSI</div>
     <div class="prob-wrap absen-wrap">
@@ -255,23 +277,6 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
   </div>
 </div>
-  <div class="lap-sec">
-    <div class="lap-sec-title">4.PRODUKSI</div>
-    <div class="prob-wrap">
-    <table class="prob-table">
-      <tbody>
-<tr><td class="mat-lab">Type</td><td><input class="prob-in" data-r="p" data-k="type" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Core</td><td><input class="prob-in" data-r="p" data-k="core" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Nomor Die</td><td><input class="prob-in" data-r="p" data-k="die" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Prod Time</td><td><input class="prob-in" data-r="p" data-k="prodt" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Line Stop</td><td><input class="prob-in" data-r="p" data-k="linestop" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Produk</td><td><input class="prob-in" data-r="p" data-k="produk" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Stock</td><td><input class="prob-in" data-r="p" data-k="stock" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">RCS (ton)</td><td><input class="prob-in" data-r="p" data-k="rcs" autocomplete="off"></td></tr>
-      </tbody>
-    </table>
-    </div>
-  </div>
   <div class="lap-sec">
     <div class="lap-sec-title">6.LINE STOP / PROBLEM</div>
     <div class="prob-wrap">
