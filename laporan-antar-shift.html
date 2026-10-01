@@ -95,7 +95,9 @@ body.night .absen-in:focus { background: #2d2d44; }
 #colLeft .prob-wrap.absen-wrap table { flex: 1; }
 #colLeft .prob-table td { vertical-align: middle; }
 .prob-wrap.absen-wrap { width: 100%; }
-#secProd4 { flex: 1; min-width: 280px; }
+#secProd4 { flex: 1; min-width: 280px; display: flex; flex-direction: column; }
+#secProd4 > .prob-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#secProd4 > .prob-wrap > table { flex: 1; }
 #secProd4 .mat-lab { text-align: center; padding: 7px 6px; }
 #secProd4 td.pcol { width: 90px; }
 #secProd4 .prob-in { text-align: center; }
