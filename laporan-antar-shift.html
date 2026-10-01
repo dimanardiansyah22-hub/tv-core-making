@@ -586,7 +586,8 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
         syncLapModeFromKey(next);
         loadStop6();
         pullLapForm(next);
-        syncStop6FromServer();
+        if (typeof lapRefreshStop6 === 'function') lapRefreshStop6();
+        else syncStop6FromServer();
         lapSyncMode();
       }
     });
@@ -982,6 +983,107 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       if (tel && tel.value !== t) { tel.value = t; saveLapData(); }
     });
   });
+  /* ── Rekap draft line stop WIP Core ke seksi 6 (Day←Pagi, Night←Malam) ──
+     Sumber: snapshot 'wip' server (keterangan per jam: mesin/problem/
+     penanggulangan/menit). Jam kejadian diabaikan — semua catatan direkap
+     menjadi draft baris seksi 6 (DIE/MESIN, MASALAH, PENANGGULANGAN, DURASI).
+     Hanya mengisi baris yg masih kosong + tidak menduplikasi catatan yg
+     sudah ada; isian manual tidak ditimpa. Kolom Type lalu dinormalkan
+     otomatis dari mesin + mode. */
+  function lapWipShiftFor(store) {
+    var s = (store === 'night' || store === 'malam') ? 'malam' : 'pagi';
+    return s;
+  }
+  function lapParseWipNotes(data) {
+    var notes = [];
+    if (!data) return notes;
+    Object.keys(data).forEach(function (k) {
+      if (k === 'updatedAt' || k === '_deleted' || k === '_planMode') return;
+      if (k.slice(0, 5) !== 'note_') return;
+      var parts = k.split('_');
+      var idx = parseInt(parts[parts.length - 1], 10);
+      if (idx !== 0 && idx !== 1 && idx !== 2) return;
+      var slot = parts.slice(1, -1).join('_');
+      var str = data[k];
+      if (idx === 2 && !str) str = data['note_' + slot + '_3'];
+      var o = null;
+      try { o = JSON.parse(str); } catch (e) { o = null; }
+      if (!o || !(o.pr || o.wt || o.me || o.pg)) return;
+      notes.push({
+        slot: slot, idx: idx,
+        me: String(o.me == null ? '' : o.me).trim(),
+        pr: String(o.pr == null ? '' : o.pr).trim(),
+        pg: String(o.pg == null ? '' : o.pg).trim(),
+        wt: String(o.wt == null ? '' : o.wt).trim()
+      });
+    });
+    notes.sort(function (a, b) {
+      if (a.slot < b.slot) return -1;
+      if (a.slot > b.slot) return 1;
+      return a.idx - b.idx;
+    });
+    return notes;
+  }
+  function lapRowSig(me, pr, pg, wt) {
+    function n(s) { return String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' '); }
+    return n(me) + '|' + n(pr) + '|' + n(pg) + '|' + n(wt);
+  }
+  function lapFillStop6FromWip(notes) {
+    if (!notes || !notes.length) return false;
+    var rows = [];
+    document.querySelectorAll('#secStop6 tbody tr').forEach(function (tr) {
+      function cell(k) { var el = tr.querySelector('.prob-in[data-k="' + k + '"]'); return el ? { el: el, v: el.value } : null; }
+      rows.push({ mesin: cell('mesin'), masalah: cell('masalah'), pg: cell('pg'), durasi: cell('durasi') });
+    });
+    var have = {};
+    rows.forEach(function (r) {
+      if (r.mesin && r.masalah && r.pg && r.durasi) have[lapRowSig(r.mesin.v, r.masalah.v, r.pg.v, r.durasi.v)] = true;
+    });
+    var changed = false;
+    notes.forEach(function (n) {
+      if (!n.me && !n.pr && !n.pg && !n.wt) return;
+      if (have[lapRowSig(n.me, n.pr, n.pg, n.wt)]) return;
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        if (!r.mesin || !r.masalah || !r.pg || !r.durasi) continue;
+        if (r.mesin.v || r.masalah.v || r.pg.v || r.durasi.v) continue;
+        r.mesin.el.value = n.me; r.masalah.el.value = n.pr; r.pg.el.value = n.pg; r.durasi.el.value = n.wt;
+        r.mesin.v = n.me; r.masalah.v = n.pr; r.pg.v = n.pg; r.durasi.v = n.wt;
+        have[lapRowSig(n.me, n.pr, n.pg, n.wt)] = true;
+        changed = true;
+        break;
+      }
+    });
+    return changed;
+  }
+  async function lapPullStop6FromWip(store) {
+    store = store || lapActiveStore;
+    var wipShift = lapWipShiftFor(store);
+    var data = null;
+    try {
+      if (window.Sync && Sync.hasUrl()) {
+        const res = await Sync.get('wip', { shift: wipShift, action: 'get' });
+        if (store !== lapActiveStore) return;
+        if (res && res.ok && res.data) data = res.data;
+      }
+    } catch (e) { data = null; }
+    if (!data) {
+      try { data = JSON.parse(localStorage.getItem('wip-core-data-' + wipShift) || 'null'); } catch (e) { data = null; }
+      if (store !== lapActiveStore) return;
+    }
+    var notes = lapParseWipNotes(data);
+    if (!notes.length) return;
+    if (lapFillStop6FromWip(notes)) {
+      if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
+      saveLapData();
+    }
+  }
+  async function lapRefreshStop6() {
+    var store = lapActiveStore;
+    try { await syncStop6FromServer(); } catch (e) {}
+    if (lapActiveStore !== store) return;
+    try { await lapPullStop6FromWip(store); } catch (e) {}
+  }
   /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
      Hanya berhenti di sel berisi input (sel label dilewati). */
   function bindTableNav() {
@@ -1046,8 +1148,13 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   }
   pullLapForm(lapActiveStore);
   if (window.Sync) setInterval(function () { pullLapForm(lapActiveStore); }, Sync.pollMs);
-  syncStop6FromServer();
-  if (window.Sync) setInterval(syncStop6FromServer, Sync.pollMs);
+  if (typeof lapRefreshStop6 === 'function') {
+    lapRefreshStop6();
+    if (window.Sync) setInterval(lapRefreshStop6, Sync.pollMs);
+  } else {
+    syncStop6FromServer();
+    if (window.Sync) setInterval(syncStop6FromServer, Sync.pollMs);
+  }
   lapSyncMode();
   if (window.Sync) setInterval(lapSyncMode, Sync.pollMs);
 
