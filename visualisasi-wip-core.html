@@ -913,6 +913,15 @@ function getStorageKey() {
 function currentShift() {
   return localStorage.getItem('wip-shift') === 'malam' ? 'malam' : 'pagi';
 }
+/* Shift menurut jam WIB: 19:00-07:00 = malam, selebihnya pagi.
+   Dipakai saat halaman dibuka agar tampilan + klik mode selalu masuk
+   dokumen shift yang benar (Day=Pagi, Night=Malam). */
+function clockShift() {
+  try {
+    const h = (typeof wibNow === 'function' ? wibNow() : new Date()).getHours();
+    return (h >= 19 || h < 7) ? 'malam' : 'pagi';
+  } catch (e) { return 'pagi'; }
+}
 
 function collectWipData() {
   const data = {};
@@ -931,7 +940,10 @@ function collectWipData() {
   data._prod_2tr_plan = document.getElementById('prod-2tr-plan') ? document.getElementById('prod-2tr-plan').value : '';
   data._prod_2tr_act = document.getElementById('prod-2tr-act') ? document.getElementById('prod-2tr-act').value : '';
   data._ct = document.getElementById('ct-input') ? document.getElementById('ct-input').value : '';
-  data._planMode = (typeof planMode !== 'undefined' && planMode === 'all2tr') ? 'all2tr' : 'ratio';
+  /* CATATAN: _planMode SENGAJA tak ikut snapshot wip. Mode hanya hidup di
+     dokumen wmode-day/night + cache lokal per shift. Dulu _planMode ikut
+     di sini sehingga snapshot wip basi menimpa wmode kanonis (TV=All2TR
+     tapi device lain kembali Ratio + flap tiap polling). */
   return data;
 }
 
@@ -1146,7 +1158,7 @@ function mergeWipData(shift, server) {
   const delMap = (server._deleted && typeof server._deleted === 'object') ? server._deleted : {};
   const guest = isGuestMode(); /* tamu = pengikut murni: selalu ikut server terbaru */
   Object.keys(server).forEach(k => {
-    if (k === 'updatedAt' || k === '_deleted') return;
+    if (k === 'updatedAt' || k === '_deleted' || k === '_planMode') return;
     const sv = server[k];
     const lv = local[k];
     if (!guest && dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
@@ -1384,7 +1396,25 @@ function renderMachineList() {
   }).join('');
 }
 
-let planMode = (() => { try { return localStorage.getItem('wip-plan-mode') || 'ratio'; } catch (e) { return 'ratio'; } })();
+/* Mode produksi PER-SHIFT: Day=Pagi, Night=Malam (pemetaan kanonis).
+   SATU-SATUNYA sumber kebenaran = dokumen server wmode-day (=Pagi) /
+   wmode-night (=Malam). Kunci lokal per shift hanya cache agar Pagi/Malam
+   punya mode masing-masing dan tak saling menimpa. Kunci lama tunggal
+   'wip-plan-mode' SENGAJA tak dipakai lagi (itu penyebab Day/Night
+   terlihat sama + TV vs device lain beda). */
+function wipModeKey(shift) {
+  const s = (shift === 'malam' || shift === 'night') ? 'malam' : 'pagi';
+  return 'wip-plan-mode-' + s;
+}
+function wipGetMode(shift) {
+  const sh = shift || ((typeof currentShift === 'function') ? currentShift() : 'pagi');
+  try {
+    const v = localStorage.getItem(wipModeKey(sh));
+    if (v === 'all2tr' || v === 'ratio') return v;
+  } catch (e) {}
+  return 'ratio';
+}
+let planMode = wipGetMode((() => { try { return localStorage.getItem('wip-shift') === 'malam' ? 'malam' : 'pagi'; } catch (e) { return 'pagi'; } })());
 
 function applyPlanMode(mode, save) {
   planMode = mode === 'all2tr' ? 'all2tr' : 'ratio';
@@ -1400,7 +1430,10 @@ function applyPlanMode(mode, save) {
     all2trBtn.classList.toggle('dim', planMode !== 'all2tr');
   }
   if (row1tr) row1tr.classList.toggle('wip-row-dim', planMode === 'all2tr');
-  try { localStorage.setItem('wip-plan-mode', planMode); } catch (e) {}
+  try {
+    const sh = (typeof currentShift === 'function') ? currentShift() : 'pagi';
+    localStorage.setItem(wipModeKey(sh), planMode);
+  } catch (e) {}
   updateEfficiency();
   if (save) saveAllData();
 }
@@ -1416,10 +1449,11 @@ function userSetPlanMode(mode) {
     }
   } catch (e) {}
 }
-/* Terapkan mode dari snapshot server (tanpa memicu save ulang -> anti loop) */
+/* Terapkan mode dari snapshot server (tanpa memicu save ulang -> anti loop)
+   DEPRECATED: tak dipakai lagi. Mode hanya dari wmode-day/night via
+   wipSyncModeFromServer(). Fungsi dipertahankan agar panggilan lama tak error. */
 function applyServerPlanMode(data) {
-  const m = data && (data._planMode === 'all2tr' ? 'all2tr' : (data._planMode === 'ratio' ? 'ratio' : null));
-  if (m && m !== planMode) applyPlanMode(m, false);
+  return;
 }
 
 function computeOee() {
@@ -1704,8 +1738,48 @@ function switchShift(value) {
   localStorage.setItem('wip-shift', isMalam ? 'malam' : 'pagi');
   document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(isMalam ? 'shiftMalamBtn' : 'shiftPagiBtn').classList.add('active');
+  /* Muat mode per-shift SEBELUM render agar Pagi/Malam tak saling menimpa
+     (Day=Pagi, Night=Malam). Snapshot wip SENGAJA tak membawa mode lagi,
+     jadi render tak akan menimpa mode kanonis dari wmode. */
+  try { applyPlanMode(wipGetMode(isMalam ? 'malam' : 'pagi'), false); } catch (e) {}
   renderTimeSlots(isMalam ? nightSlots : daySlots);
   wipSyncFromServer();
+  wipSyncModeFromServer();
+}
+/* Mode kanonis per shift dari dokumen wmode (Day=Pagi, Night=Malam).
+   Sinkron KEDUA shift sekaligus agar cache Pagi & Malam selalu segar;
+   yg diterapkan ke layar hanya shift yg sedang tampil. Tanpa memicu
+   save ulang (anti loop). */
+async function wipSyncModeFromServer() {
+  if (!window.Sync || !Sync.hasUrl()) return;
+  const pairs = [['pagi', 'day'], ['malam', 'night']];
+  const cur = (typeof currentShift === 'function') ? currentShift() : 'pagi';
+  try {
+    const results = await Promise.all(pairs.map(async ([sh, wshift]) => {
+      try {
+        const res = await Sync.get('wmode', { action: 'get', shift: wshift });
+        const m = res && res.ok && res.data && res.data.mode;
+        if (m !== 'all2tr' && m !== 'ratio') {
+          /* Dokumen shift ini (termasuk fallback legacy) belum punya mode:
+             tanam cache lokal shift tsb agar device lain ikut (non-tamu saja). */
+          try {
+            if (typeof isGuestMode !== 'function' || !isGuestMode()) {
+              const seed = wipGetMode(sh);
+              Sync.save('wmode', { action: 'save', shift: wshift, data: { mode: seed } }).catch(() => {});
+            }
+          } catch (e) {}
+          return null;
+        }
+        try { localStorage.setItem(wipModeKey(sh), m); } catch (e) {}
+        return { sh, m };
+      } catch (e) { return null; }
+    }));
+    (results || []).forEach(r => {
+      if (!r) return;
+      if (r.sh === currentShift() && r.m !== planMode) applyPlanMode(r.m, false);
+    });
+    void cur;
+  } catch (e) {}
 }
 
 /* ── Generate to PDF: ringkasan WIP Core ──
@@ -2570,16 +2644,28 @@ function noteClearCell() {
   updateEfficiency();
 }
 
-const initialShift = localStorage.getItem('wip-shift') || 'pagi';
+/* Shift awal selalu disejajarkan jam WIB (Day=Pagi, Night=Malam);
+   tombol Pagi/Malam tetap bisa dipakai untuk pindah manual setelahnya. */
+const initialShift = clockShift();
+try { localStorage.setItem('wip-shift', initialShift); } catch (e) {}
 if (initialShift === 'malam') document.body.classList.add('dark-mode');
 document.getElementById(initialShift === 'malam' ? 'shiftMalamBtn' : 'shiftPagiBtn').classList.add('active');
+try { planMode = wipGetMode(initialShift); } catch (e) {}
 renderTimeSlots(initialShift === 'malam' ? nightSlots : daySlots);
 bindPanelInputs();
 setCtLock(ctLocked);
 bindPanelNav();
+window.addEventListener('storage', (e) => {
+  if (!e || !e.key) return;
+  if (e.key === 'wip-plan-mode-pagi' || e.key === 'wip-plan-mode-malam') {
+    const m = wipGetMode(currentShift());
+    if (m !== planMode) applyPlanMode(m, false);
+  }
+});
 
 wipSyncFromServer();
-if (window.Sync) setInterval(wipSyncFromServer, Sync.pollMs);
+wipSyncModeFromServer();
+if (window.Sync) { setInterval(wipSyncFromServer, Sync.pollMs); setInterval(wipSyncModeFromServer, Sync.pollMs); }
 setInterval(checkAutoPdf, 30000);
 setTimeout(checkAutoPdf, 5000);
 

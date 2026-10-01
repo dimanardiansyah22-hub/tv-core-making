@@ -140,6 +140,19 @@ body.night .prob-table td { border-bottom-color: #555; }
 body.night .prob-no { color: #b0b0d0; }
 body.night .prob-in, body.night .mat-in, body.night .kwh-in { color: #f5f5ff; }
 body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { background: #2d2d44; }
+/* ── Fill minimalis sel judul seksi 2, 4, 5 ──
+   Abu terang = sel judul/label (tidak perlu diisi, cukup dibaca);
+   sel input putih = harus diisi; input readonly = otomatis (tidak perlu diisi). */
+#secAbsen2 .mat-lab, #secProd4 .mat-lab, #secKwh .mat-lab,
+#secProd4 td.bl, #secProd4 td:empty { background: #eef2f7; }
+#secProd4 .merge-center, #secProd4 .sub-h,
+#secAbsen2 .absen-subrow, #secKwh thead th { background: #e2e8f0; }
+#secAbsen2 input[readonly], #secProd4 input[readonly], #secKwh input[readonly] { background: #f1f5f9; color: #64748b; }
+body.night #secAbsen2 .mat-lab, body.night #secProd4 .mat-lab, body.night #secKwh .mat-lab,
+body.night #secProd4 td.bl, body.night #secProd4 td:empty { background: #41415e; }
+body.night #secProd4 .merge-center, body.night #secProd4 .sub-h,
+body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th { background: #4a4a6e; color: #e8e8f0; }
+body.night #secAbsen2 input[readonly], body.night #secProd4 input[readonly], body.night #secKwh input[readonly] { background: #2d2d44; color: #8a8aa3; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
 body.night #lapReport { background: #383855; border-color: #555; }
@@ -220,7 +233,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
     </div>
   </div>
-  <div class="lap-sec">
+  <div class="lap-sec" id="secAbsen2">
     <div class="lap-sec-title">2.ABSENSI</div>
     <div class="prob-wrap absen-wrap">
     <table class="prob-table fixed">
@@ -291,12 +304,12 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <table class="prob-table fixed">
       <thead><tr><th>Item</th><th>Awal</th><th>Pakai</th><th>Akhir</th></tr></thead>
       <tbody>
-<tr><td class="mat-lab">PD 5-1</td><td><input class="kwh-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
-<tr><td class="mat-lab">PD 2-1</td><td><input class="kwh-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
-<tr><td class="mat-lab">PD - 06</td><td><input class="kwh-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
-<tr><td class="mat-lab">PD 2-2</td><td><input class="kwh-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
-<tr><td class="mat-lab">PD - 13</td><td><input class="kwh-in" data-r="4" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="4" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="4" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
-<tr><td class="mat-lab">LPG C/C</td><td><input class="kwh-in" data-r="5" data-k="awal" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="5" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="5" data-k="akhir" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td></tr>
+<tr><td class="mat-lab">PD 5-1</td><td><input class="kwh-in" data-r="0" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="0" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="0" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">PD 2-1</td><td><input class="kwh-in" data-r="1" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="1" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="1" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">PD - 06</td><td><input class="kwh-in" data-r="2" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="2" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="2" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">PD 2-2</td><td><input class="kwh-in" data-r="3" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="3" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="3" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">PD - 13</td><td><input class="kwh-in" data-r="4" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="4" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="4" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
+<tr><td class="mat-lab">LPG C/C</td><td><input class="kwh-in" data-r="5" data-k="awal" autocomplete="off" inputmode="decimal"></td><td><input class="kwh-in" data-r="5" data-k="pakai" autocomplete="off" inputmode="decimal" readonly title="Otomatis: Akhir - Awal"></td><td><input class="kwh-in" data-r="5" data-k="akhir" autocomplete="off" inputmode="decimal"></td></tr>
       </tbody>
     </table>
     </div>
@@ -450,42 +463,78 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     });
   });
   /* Mode Produksi — INDIKATOR MURNI dari Visualisasi WIP Core.
-     Hanya dibaca (kunci 'wip-plan-mode' + snapshot server); operator tak bisa
-     mengubah dari sini. Diubah hanya di halaman Visualisasi. */
+     Hanya dibaca; operator tak bisa mengubah dari sini. Diubah hanya di
+     halaman Visualisasi. Pemetaan kanonis: Day = Shift Pagi, Night = Shift Malam.
+     SATU-SATUNYA sumber kebenaran = dokumen server wmode-day (=Pagi) /
+     wmode-night (=Malam). Cache lokal per shift (wip-plan-mode-pagi/malam)
+     hanya agar Day & Malam bisa BERBEDA. Kunci tunggal lama 'wip-plan-mode'
+     SENGAJA tak dipakai lagi (itu yg membuat Day/Night selalu terlihat sama). */
   var lapPlanMode = 'ratio';
+  function lapModeKey(store) {
+    var s = (store === 'night' || store === 'malam') ? 'malam' : 'pagi';
+    return 'wip-plan-mode-' + s;
+  }
+  function lapModeStore() {
+    try {
+      if (typeof lapActiveStore !== 'undefined' && lapActiveStore) return lapActiveStore;
+    } catch (e) {}
+    var n = document.querySelector('.shift-time:checked');
+    return (n && n.value === 'Night') ? 'night' : 'day';
+  }
+  function lapReadMode(store) {
+    var key = lapModeKey(store);
+    try {
+      var v = localStorage.getItem(key) || '';
+      if (v === 'all2tr' || v === 'ratio') return v;
+    } catch (e) {}
+    return 'ratio';
+  }
   function paintLapMode() {
     var r = document.getElementById('lapModeRatio');
     var a = document.getElementById('lapModeAll2tr');
     if (r) { r.classList.toggle('active', lapPlanMode === 'ratio'); r.classList.toggle('dim', lapPlanMode !== 'ratio'); }
     if (a) { a.classList.toggle('active', lapPlanMode === 'all2tr'); a.classList.toggle('dim', lapPlanMode !== 'all2tr'); }
   }
-  function syncLapModeFromKey() {
-    var m = 'ratio';
-    try { m = localStorage.getItem('wip-plan-mode') || 'ratio'; } catch (e) {}
-    if (m !== 'all2tr') m = 'ratio';
+  function syncLapModeFromKey(store) {
+    var m = lapReadMode(store || lapModeStore());
     if (m !== lapPlanMode) { lapPlanMode = m; paintLapMode(); }
+    else paintLapMode();
   }
   function applyServerLapMode(data) {
     var m = data && (data._wmode === 'all2tr' ? 'all2tr' : (data._wmode === 'ratio' ? 'ratio' : null));
     if (m && m !== lapPlanMode) { lapPlanMode = m; paintLapMode(); }
   }
   /* Mode kanonis dari dokumen wmode (ditulis tiap klik operator di Visualisasi).
-     Ini sumber utama lintas device; kunci lokal + snapshot hanya cadangan. */
+     Sinkron KEDUA shift sekaligus (Day->wmode-day=Pagi, Night->wmode-night=Malam)
+     agar cache Day & Night bisa BERBEDA; yg digambar hanya tab yg sedang aktif.
+     Ini sumber utama lintas device; cache lokal per shift hanya agar pindah
+     tab langsung benar sebelum fetch tiba. */
   async function lapSyncMode() {
     if (!window.Sync || !Sync.hasUrl()) return;
+    var active = lapModeStore();
+    var jobs = [{ store: 'day', wshift: 'day' }, { store: 'night', wshift: 'night' }];
     try {
-      var wshift = (typeof lapActiveStore !== 'undefined' && lapActiveStore === 'night') ? 'night' : 'day';
-      const res = await Sync.get('wmode', { action: 'get', shift: wshift });
-      const m = res && res.ok && res.data && res.data.mode;
-      if (m !== 'all2tr' && m !== 'ratio') return;
-      try { localStorage.setItem('wip-plan-mode', m); } catch (e) {}
-      if (m !== lapPlanMode) { lapPlanMode = m; paintLapMode(); }
+      var results = await Promise.all(jobs.map(function (j) {
+        return Sync.get('wmode', { action: 'get', shift: j.wshift }).then(function (res) {
+          var m = res && res.ok && res.data && res.data.mode;
+          if (m !== 'all2tr' && m !== 'ratio') return null;
+          try { localStorage.setItem(lapModeKey(j.store), m); } catch (e) {}
+          return { store: j.store, mode: m };
+        }).catch(function () { return null; });
+      }));
+      if (lapModeStore() !== active) active = lapModeStore();
+      var mActive = null;
+      (results || []).forEach(function (r) {
+        if (r && r.store === active) mActive = r.mode;
+      });
+      if (mActive && mActive !== lapPlanMode) { lapPlanMode = mActive; paintLapMode(); }
+      else if (!mActive) syncLapModeFromKey(active);
     } catch (e) {}
   }
   syncLapModeFromKey();
   paintLapMode();
   window.addEventListener('storage', function (e) {
-    if (e && e.key === 'wip-plan-mode') syncLapModeFromKey();
+    if (e && (e.key === 'wip-plan-mode-pagi' || e.key === 'wip-plan-mode-malam')) syncLapModeFromKey();
   });
   document.querySelectorAll('.shift-time').forEach(function (el) {
     el.addEventListener('change', function () {
@@ -501,6 +550,9 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
         flushLapForm(oldStore);
         flushStop6(oldStore);
         lapActiveStore = next;
+        /* Tampilkan mode shift tujuan seketika dari kunci lokal per shift
+           (Day=Pagi, Night=Malam) sebelum snapshot server tiba. */
+        syncLapModeFromKey(next);
         loadStop6();
         pullLapForm(next);
         syncStop6FromServer();
@@ -898,7 +950,17 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   }
   bindTableNav();
   /* init: seksi 1-5 langsung dari backend (tanpa local); seksi 6 dari lokal + server */
+  /* Tab Day/Night awal mengikuti jam WIB (07:00-19:00 Day, selebihnya Night)
+     agar mode + isian yang tampil = shift yang sedang berjalan. */
+  try {
+    var wh = new Date(Date.now() + (420 + new Date().getTimezoneOffset()) * 60000).getHours();
+    var wnight = (wh >= 19 || wh < 7);
+    document.querySelectorAll('.shift-time').forEach(function (o) { o.checked = (wnight ? o.value === 'Night' : o.value === 'Day'); });
+    document.body.classList.toggle('night', wnight);
+  } catch (e) {}
   lapActiveStore = lapStore();
+  /* Selaraskan indikator mode dgn shift awal (Day=Pagi, Night=Malam). */
+  syncLapModeFromKey(lapActiveStore);
   loadStop6();
   if (document.querySelector('.shift-time:checked')) {
     document.body.classList.toggle('night', document.querySelector('.shift-time:checked').value === 'Night');
