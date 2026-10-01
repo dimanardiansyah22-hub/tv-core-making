@@ -556,12 +556,16 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       });
       if (mActive && mActive !== lapPlanMode) { lapPlanMode = mActive; paintLapMode(); }
       else if (!mActive) syncLapModeFromKey(active);
+      if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
     } catch (e) {}
   }
   syncLapModeFromKey();
   paintLapMode();
   window.addEventListener('storage', function (e) {
-    if (e && (e.key === 'wip-plan-mode-pagi' || e.key === 'wip-plan-mode-malam')) syncLapModeFromKey();
+    if (e && (e.key === 'wip-plan-mode-pagi' || e.key === 'wip-plan-mode-malam')) {
+      syncLapModeFromKey();
+      if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
+    }
   });
   document.querySelectorAll('.shift-time').forEach(function (el) {
     el.addEventListener('change', function () {
@@ -658,6 +662,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       if (v !== undefined && v !== '') e2.value = v;
       else if (cleared[k]) e2.value = '';
     });
+    if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
   }
   function clearLapForm() {
     document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
@@ -929,6 +934,53 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   });
   document.querySelectorAll('#secStop6 .prob-in').forEach(function (el) {
     el.addEventListener('input', function () { saveLapData(); });
+  });
+  /* ── Otomatisasi kolom Type seksi 6 dari DIE/MESIN + Mode Produksi ──
+     Ratio    : ICM 002→Fr/Re 1 TR, 003→Wj/Sb 1 TR, 008→C/C 1 TR,
+                007→Fr/Re 2 TR, 006→Wj/Sb 2 TR, 009→C/C 2 TR.
+     All 2 TR : keenam mesin → varian 2 TR (tidak ada 1 TR).
+     Mesin lain (Conveyor, Dolly, dsb.) tidak disentuh (isi manual).
+     Type baris bermesin ICM dikenal dikelola otomatis: dinormalkan tiap
+     input mesin, tiap mode berubah, dan tiap data seksi 6 dimuat. */
+  var LAP_TR1_BASE = { 'ICM 002': 'Fr/Re', 'ICM 003': 'Wj/Sb', 'ICM 008': 'C/C' };
+  var LAP_TR2_BASE = { 'ICM 007': 'Fr/Re', 'ICM 006': 'Wj/Sb', 'ICM 009': 'C/C' };
+  function lapNormMachine(s) {
+    var t = String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
+    t = t.replace(/^(ICM)\s*0*(\d+)$/, function (m0, p1, p2) { return p1 + ' ' + ('00' + p2).slice(-3); });
+    return t;
+  }
+  function lapTypeForMachine(machine, mode) {
+    var m = lapNormMachine(machine);
+    var base = LAP_TR1_BASE[m] || LAP_TR2_BASE[m];
+    if (!base) return null;
+    if (mode === 'all2tr') return base + ' 2 TR';
+    if (LAP_TR1_BASE[m]) return base + ' 1 TR';
+    return base + ' 2 TR';
+  }
+  function lapTypeElForRow(r) {
+    return document.querySelector('#secStop6 .prob-in[data-r="' + r + '"][data-k="type"]');
+  }
+  function lapRemapStop6Types() {
+    if (typeof lapPlanMode === 'undefined') return;
+    var focusEl = document.activeElement;
+    var changed = false;
+    document.querySelectorAll('#secStop6 .prob-in[data-k="mesin"]').forEach(function (mel) {
+      var t = lapTypeForMachine(mel.value, lapPlanMode);
+      if (!t) return;
+      var tel = lapTypeElForRow(mel.dataset.r);
+      if (!tel || tel === focusEl || tel.value === t) return;
+      tel.value = t; changed = true;
+    });
+    if (changed) saveLapData();
+  }
+  document.querySelectorAll('#secStop6 .prob-in[data-k="mesin"]').forEach(function (el) {
+    el.addEventListener('input', function () {
+      if (typeof lapPlanMode === 'undefined') return;
+      var t = lapTypeForMachine(el.value, lapPlanMode);
+      if (!t) return;
+      var tel = lapTypeElForRow(el.dataset.r);
+      if (tel && tel.value !== t) { tel.value = t; saveLapData(); }
+    });
   });
   /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
      Hanya berhenti di sel berisi input (sel label dilewati). */
