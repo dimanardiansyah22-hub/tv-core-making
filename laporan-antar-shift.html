@@ -339,7 +339,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   </div>
 </div>
   <div class="lap-sec" id="secStop6">
-    <div class="lap-sec-title">6.LINE STOP / PROBLEM</div>
+    <div class="lap-sec-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>6.LINE STOP / PROBLEM</span><button type="button" class="lap-btn" id="lapWipRefreshBtn" style="padding:4px 10px;font-size:11px" title="Ganti seluruh isi seksi 6 tab ini dengan rekap line stop WIP shift terkait (Day dari Pagi, Night dari Malam)">Tarik dari WIP</button></div>
     <div class="prob-wrap">
     <table class="prob-table">
       <thead><tr><th style="width:34px">No</th><th>TYPE</th><th>DIE/MESIN</th><th>MASALAH</th><th>PENANGGULANGAN</th><th>DURASI</th><th>PIC</th></tr></thead>
@@ -1057,22 +1057,24 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     });
     return changed;
   }
-  async function lapPullStop6FromWip(store) {
-    store = store || lapActiveStore;
+  async function lapGetWipNotes(store) {
     var wipShift = lapWipShiftFor(store);
     var data = null;
     try {
       if (window.Sync && Sync.hasUrl()) {
         const res = await Sync.get('wip', { shift: wipShift, action: 'get' });
-        if (store !== lapActiveStore) return;
         if (res && res.ok && res.data) data = res.data;
       }
     } catch (e) { data = null; }
     if (!data) {
       try { data = JSON.parse(localStorage.getItem('wip-core-data-' + wipShift) || 'null'); } catch (e) { data = null; }
-      if (store !== lapActiveStore) return;
     }
-    var notes = lapParseWipNotes(data);
+    return lapParseWipNotes(data);
+  }
+  async function lapPullStop6FromWip(store) {
+    store = store || lapActiveStore;
+    var notes = await lapGetWipNotes(store);
+    if (store !== lapActiveStore) return;
     if (!notes.length) return;
     if (lapFillStop6FromWip(notes)) {
       if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
@@ -1085,6 +1087,42 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     if (lapActiveStore !== store) return;
     try { await lapPullStop6FromWip(store); } catch (e) {}
   }
+  /* Tombol "Tarik dari WIP": bangun ulang draft seksi 6 tab aktif dari rekap
+     line stop WIP shift pasangannya (Day←Pagi, Night←Malam). Dipakai untuk
+     membersihkan data yg sempat tercampur antar shift. Mengganti seluruh
+     16 baris (termasuk Type & PIC) lalu menyimpan + sinkron seperti biasa. */
+  async function lapRebuildStop6FromWip() {
+    if (isLapGuest()) return;
+    var store = lapActiveStore;
+    var tabName = (store === 'night') ? 'Night' : 'Day';
+    var wipName = (store === 'night') ? 'Malam' : 'Pagi';
+    const ok = await lapConfirm('Ganti seluruh isi seksi 6 (' + tabName + ') dengan rekap line stop WIP Shift ' + wipName + '? Isian manual termasuk PIC ikut terhapus.');
+    if (!ok || lapActiveStore !== store) return;
+    lapPdfStatus('Menarik line stop WIP Shift ' + wipName + '…');
+    var notes = [];
+    try { notes = await lapGetWipNotes(store); } catch (e) { notes = []; }
+    if (lapActiveStore !== store) return;
+    if (!notes.length) { lapPdfStatus('Tidak ada line stop di WIP Shift ' + wipName + ' — seksi 6 tidak diubah.', true); return; }
+    var rows = Array.from(document.querySelectorAll('#secStop6 tbody tr'));
+    var cols = ['type', 'mesin', 'masalah', 'pg', 'durasi', 'pic'];
+    rows.forEach(function (tr, i) {
+      var n = notes[i];
+      cols.forEach(function (k) {
+        var el = tr.querySelector('.prob-in[data-k="' + k + '"]');
+        if (!el) return;
+        if (k === 'mesin') el.value = n ? n.me : '';
+        else if (k === 'masalah') el.value = n ? n.pr : '';
+        else if (k === 'pg') el.value = n ? n.pg : '';
+        else if (k === 'durasi') el.value = n ? n.wt : '';
+        else el.value = '';
+      });
+    });
+    if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
+    saveLapData();
+    var extra = notes.length > rows.length ? ' (+' + (notes.length - rows.length) + ' catatan melebihi 16 baris, tidak masuk)' : '';
+    lapPdfStatus('Seksi 6 (' + tabName + ') direkap dari ' + notes.length + ' line stop WIP Shift ' + wipName + '.' + extra);
+  }
+  document.getElementById('lapWipRefreshBtn').addEventListener('click', function () { lapRebuildStop6FromWip(); });
   /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
      Hanya berhenti di sel berisi input (sel label dilewati). */
   function bindTableNav() {
