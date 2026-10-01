@@ -90,6 +90,10 @@ body.night .absen-in:focus { background: #2d2d44; }
 .sec-row > .lap-sec { min-width: 0; }
 #secShiftCol { flex: none; width: 100%; }
 #colLeft { flex: none; width: 25%; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+#colLeft > .lap-sec:last-child { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#colLeft .prob-wrap.absen-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#colLeft .prob-wrap.absen-wrap table { flex: 1; }
+#colLeft .prob-table td { vertical-align: middle; }
 .prob-wrap.absen-wrap { width: 100%; }
 #secProd4 { flex: 1; min-width: 280px; }
 #secProd4 .mat-lab { text-align: center; padding: 7px 6px; }
