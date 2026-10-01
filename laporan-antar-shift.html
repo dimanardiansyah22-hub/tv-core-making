@@ -275,7 +275,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     <div class="prob-wrap">
     <table class="prob-table">
 <tbody>
-<tr><td colspan="2" class="merge-center">Type</td><td colspan="3" class="merge-center"><span class="tr-pill" id="lapPillTr1">1 TR</span><span class="tr-sep">/</span><span class="tr-pill" id="lapPillTr2">2 TR</span></td><td colspan="3" class="merge-center">2 TR</td></tr>
+<tr><td colspan="2" class="merge-center">Type</td><td colspan="3" class="merge-center"><span class="tr-pill" id="lapPillTr1">1 TR</span><span class="tr-sep">/</span><span class="tr-pill" id="lapPillTr2">2 TR</span></td><td colspan="3" class="merge-center"><span class="tr-pill" id="lapPillTr2R">2 TR</span></td></tr>
 <tr><td colspan="2" class="merge-center">Core</td><td class="sub-h pcol">C/Case</td><td class="sub-h pcol">Fr/Re</td><td class="sub-h pcol">W/J-Sb</td><td class="sub-h pcol">C/Case</td><td class="sub-h pcol">Fr/Re</td><td class="sub-h pcol">W/J-Sb</td></tr>
 <tr><td colspan="2" class="merge-center">Nomor Die</td><td class="pcol"><input class="prob-in" data-r="2" data-k="c0" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="2" data-k="c1" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="2" data-k="c2" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="2" data-k="c3" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="2" data-k="c4" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="2" data-k="c5" autocomplete="off"></td></tr>
 <tr><td class="mat-lab" rowspan="2">Prod Time</td><td class="bl"><div class="sub-line"><span class="sub-lab2">Start</span></div></td><td class="pcol"><input class="prob-in" data-r="3" data-k="c0" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="3" data-k="c1" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="3" data-k="c2" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="3" data-k="c3" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="3" data-k="c4" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="3" data-k="c5" autocomplete="off"></td></tr>
@@ -514,6 +514,8 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     var p2 = document.getElementById('lapPillTr2');
     if (p1) p1.classList.toggle('on-red', lapPlanMode === 'ratio');
     if (p2) p2.classList.toggle('on-blue', lapPlanMode === 'all2tr');
+    var p2r = document.getElementById('lapPillTr2R');
+    if (p2r) p2r.classList.toggle('on-blue', lapPlanMode === 'all2tr');
   }
   function syncLapModeFromKey(store) {
     var m = lapReadMode(store || lapModeStore());
