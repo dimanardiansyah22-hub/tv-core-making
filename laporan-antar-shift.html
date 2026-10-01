@@ -167,6 +167,9 @@ body.night #secAbsen2 input[readonly], body.night #secProd4 input[readonly] { ba
 #secProd4 .tr-pill { display: inline-block; padding: 2px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .04em; border: 1.5px solid #9ca3af; color: #6b7280; background: transparent; }
 #secProd4 .tr-pill.on-red { background: #dc2626; border-color: #991b1b; color: #fff; }
 #secProd4 .tr-pill.on-blue { background: #2563eb; border-color: #1e40af; color: #fff; }
+/* Font pil merah/biru selalu putih (siang & malam) */
+#secProd4 .tr-pill.on-red, #secProd4 .tr-pill.on-blue,
+body.night #secProd4 .tr-pill.on-red, body.night #secProd4 .tr-pill.on-blue { color: #fff; }
 #secProd4 .tr-sep { color: #9ca3af; font-weight: 800; margin: 0 4px; }
 body.night #secProd4 .tr-pill { border-color: #888; color: #b0b0d0; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
