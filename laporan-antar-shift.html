@@ -474,7 +474,8 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   async function lapSyncMode() {
     if (!window.Sync || !Sync.hasUrl()) return;
     try {
-      const res = await Sync.get('wmode', { action: 'get' });
+      var wshift = (typeof lapActiveStore !== 'undefined' && lapActiveStore === 'night') ? 'night' : 'day';
+      const res = await Sync.get('wmode', { action: 'get', shift: wshift });
       const m = res && res.ok && res.data && res.data.mode;
       if (m !== 'all2tr' && m !== 'ratio') return;
       try { localStorage.setItem('wip-plan-mode', m); } catch (e) {}
@@ -500,6 +501,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
         lapActiveStore = next;
         loadSavedLap();
         lapSyncFromServer();
+        lapSyncMode();
       }
     });
   });

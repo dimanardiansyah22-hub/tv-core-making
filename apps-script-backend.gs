@@ -60,7 +60,9 @@ var DOC_NAMES = {
   capability_white: 'capability-white.json',
   lapshift_day: 'lapshift-day.json',
   lapshift_night: 'lapshift-night.json',
-  wmode: 'wmode.json'
+  wmode: 'wmode.json',
+  wmode_day: 'wmode-day.json',
+  wmode_night: 'wmode-night.json'
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -89,7 +91,7 @@ function doGet(e) {
     else if (action === 'getpdf') result = getWipPdf_(p.id);
     else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'wmode') {
-    if (action === 'get') result = docGet_('wmode');
+    if (action === 'get') result = wmodeGet_(p.shift);
     else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'oeedata') {
     if (action === 'list') result = listOeeData_(p);
@@ -151,7 +153,7 @@ function doPost(e) {
   } else if (app === 'machines' && action === 'save') {
     result = appSave_('machines', null, body.data);
   } else if (app === 'wmode' && action === 'save') {
-    result = appSave_('wmode', null, body.data);
+    result = appSave_('wmode', body.shift, body.data);
   } else if (app === 'wip') {
     result = appSave_('wip', body.shift, body.data);
   } else if (app === 'lapshift') {
@@ -176,7 +178,7 @@ function doPost(e) {
 function appKey_(app, variant) {
   if (app === 'mapping') return (variant === 'white') ? DOC_NAMES.mapping_white : DOC_NAMES.mapping_red;
   if (app === 'wip') return (variant === 'malam') ? DOC_NAMES.wip_malam : DOC_NAMES.wip_pagi;
-  if (app === 'wmode') return DOC_NAMES.wmode;
+  if (app === 'wmode') return (variant === 'night' || variant === 'malam') ? DOC_NAMES.wmode_night : DOC_NAMES.wmode_day;
   if (app === 'lapshift') return (variant === 'night') ? DOC_NAMES.lapshift_night : DOC_NAMES.lapshift_day;
   if (app === 'planning') return (variant === 'white') ? DOC_NAMES.planning_white : DOC_NAMES.planning_red;
   if (app === 'machines') return DOC_NAMES.machines;
@@ -202,6 +204,15 @@ function appSave_(app, variant, data) {
 function docGet_(name) {
   var doc = readDoc_(name);
   return { ok: true, data: doc };
+}
+
+/* Mode produksi per shift (Day/Night). Dokumen baru wmode-day/night.json;
+   bila belum ada, fallback ke wmode.json lama agar masa transisi aman. */
+function wmodeGet_(variant) {
+  var name = appKey_('wmode', variant);
+  var doc = readDoc_(name);
+  if (doc && (doc.mode === 'ratio' || doc.mode === 'all2tr')) return { ok: true, data: doc };
+  return { ok: true, data: readDoc_(DOC_NAMES.wmode) };
 }
 
 /* ── Dokumen Drive: baca/tulis JSON ── */

@@ -1411,7 +1411,8 @@ function userSetPlanMode(mode) {
   setPlanMode(mode);
   try {
     if (window.Sync && Sync.hasUrl()) {
-      Sync.save('wmode', { action: 'save', data: { mode: planMode } }).catch(() => {});
+      var wshift = (typeof currentShift === 'function' && currentShift() === 'malam') ? 'night' : 'day';
+      Sync.save('wmode', { action: 'save', shift: wshift, data: { mode: planMode } }).catch(() => {});
     }
   } catch (e) {}
 }
