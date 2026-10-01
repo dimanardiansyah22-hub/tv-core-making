@@ -1133,12 +1133,10 @@ function setPanelValSafe(data, id) {
   if (el === document.activeElement) return; /* sedang diketik: jangan timpa */
   const k = (typeof PANEL_KEYS !== 'undefined') ? PANEL_KEYS[id] : undefined;
   const v = (k && data[k] !== undefined) ? data[k] : data[id];
-  if (v !== undefined && v !== '') { el.value = v; return; }
-  /* nilai kosong/tak ada: biarkan — KECUALI dihapus eksplisit device lain */
-  if (k) {
-    const cleared = _wipCleared[currentShift()] || {};
-    if (cleared[k]) el.value = '';
-  }
+  /* Snapshot per-shift adalah kebenaran: tak ada/kosong HARUS dikosongkan
+     agar angka Planning/CT Pagi tak terbawa ke tampilan Malam (dan sebaliknya).
+     Aman: data di sini selalu snapshot penuh (lokal/merge), bukan parsial. */
+  el.value = (v === undefined || v === null) ? '' : v;
 }
 
 /* Gabung snapshot server ke data lokal (last-write-wins antar device):

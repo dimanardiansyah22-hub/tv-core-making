@@ -655,13 +655,14 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   function applyStop6(data) {
     data = data || {};
     var focusEl = document.activeElement;
-    var cleared = _lapCleared[lapActiveStore] || {};
     document.querySelectorAll('#secStop6 .prob-in').forEach(function (e2) {
       if (e2 === focusEl) return;
       var k = 'prob_' + e2.dataset.r + '_' + e2.dataset.k;
       var v = data[k];
-      if (v !== undefined && v !== '') e2.value = v;
-      else if (cleared[k]) e2.value = '';
+      /* Snapshot adalah kebenaran per-shift (Day/Malam terpisah): kunci yang
+         tak ada/kosong HARUS dikosongkan — jangan tampilkan sisa tab shift
+         lain (itu yg membuat 2 shift tercampur). */
+      e2.value = (v === undefined || v === null) ? '' : v;
     });
     if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
   }
