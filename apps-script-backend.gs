@@ -60,6 +60,8 @@ var DOC_NAMES = {
   capability_white: 'capability-white.json',
   lapshift_day: 'lapshift-day.json',
   lapshift_night: 'lapshift-night.json',
+  lapform_day: 'lapform-day.json',
+  lapform_night: 'lapform-night.json',
   wmode: 'wmode.json',
   wmode_day: 'wmode-day.json',
   wmode_night: 'wmode-night.json'
@@ -105,6 +107,8 @@ function doGet(e) {
     result = (action === 'get') ? appGet_('wip', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'lapshift') {
     result = (action === 'get') ? appGet_('lapshift', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'lapform') {
+    result = (action === 'get') ? appGet_('lapform', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'planning-cuti') {
     result = (action === 'get') ? appGet_('planning', p.core) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'corecap') {
@@ -158,6 +162,8 @@ function doPost(e) {
     result = appSave_('wip', body.shift, body.data);
   } else if (app === 'lapshift') {
     result = appSave_('lapshift', body.shift, body.data);
+  } else if (app === 'lapform') {
+    result = appSave_('lapform', body.shift, body.data);
   } else if (app === 'planning-cuti') {
     result = appSave_('planning', body.core, body.data);
   } else if (app === 'corecap') {
@@ -180,6 +186,7 @@ function appKey_(app, variant) {
   if (app === 'wip') return (variant === 'malam') ? DOC_NAMES.wip_malam : DOC_NAMES.wip_pagi;
   if (app === 'wmode') return (variant === 'night' || variant === 'malam') ? DOC_NAMES.wmode_night : DOC_NAMES.wmode_day;
   if (app === 'lapshift') return (variant === 'night') ? DOC_NAMES.lapshift_night : DOC_NAMES.lapshift_day;
+  if (app === 'lapform') return (variant === 'night' || variant === 'malam') ? DOC_NAMES.lapform_night : DOC_NAMES.lapform_day;
   if (app === 'planning') return (variant === 'white') ? DOC_NAMES.planning_white : DOC_NAMES.planning_red;
   if (app === 'machines') return DOC_NAMES.machines;
   if (app === 'capability') return (variant === 'white') ? DOC_NAMES.capability_white : DOC_NAMES.capability_red;

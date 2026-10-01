@@ -302,7 +302,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     </div>
   </div>
 </div>
-  <div class="lap-sec">
+  <div class="lap-sec" id="secStop6">
     <div class="lap-sec-title">6.LINE STOP / PROBLEM</div>
     <div class="prob-wrap">
     <table class="prob-table">
@@ -497,18 +497,23 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       }
       var next = lapStore();
       if (next !== lapActiveStore) {
-        saveLapDataTo(lapActiveStore, lapActiveStore === 'night' ? 'Night' : 'Day');
+        var oldStore = lapActiveStore;
+        flushLapForm(oldStore);
+        flushStop6(oldStore);
         lapActiveStore = next;
-        loadSavedLap();
-        lapSyncFromServer();
+        loadStop6();
+        pullLapForm(next);
+        syncStop6FromServer();
         lapSyncMode();
       }
     });
   });
 
-  /* ── Sinkron Drive per shift Day/Night (pola = Visualisasi WIP Core) ──
-     Isi/hapus apa pun tersimpan lokal seketika + terdorong ke Drive (±800ms).
-     Last-write-wins berbasis waktu; server kosong tak menghapus; anti-campur shift. */
+  /* ── Sinkron Drive per shift Day/Night ──
+     Seksi 1-5: BACKEND-ONLY (tanpa localStorage). Admin mengetik -> debounce
+     800ms -> snapshot penuh ke lapform-day/night.json. Semua device (admin +
+     tamu) polling + terapkan bila server lebih baru (lewati sel yg difokus).
+     Seksi 6 LINE STOP: tetap memakai sistem lokal lama di bawah (belum diubah). */
   var lapActiveStore = 'day';
   var LAP_SKEW_MS = 120000;
   var _lapSaveTimer = {};
@@ -549,28 +554,11 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
   function lapSetSyncedAt(store, t) {
     try { localStorage.setItem('lap-synced-' + store, String(t)); } catch (e) {}
   }
-  function collectLapData() {
+  /* Sistem lokal LAMA — khusus seksi 6 LINE STOP (belum diubah) */
+  function collectStop6() {
     var data = {};
-    var t = document.getElementById('lapTanggal');
-    data.tanggal = t ? t.value : '';
-    function chk(cls) {
-      var el = document.querySelector('.' + cls + ':checked');
-      return el ? el.value : '';
-    }
-    data.pic = chk('pic-chk');
-    data.shiftCore = chk('shift-core');
-    data.shiftTime = chk('shift-time');
-    document.querySelectorAll('.absen-in').forEach(function (el) {
-      if (el.dataset.k) data[el.dataset.k] = el.value;
-    });
-    document.querySelectorAll('.prob-in').forEach(function (el) {
+    document.querySelectorAll('#secStop6 .prob-in').forEach(function (el) {
       data['prob_' + el.dataset.r + '_' + el.dataset.k] = el.value;
-    });
-    document.querySelectorAll('.mat-in').forEach(function (el) {
-      data['mat_' + el.dataset.r + '_' + el.dataset.k] = el.value;
-    });
-    document.querySelectorAll('.kwh-in').forEach(function (el) {
-      data['kwh_' + el.dataset.r + '_' + el.dataset.k] = el.value;
     });
     return data;
   }
@@ -580,52 +568,17 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       el.checked = (val !== undefined && val !== '' && el.value === val);
     });
   }
-  function applyLapData(data) {
+  function applyStop6(data) {
     data = data || {};
     var focusEl = document.activeElement;
-    var el = document.getElementById('lapTanggal');
-    if (el && el !== focusEl && data.tanggal !== undefined && data.tanggal !== '') el.value = data.tanggal;
-    setLapCheck('pic-chk', data.pic);
-    setLapCheck('shift-core', data.shiftCore);
-    if (data.shiftTime !== undefined && data.shiftTime !== '') {
-      setLapCheck('shift-time', data.shiftTime);
-      document.body.classList.toggle('night', data.shiftTime === 'Night');
-    }
-    applyServerLapMode(data);
     var cleared = _lapCleared[lapActiveStore] || {};
-    document.querySelectorAll('.absen-in').forEach(function (e2) {
-      if (e2 === focusEl) return;
-      var k = e2.dataset.k;
-      if (!k) return;
-      var v = data[k];
-      if (v !== undefined && v !== '') e2.value = v;
-      else if (cleared[k]) e2.value = '';
-    });
-    document.querySelectorAll('.prob-in').forEach(function (e2) {
+    document.querySelectorAll('#secStop6 .prob-in').forEach(function (e2) {
       if (e2 === focusEl) return;
       var k = 'prob_' + e2.dataset.r + '_' + e2.dataset.k;
       var v = data[k];
       if (v !== undefined && v !== '') e2.value = v;
       else if (cleared[k]) e2.value = '';
     });
-    document.querySelectorAll('.mat-in').forEach(function (e2) {
-      if (e2 === focusEl) return;
-      var k = 'mat_' + e2.dataset.r + '_' + e2.dataset.k;
-      var v = data[k];
-      if (v !== undefined && v !== '') e2.value = v;
-      else if (cleared[k]) e2.value = '';
-    });
-    document.querySelectorAll('.kwh-in').forEach(function (e2) {
-      if (e2 === focusEl) return;
-      var k = 'kwh_' + e2.dataset.r + '_' + e2.dataset.k;
-      var v = data[k];
-      if (v !== undefined && v !== '') e2.value = v;
-      else if (cleared[k]) e2.value = '';
-    });
-    updateHari();
-    updateKehadiran();
-    updatePakaiAll();
-    updatePakaiKwhAll();
   }
   function clearLapForm() {
     document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
@@ -633,17 +586,15 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) { el.checked = false; });
   }
-  function loadSavedLap() {
-    clearLapForm();
+  function loadStop6() {
     var raw = null;
     try { raw = localStorage.getItem(lapKey(lapActiveStore)); } catch (e) {}
     var data = {};
     try { data = raw ? JSON.parse(raw) : {}; } catch (e) { data = {}; }
-    applyLapData(data);
+    applyStop6(data);
   }
-  function saveLapDataTo(store, shiftTimeOverride) {
-    var snapshot = collectLapData();
-    if (shiftTimeOverride) snapshot.shiftTime = shiftTimeOverride;
+  function saveStop6To(store) {
+    var snapshot = collectStop6();
     var key = lapKey(store);
     var prev = {};
     try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
@@ -671,7 +622,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     if (changed) { try { localStorage.setItem('lap-ts2-' + store, String(now)); } catch (e) {} }
     scheduleLapSave(store);
   }
-  function saveLapData() { saveLapDataTo(lapActiveStore); }
+  function saveLapData() { saveStop6To(lapActiveStore); }
   function scheduleLapSave(store) {
     store = store || lapActiveStore;
     if (isLapGuest()) return;
@@ -680,8 +631,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     if (!_lapDeleted[store]) { try { _lapDeleted[store] = JSON.parse(localStorage.getItem('lap-del-' + store) || '{}') || {}; } catch (e) { _lapDeleted[store] = {}; } }
     _lapPendingSave[store] = true;
     clearTimeout(_lapSaveTimer[store]);
-    var snapshot = { store: store, data: collectLapData() };
-    if (store !== lapActiveStore) snapshot.data.shiftTime = (store === 'night' ? 'Night' : 'Day');
+    var snapshot = { store: store, data: collectStop6() };
     if (_lapDeleted[store] && Object.keys(_lapDeleted[store]).length) {
       snapshot.data._deleted = Object.assign({}, _lapDeleted[store]);
     }
@@ -709,6 +659,14 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     } catch (e) {
       _lapPendingSave[snapshot.store] = false;
     }
+  }
+  function flushStop6(store) {
+    if (!_lapPendingSave[store]) return;
+    clearTimeout(_lapSaveTimer[store]);
+    _lapPendingSave[store] = false;
+    var data = collectStop6();
+    if (_lapDeleted[store] && Object.keys(_lapDeleted[store]).length) data._deleted = Object.assign({}, _lapDeleted[store]);
+    syncLapSave({ store: store, data: data });
   }
   function mergeLapData(store, server) {
     var local = {};
@@ -751,7 +709,7 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     });
     return merged;
   }
-  async function lapSyncFromServer() {
+  async function syncStop6FromServer() {
     if (!window.Sync || !Sync.hasUrl()) return;
     var store = lapActiveStore;
     if (_lapPendingSave[store]) return;
@@ -772,18 +730,126 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
       lapSetLastTs(store, data.updatedAt);
       const values = mergeLapData(store, data);
       try { localStorage.setItem(lapKey(store), JSON.stringify(values)); } catch (e) {}
-      applyLapData(values);
+      applyStop6(values);
       if (needPush()) scheduleLapSave(store);
     } catch (e) {}
   }
-  /* binding simpan: semua isian + checkbox */
-  document.getElementById('lapTanggal').addEventListener('input', function () { saveLapData(); });
-  document.getElementById('lapTanggal').addEventListener('change', function () { saveLapData(); });
-  document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) {
-    el.addEventListener('input', function () { saveLapData(); });
+  /* ── Alur BARU seksi 1-5: backend-only, tanpa localStorage ── */
+  var _formTs = {};
+  var _formUnsent = {};
+  var _formTimer = {};
+  function collectLapForm() {
+    var data = {};
+    var t = document.getElementById('lapTanggal');
+    data.tanggal = t ? t.value : '';
+    function chk(cls) {
+      var el = document.querySelector('.' + cls + ':checked');
+      return el ? el.value : '';
+    }
+    data.pic = chk('pic-chk');
+    data.shiftCore = chk('shift-core');
+    data.shiftTime = chk('shift-time');
+    document.querySelectorAll('.absen-in').forEach(function (el) {
+      if (el.dataset.k) data[el.dataset.k] = el.value;
+    });
+    document.querySelectorAll('#secProd4 .prob-in').forEach(function (el) {
+      data['prob_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
+    document.querySelectorAll('.mat-in').forEach(function (el) {
+      data['mat_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
+    document.querySelectorAll('.kwh-in').forEach(function (el) {
+      data['kwh_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
+    return data;
+  }
+  function applyLapForm(data) {
+    data = data || {};
+    var focusEl = document.activeElement;
+    var el = document.getElementById('lapTanggal');
+    if (el && el !== focusEl && data.tanggal !== undefined) el.value = data.tanggal || '';
+    setLapCheck('pic-chk', data.pic);
+    setLapCheck('shift-core', data.shiftCore);
+    if (data.shiftTime !== undefined && data.shiftTime !== '') {
+      setLapCheck('shift-time', data.shiftTime);
+      document.body.classList.toggle('night', data.shiftTime === 'Night');
+    }
+    var map = [
+      ['.absen-in', function (e2) { return e2.dataset.k; }],
+      ['#secProd4 .prob-in', function (e2) { return 'prob_' + e2.dataset.r + '_' + e2.dataset.k; }],
+      ['.mat-in', function (e2) { return 'mat_' + e2.dataset.r + '_' + e2.dataset.k; }],
+      ['.kwh-in', function (e2) { return 'kwh_' + e2.dataset.r + '_' + e2.dataset.k; }]
+    ];
+    map.forEach(function (pair) {
+      document.querySelectorAll(pair[0]).forEach(function (e2) {
+        if (e2 === focusEl) return;
+        var k = pair[1](e2);
+        if (!k) return;
+        var v = data[k];
+        e2.value = (v === undefined || v === null) ? '' : v;
+      });
+    });
+    updateHari();
+    updateKehadiran();
+    updatePakaiAll();
+    updatePakaiKwhAll();
+  }
+  function pushLapForm(store, snapshot) {
+    if (isLapGuest()) return Promise.resolve(false);
+    if (!window.Sync || !Sync.hasUrl()) return Promise.resolve(false);
+    store = store || lapActiveStore;
+    var data = snapshot || collectLapForm();
+    if (store !== lapActiveStore) data.shiftTime = (store === 'night' ? 'Night' : 'Day');
+    var timeout = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, 25000); });
+    return Promise.race([Sync.save('lapform', { shift: store, action: 'save', data: data }), timeout]).then(function (res) {
+      if (!res || !res.ok) throw new Error('ditolak');
+      if (res.updatedAt) _formTs[store] = res.updatedAt;
+      _formUnsent[store] = false;
+      return true;
+    }).catch(function () { _formUnsent[store] = true; return false; });
+  }
+  function markFormDirty() {
+    if (isLapGuest()) return;
+    var store = lapActiveStore;
+    _formUnsent[store] = true;
+    clearTimeout(_formTimer[store]);
+    _formTimer[store] = setTimeout(function () { pushLapForm(store); }, 800);
+  }
+  function flushLapForm(store) {
+    store = store || lapActiveStore;
+    if (isLapGuest() || !_formUnsent[store]) return;
+    clearTimeout(_formTimer[store]);
+    pushLapForm(store);
+  }
+  async function pullLapForm(store) {
+    if (!window.Sync || !Sync.hasUrl()) return;
+    store = store || lapActiveStore;
+    try {
+      if (_formUnsent[store]) {
+        if (isLapGuest()) return;
+        await pushLapForm(store);
+        if (_formUnsent[store]) return;
+      }
+      const res = await Sync.get('lapform', { shift: store, action: 'get' });
+      if (store !== lapActiveStore) return;
+      const data = (res && res.ok && res.data) ? res.data : null;
+      if (!data || !data.updatedAt) return;
+      if (data.updatedAt === _formTs[store]) return;
+      _formTs[store] = data.updatedAt;
+      applyLapForm(data);
+    } catch (e) {}
+  }
+  /* binding: seksi 1-5 -> backend-only (admin kirim, tamu diam); seksi 6 -> sistem lama */
+  document.getElementById('lapTanggal').addEventListener('input', markFormDirty);
+  document.getElementById('lapTanggal').addEventListener('change', markFormDirty);
+  document.querySelectorAll('.absen-in, #secProd4 .prob-in, .mat-in, .kwh-in').forEach(function (el) {
+    el.addEventListener('input', markFormDirty);
   });
-  document.querySelectorAll('.pic-chk, .shift-core, .shift-time').forEach(function (el) {
-    el.addEventListener('change', function () { saveLapData(); });
+  document.querySelectorAll('.pic-chk, .shift-core').forEach(function (el) {
+    el.addEventListener('change', markFormDirty);
+  });
+  document.querySelectorAll('#secStop6 .prob-in').forEach(function (el) {
+    el.addEventListener('input', function () { saveLapData(); });
   });
   /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
      Hanya berhenti di sel berisi input (sel label dilewati). */
@@ -831,14 +897,16 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     });
   }
   bindTableNav();
-  /* init */
+  /* init: seksi 1-5 langsung dari backend (tanpa local); seksi 6 dari lokal + server */
   lapActiveStore = lapStore();
-  loadSavedLap();
+  loadStop6();
   if (document.querySelector('.shift-time:checked')) {
     document.body.classList.toggle('night', document.querySelector('.shift-time:checked').value === 'Night');
   }
-  lapSyncFromServer();
-  if (window.Sync) setInterval(lapSyncFromServer, Sync.pollMs);
+  pullLapForm(lapActiveStore);
+  if (window.Sync) setInterval(function () { pullLapForm(lapActiveStore); }, Sync.pollMs);
+  syncStop6FromServer();
+  if (window.Sync) setInterval(syncStop6FromServer, Sync.pollMs);
   lapSyncMode();
   if (window.Sync) setInterval(lapSyncMode, Sync.pollMs);
 
@@ -867,15 +935,17 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
     el.style.color = isErr ? '#dc2626' : '';
   }
   document.getElementById('lapClearBtn').addEventListener('click', async () => {
-    const ok = await lapConfirm('Hapus semua isian form (kecuali pilihan Day/Night)?');
+    const ok = await lapConfirm('Hapus isian seksi 1-5 (kecuali Day/Night)?');
     if (!ok) return;
-    document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(el => { el.value = ''; });
+    document.querySelectorAll('.absen-in, #secProd4 .prob-in, .mat-in, .kwh-in').forEach(el => { el.value = ''; });
     const t = document.getElementById('lapTanggal');
     if (t) t.value = '';
     document.querySelectorAll('.pic-chk, .shift-core').forEach(el => { el.checked = false; });
     updateHari();
     updateKehadiran();
-    saveLapData();
+    updatePakaiAll();
+    updatePakaiKwhAll();
+    markFormDirty();
     lapPdfStatus('');
   });
   function lapFileName() {
