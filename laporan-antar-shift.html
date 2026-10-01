@@ -141,17 +141,24 @@ body.night .prob-no { color: #b0b0d0; }
 body.night .prob-in, body.night .mat-in, body.night .kwh-in { color: #f5f5ff; }
 body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { background: #2d2d44; }
 /* ── Fill minimalis sel judul seksi 2, 4, 5 ──
-   Abu terang = sel judul/label (tidak perlu diisi, cukup dibaca);
-   sel input putih = harus diisi; input readonly = otomatis (tidak perlu diisi). */
+   Satu warna untuk semua judul/sub-judul (tidak perlu diisi, cukup dibaca);
+   sel input putih = harus diisi; input readonly = otomatis (tidak perlu diisi).
+   Border dipertegas agar garis tabel jelas. */
 #secAbsen2 .mat-lab, #secProd4 .mat-lab, #secKwh .mat-lab,
-#secProd4 td.bl, #secProd4 td:empty { background: #eef2f7; }
+#secProd4 td.bl, #secProd4 td:empty,
 #secProd4 .merge-center, #secProd4 .sub-h,
-#secAbsen2 .absen-subrow, #secKwh thead th { background: #e2e8f0; }
+#secAbsen2 .absen-subrow, #secKwh thead th { background: #e9edf3; }
+#secAbsen2 .prob-table td, #secAbsen2 .prob-table th,
+#secProd4 .prob-table td, #secProd4 .prob-table th,
+#secKwh .prob-table td, #secKwh .prob-table th { border-color: #9ca3af; }
 #secAbsen2 input[readonly], #secProd4 input[readonly], #secKwh input[readonly] { background: #f1f5f9; color: #64748b; }
 body.night #secAbsen2 .mat-lab, body.night #secProd4 .mat-lab, body.night #secKwh .mat-lab,
-body.night #secProd4 td.bl, body.night #secProd4 td:empty { background: #41415e; }
+body.night #secProd4 td.bl, body.night #secProd4 td:empty,
 body.night #secProd4 .merge-center, body.night #secProd4 .sub-h,
-body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th { background: #4a4a6e; color: #e8e8f0; }
+body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th { background: #41415e; }
+body.night #secAbsen2 .prob-table td, body.night #secAbsen2 .prob-table th,
+body.night #secProd4 .prob-table td, body.night #secProd4 .prob-table th,
+body.night #secKwh .prob-table td, body.night #secKwh .prob-table th { border-color: #888; }
 body.night #secAbsen2 input[readonly], body.night #secProd4 input[readonly], body.night #secKwh input[readonly] { background: #2d2d44; color: #8a8aa3; }
 /* Tema malam (versi Night) — selaras dark-mode Visualisasi WIP Core */
 body.night { background: #2d2d44; color: #e8e8f0; }
