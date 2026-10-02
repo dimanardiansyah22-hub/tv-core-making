@@ -1254,36 +1254,84 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
         var k = e.key;
         if (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'ArrowUp' && k !== 'ArrowDown' && k !== 'Enter') return;
         var rows = Array.from(tbl.querySelectorAll('tbody tr'));
-        var rIdx = -1, cIdx = -1;
-        rows.forEach(function (tr, ri) {
-          Array.from(tr.querySelectorAll('td')).forEach(function (td, ci) {
-            if (td.contains(el)) { rIdx = ri; cIdx = ci; }
-          });
-        });
-        if (rIdx === -1) return;
         function rowHidden(ri) {
           var tr = rows[ri];
           return !!(tr && tr.style && tr.style.display === 'none');
         }
-        function cellInput(ri, ci) {
-          if (ri < 0 || ri >= rows.length || rowHidden(ri)) return null;
-          var tds = rows[ri].querySelectorAll('td');
-          if (ci < 0 || ci >= tds.length) return null;
-          return tds[ci].querySelector('input:not([type="checkbox"])');
+        /* Grid kolom visual: bentangkan colspan/rowspan. Indeks td mentah
+           bergeser tiap baris (label rowspan + header colspan di seksi 4),
+           itu yg membuat panah bawah/Enter mendarat ke kanan bawah. */
+        var grid = [];
+        var span = [];
+        rows.forEach(function (tr) {
+          var cols = [];
+          var ci = 0;
+          Array.from(tr.cells).forEach(function (td) {
+            while ((span[ci] || 0) > 0) { if (!cols[ci]) cols[ci] = null; ci++; }
+            var cs = parseInt(td.getAttribute('colspan') || '1', 10) || 1;
+            var rs = parseInt(td.getAttribute('rowspan') || '1', 10) || 1;
+            for (var q = 0; q < cs; q++) {
+              cols[ci + q] = td;
+              span[ci + q] = Math.max(span[ci + q] || 0, rs);
+            }
+            ci += cs;
+          });
+          grid.push(cols);
+          for (var c = 0; c < span.length; c++) if (span[c] > 0) span[c]--;
+        });
+        function cellInp(td) {
+          return td ? td.querySelector('input:not([type="checkbox"])') : null;
         }
-        var nR = rIdx, nC = cIdx, target = null;
-        if (k === 'ArrowUp') {
-          target = cellInput(nR - 1, nC);
-        } else if (k === 'ArrowDown' || k === 'Enter') {
-          target = cellInput(nR + 1, nC);
+        var rIdx = -1, cIdx = -1;
+        rows.forEach(function (tr, ri) {
+          if (!tr.contains(el)) return;
+          rIdx = ri;
+          var tds = Array.from(tr.cells);
+          for (var ti = 0; ti < tds.length; ti++) {
+            if (tds[ti].contains(el)) {
+              var gcols = grid[ri] || [];
+              for (var g = 0; g < gcols.length; g++) {
+                if (gcols[g] === tds[ti]) { cIdx = g; break; }
+              }
+              break;
+            }
+          }
+        });
+        if (rIdx === -1 || cIdx === -1) return;
+        function rowInputAt(ri, col) {
+          if (ri < 0 || ri >= grid.length || rowHidden(ri)) return null;
+          var cols = grid[ri] || [];
+          var inp = cellInp(cols[col]);
+          if (inp) return inp;
+          for (var d = 1; d <= cols.length; d++) {
+            var ia = cellInp(cols[col - d]);
+            if (ia) return ia;
+            var ib = cellInp(cols[col + d]);
+            if (ib) return ib;
+          }
+          return null;
+        }
+        var target = null;
+        if (k === 'ArrowUp' || k === 'ArrowDown' || k === 'Enter') {
+          var step = (k === 'ArrowUp') ? -1 : 1;
+          var rr = rIdx + step;
+          while (rr >= 0 && rr < grid.length) {
+            if (!rowHidden(rr)) {
+              target = rowInputAt(rr, cIdx);
+              if (target) break;
+            }
+            rr += step;
+          }
         } else {
+          var tds = Array.from(rows[rIdx].cells);
+          var selfCi = -1;
+          tds.forEach(function (td, i) { if (td.contains(el)) selfCi = i; });
           var d = (k === 'ArrowLeft') ? -1 : 1;
-          var cc = nC + d;
-          while (true) {
-            var tds = rows[nR].querySelectorAll('td');
-            if (cc < 0 || cc >= tds.length) break;
-            target = tds[cc].querySelector('input:not([type="checkbox"])');
+          var cc = selfCi + d;
+          while (cc >= 0 && cc < tds.length) {
+            target = cellInp(tds[cc]);
             if (target) break;
+            target = null;
             cc += d;
           }
         }
