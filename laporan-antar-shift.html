@@ -201,6 +201,8 @@ body.night .shift-row:first-child { border-bottom-color: #777; }
    (modal dikecualikan karena background-nya terang). */
 body.night #lapReport, body.night #lapReport *,
 body.night #lapHeader, body.night #lapHeader * { color: #fff; }
+/* Placeholder tetap terbaca di Night (pseudo-element tak ikut aturan color). */
+body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
 .placeholder {
     background: #fff;
     border: 1px solid #e5e7eb;
