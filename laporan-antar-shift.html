@@ -342,7 +342,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   </div>
 </div>
   <div class="lap-sec" id="secStop6">
-    <div class="lap-sec-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>6.LINE STOP / PROBLEM</span><button type="button" class="lap-btn" id="lapWipRefreshBtn" style="padding:4px 10px;font-size:11px" title="Ganti seluruh isi seksi 6 tab ini dengan rekap line stop WIP shift terkait (Day dari Pagi, Night dari Malam)">Tarik dari WIP</button></div>
+    <div class="lap-sec-title">6.LINE STOP / PROBLEM</div>
     <div class="prob-wrap">
     <table class="prob-table">
       <thead><tr><th style="width:34px">No</th><th>TYPE</th><th>DIE/MESIN</th><th>MASALAH</th><th>PENANGGULANGAN</th><th>DURASI</th><th>PIC</th></tr></thead>
@@ -1066,32 +1066,79 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     function n(s) { return String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' '); }
     return n(me) + '|' + n(pr) + '|' + n(pg) + '|' + n(wt);
   }
-  function lapFillStop6FromWip(notes) {
-    if (!notes || !notes.length) return false;
+  /* Titipan PIC per mesin (memori sesi): agar PIC tidak hilang saat baris
+     ditulis ulang cermin (mis. catatan sempat tak terbaca sepolling). */
+  var _lapPicKeep = {};
+  function lapStashPic(me, pic) {
+    var m = (typeof lapNormMachine === 'function') ? lapNormMachine(me) : String(me || '').trim();
+    pic = String(pic == null ? '' : pic).trim();
+    if (m && pic) _lapPicKeep[m] = pic;
+  }
+  /* Cermin penuh WIP → seksi 6: baris = catatan line stop shift pasangan
+     (Day←Pagi, Night←Malam), maksimal 16. WIP kosong → laporan kosong.
+     Baris yg cocok mesin dipakai ulang (PIC dipertahankan); baris yatim
+     dikosongkan (PIC-nya dititipkan dulu). Isian manual di luar WIP akan
+     ikut terhapus — catat semua line stop di Visualisasi WIP. */
+  function lapMirrorStop6FromWip(notes) {
+    notes = (notes || []).slice(0, 16);
+    function C(tr, k) { return tr.querySelector('.prob-in[data-k="' + k + '"]'); }
+    function get(tr, k) { var el = C(tr, k); return el ? el.value : ''; }
     var rows = [];
     document.querySelectorAll('#secStop6 tbody tr').forEach(function (tr) {
-      function cell(k) { var el = tr.querySelector('.prob-in[data-k="' + k + '"]'); return el ? { el: el, v: el.value } : null; }
-      rows.push({ mesin: cell('mesin'), masalah: cell('masalah'), pg: cell('pg'), durasi: cell('durasi') });
+      if (tr.id === 'stop6EmptyRow' || !tr.querySelector('.prob-in')) return;
+      rows.push(tr);
     });
-    var have = {};
-    rows.forEach(function (r) {
-      if (r.mesin && r.masalah && r.pg && r.durasi) have[lapRowSig(lapNormMachine(r.mesin.v), r.masalah.v, r.pg.v, r.durasi.v)] = true;
-    });
+    var focusEl = document.activeElement;
+    function hasFocus(tr) { return !!(focusEl && tr.contains && tr.contains(focusEl)); }
+    function sigVals(me, pr, pg, wt) { return lapRowSig(lapNormMachine(me), pr, pg, wt); }
+    function curSig(tr) { return sigVals(get(tr, 'mesin'), get(tr, 'masalah'), get(tr, 'pg'), get(tr, 'durasi')); }
+    function noteSig(n) { return sigVals(n.me, n.pr, n.pg, n.wt); }
+    function fmtMe(n) { return (typeof lapFormatMesin === 'function') ? lapFormatMesin(n.me) : n.me; }
     var changed = false;
+    function setCell(tr, k, v) {
+      var el = C(tr, k);
+      v = (v == null) ? '' : String(v);
+      if (!el || el === focusEl || el.value === v) return;
+      el.value = v; changed = true;
+    }
+    var assigned = [];
+    for (var a = 0; a < rows.length; a++) assigned.push(false);
     notes.forEach(function (n) {
-      if (!n.me && !n.pr && !n.pg && !n.wt) return;
-      if (have[lapRowSig(lapNormMachine(n.me), n.pr, n.pg, n.wt)]) return;
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        if (!r.mesin || !r.masalah || !r.pg || !r.durasi) continue;
-        if (r.mesin.v || r.masalah.v || r.pg.v || r.durasi.v) continue;
-        var fme = (typeof lapFormatMesin === 'function') ? lapFormatMesin(n.me) : n.me;
-        r.mesin.el.value = fme; r.masalah.el.value = n.pr; r.pg.el.value = n.pg; r.durasi.el.value = n.wt;
-        r.mesin.v = fme; r.masalah.v = n.pr; r.pg.v = n.pg; r.durasi.v = n.wt;
-        have[lapRowSig(lapNormMachine(fme), n.pr, n.pg, n.wt)] = true;
-        changed = true;
-        break;
+      var nm = lapNormMachine(n.me);
+      var idx = -1, i;
+      if (nm) {
+        for (i = 0; i < rows.length; i++) {
+          if (assigned[i] || hasFocus(rows[i])) continue;
+          if (lapNormMachine(get(rows[i], 'mesin')) === nm) { idx = i; break; }
+        }
       }
+      if (idx === -1) {
+        for (i = 0; i < rows.length; i++) {
+          if (assigned[i] || hasFocus(rows[i])) continue;
+          idx = i; break;
+        }
+      }
+      if (idx === -1) return;
+      assigned[idx] = true;
+      var tr = rows[idx];
+      var machineMatched = !!(nm && lapNormMachine(get(tr, 'mesin')) === nm);
+      if (curSig(tr) !== noteSig(n)) {
+        lapStashPic(get(tr, 'mesin'), get(tr, 'pic'));
+        setCell(tr, 'mesin', fmtMe(n));
+        setCell(tr, 'masalah', n.pr);
+        setCell(tr, 'pg', n.pg);
+        setCell(tr, 'durasi', n.wt);
+      }
+      var picEl = C(tr, 'pic');
+      if (picEl && picEl !== focusEl) {
+        if (!machineMatched && picEl.value !== '') { picEl.value = ''; changed = true; }
+        if (picEl.value === '' && nm && _lapPicKeep[nm]) { picEl.value = _lapPicKeep[nm]; changed = true; }
+      }
+    });
+    rows.forEach(function (tr, i) {
+      if (assigned[i] || hasFocus(tr)) return;
+      lapStashPic(get(tr, 'mesin'), get(tr, 'pic'));
+      ['mesin', 'masalah', 'pg', 'durasi', 'type', 'pic'].forEach(function (k) { setCell(tr, k, ''); });
     });
     return changed;
   }
@@ -1104,21 +1151,18 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
         if (res && res.ok && res.data) data = res.data;
       }
     } catch (e) { data = null; }
-    if (!data) {
-      try { data = JSON.parse(localStorage.getItem('wip-core-data-' + wipShift) || 'null'); } catch (e) { data = null; }
-    }
+    if (!data) return null;
     return lapParseWipNotes(data);
   }
   async function lapPullStop6FromWip(store) {
     store = store || lapActiveStore;
     var notes = await lapGetWipNotes(store);
     if (store !== lapActiveStore) return;
-    if (!notes.length) return;
-    if (lapFillStop6FromWip(notes)) {
-      if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
-      saveLapData();
-      if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
-    }
+    if (notes === null) return;
+    var ch = lapMirrorStop6FromWip(notes);
+    if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
+    if (ch) saveLapData();
+    if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
   }
   async function lapRefreshStop6() {
     var store = lapActiveStore;
@@ -1126,43 +1170,6 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     if (lapActiveStore !== store) return;
     try { await lapPullStop6FromWip(store); } catch (e) {}
   }
-  /* Tombol "Tarik dari WIP": bangun ulang draft seksi 6 tab aktif dari rekap
-     line stop WIP shift pasangannya (Day←Pagi, Night←Malam). Dipakai untuk
-     membersihkan data yg sempat tercampur antar shift. Mengganti seluruh
-     16 baris (termasuk Type & PIC) lalu menyimpan + sinkron seperti biasa. */
-  async function lapRebuildStop6FromWip() {
-    if (isLapGuest()) return;
-    var store = lapActiveStore;
-    var tabName = (store === 'night') ? 'Night' : 'Day';
-    var wipName = (store === 'night') ? 'Malam' : 'Pagi';
-    const ok = await lapConfirm('Ganti seluruh isi seksi 6 (' + tabName + ') dengan rekap line stop WIP Shift ' + wipName + '? Isian manual termasuk PIC ikut terhapus.');
-    if (!ok || lapActiveStore !== store) return;
-    lapPdfStatus('Menarik line stop WIP Shift ' + wipName + '…');
-    var notes = [];
-    try { notes = await lapGetWipNotes(store); } catch (e) { notes = []; }
-    if (lapActiveStore !== store) return;
-    if (!notes.length) { lapPdfStatus('Tidak ada line stop di WIP Shift ' + wipName + ' — seksi 6 tidak diubah.', true); return; }
-    var rows = Array.from(document.querySelectorAll('#secStop6 tbody tr'));
-    var cols = ['type', 'mesin', 'masalah', 'pg', 'durasi', 'pic'];
-    rows.forEach(function (tr, i) {
-      var n = notes[i];
-      cols.forEach(function (k) {
-        var el = tr.querySelector('.prob-in[data-k="' + k + '"]');
-        if (!el) return;
-        if (k === 'mesin') el.value = (n && typeof lapFormatMesin === 'function') ? lapFormatMesin(n.me) : (n ? n.me : '');
-        else if (k === 'masalah') el.value = n ? n.pr : '';
-        else if (k === 'pg') el.value = n ? n.pg : '';
-        else if (k === 'durasi') el.value = n ? n.wt : '';
-        else el.value = '';
-      });
-    });
-    if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
-    saveLapData();
-    if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
-    var extra = notes.length > rows.length ? ' (+' + (notes.length - rows.length) + ' catatan melebihi 16 baris, tidak masuk)' : '';
-    lapPdfStatus('Seksi 6 (' + tabName + ') direkap dari ' + notes.length + ' line stop WIP Shift ' + wipName + '.' + extra);
-  }
-  document.getElementById('lapWipRefreshBtn').addEventListener('click', function () { lapRebuildStop6FromWip(); });
   /* ── Tampilan seksi 6 mengikuti isi: yg tampil = baris terisi (+1 baris
      kosong untuk entry manual); kosong semua → "Tidak ada Problem" (klik
      untuk buka baris manual). Nomor urut tampilan dinomori ulang; data-r
