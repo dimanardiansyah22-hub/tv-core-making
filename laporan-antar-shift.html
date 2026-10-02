@@ -947,10 +947,35 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
      input mesin, tiap mode berubah, dan tiap data seksi 6 dimuat. */
   var LAP_TR1_BASE = { 'ICM 002': 'Fr/Re', 'ICM 003': 'Wj/Sb', 'ICM 008': 'C/C' };
   var LAP_TR2_BASE = { 'ICM 007': 'Fr/Re', 'ICM 006': 'Wj/Sb', 'ICM 009': 'C/C' };
+  /* Kolom Nomor Die seksi 4 (data-r=2) per mesin, kiri→kanan:
+     c0=ICM 008, c1=ICM 002, c2=ICM 003, c3=ICM 009, c4=ICM 007, c5=ICM 006. */
+  var LAP_DIE_COL = { 'ICM 008': 'c0', 'ICM 002': 'c1', 'ICM 003': 'c2', 'ICM 009': 'c3', 'ICM 007': 'c4', 'ICM 006': 'c5' };
   function lapNormMachine(s) {
-    var t = String(s || '').toUpperCase().replace(/\s+/g, ' ').trim();
+    var t = String(s || '').toUpperCase();
+    if (t.indexOf('/') !== -1) t = t.split('/').pop();
+    t = t.replace(/\s+/g, ' ').trim();
     t = t.replace(/^(ICM)\s*0*(\d+)$/, function (m0, p1, p2) { return p1 + ' ' + ('00' + p2).slice(-3); });
     return t;
+  }
+  function lapDieForMachine(machine) {
+    var m = lapNormMachine(machine);
+    var col = LAP_DIE_COL[m];
+    if (!col) return '';
+    var el = document.querySelector('#secProd4 .prob-in[data-r="2"][data-k="' + col + '"]');
+    return el ? String(el.value || '').trim() : '';
+  }
+  /* Format DIE/MESIN seksi 6: "NomorDie/ICM XXX" memakai nomor die yg
+     terpasang (baris Nomor Die seksi 4 tab ini). Tanpa nomor die → mesin saja. */
+  function lapFormatMesin(machine) {
+    var raw = String(machine || '').trim();
+    if (!raw) return '';
+    var m = lapNormMachine(raw);
+    if (!LAP_DIE_COL[m]) return raw;
+    var die = lapDieForMachine(m);
+    if (die) return die + '/' + m;
+    var parts = raw.split('/');
+    if (parts.length > 1 && parts[0].trim() !== '') return parts[0].trim() + '/' + m;
+    return m;
   }
   function lapTypeForMachine(machine, mode) {
     var m = lapNormMachine(machine);
@@ -979,6 +1004,10 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   document.querySelectorAll('#secStop6 .prob-in[data-k="mesin"]').forEach(function (el) {
     el.addEventListener('input', function () {
       if (typeof lapPlanMode === 'undefined') return;
+      if (typeof lapFormatMesin === 'function') {
+        var f = lapFormatMesin(el.value);
+        if (f && f !== el.value) el.value = f;
+      }
       var t = lapTypeForMachine(el.value, lapPlanMode);
       if (!t) return;
       var tel = lapTypeElForRow(el.dataset.r);
@@ -1039,19 +1068,20 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     });
     var have = {};
     rows.forEach(function (r) {
-      if (r.mesin && r.masalah && r.pg && r.durasi) have[lapRowSig(r.mesin.v, r.masalah.v, r.pg.v, r.durasi.v)] = true;
+      if (r.mesin && r.masalah && r.pg && r.durasi) have[lapRowSig(lapNormMachine(r.mesin.v), r.masalah.v, r.pg.v, r.durasi.v)] = true;
     });
     var changed = false;
     notes.forEach(function (n) {
       if (!n.me && !n.pr && !n.pg && !n.wt) return;
-      if (have[lapRowSig(n.me, n.pr, n.pg, n.wt)]) return;
+      if (have[lapRowSig(lapNormMachine(n.me), n.pr, n.pg, n.wt)]) return;
       for (var i = 0; i < rows.length; i++) {
         var r = rows[i];
         if (!r.mesin || !r.masalah || !r.pg || !r.durasi) continue;
         if (r.mesin.v || r.masalah.v || r.pg.v || r.durasi.v) continue;
-        r.mesin.el.value = n.me; r.masalah.el.value = n.pr; r.pg.el.value = n.pg; r.durasi.el.value = n.wt;
-        r.mesin.v = n.me; r.masalah.v = n.pr; r.pg.v = n.pg; r.durasi.v = n.wt;
-        have[lapRowSig(n.me, n.pr, n.pg, n.wt)] = true;
+        var fme = (typeof lapFormatMesin === 'function') ? lapFormatMesin(n.me) : n.me;
+        r.mesin.el.value = fme; r.masalah.el.value = n.pr; r.pg.el.value = n.pg; r.durasi.el.value = n.wt;
+        r.mesin.v = fme; r.masalah.v = n.pr; r.pg.v = n.pg; r.durasi.v = n.wt;
+        have[lapRowSig(lapNormMachine(fme), n.pr, n.pg, n.wt)] = true;
         changed = true;
         break;
       }
@@ -1111,7 +1141,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       cols.forEach(function (k) {
         var el = tr.querySelector('.prob-in[data-k="' + k + '"]');
         if (!el) return;
-        if (k === 'mesin') el.value = n ? n.me : '';
+        if (k === 'mesin') el.value = (n && typeof lapFormatMesin === 'function') ? lapFormatMesin(n.me) : (n ? n.me : '');
         else if (k === 'masalah') el.value = n ? n.pr : '';
         else if (k === 'pg') el.value = n ? n.pg : '';
         else if (k === 'durasi') el.value = n ? n.wt : '';
