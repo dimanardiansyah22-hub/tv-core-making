@@ -160,7 +160,7 @@ body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { 
 #secMaterial .prob-table td, #secMaterial .prob-table th { border-color: #9ca3af; }
 #secProd4 input[readonly] { background: #f1f5f9; color: #64748b; }
 /* Total seksi 4 sefill judul: font hitam (day) / putih (night) agar kontras */
-#secProd4 .prob-in[data-r="9"] { background: #e9edf3; color: #000; }
+#secProd4 .prob-in[data-r="9"], #secProd4 .prob-in[data-r="22"] { background: #e9edf3; color: #000; }
 body.night #secAbsen2 .mat-lab, body.night #secProd4 .mat-lab, body.night #secKwh .mat-lab, body.night #secMaterial .mat-lab,
 body.night #secProd4 td.bl, body.night #secProd4 td:empty,
 body.night #secProd4 .merge-center, body.night #secProd4 .sub-h,
@@ -171,7 +171,7 @@ body.night #secProd4 .prob-table td, body.night #secProd4 .prob-table th,
 body.night #secKwh .prob-table td, body.night #secKwh .prob-table th,
 body.night #secMaterial .prob-table td, body.night #secMaterial .prob-table th { border-color: #888; }
 body.night #secProd4 input[readonly] { background: #2d2d44; color: #8a8aa3; }
-body.night #secProd4 .prob-in[data-r="9"] { background: #41415e; color: #fff; }
+body.night #secProd4 .prob-in[data-r="9"], body.night #secProd4 .prob-in[data-r="22"] { background: #41415e; color: #fff; }
 /* ── Toggle indikator TR seksi 4 mengikuti Mode Produksi (indikator saja) ──
    Ratio = pil merah memilih 1 TR; All 2 TR = pil biru memilih 2 TR. */
 #secProd4 .tr-pill { display: inline-block; padding: 2px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .04em; border: 1.5px solid #9ca3af; color: #6b7280; background: transparent; }
@@ -314,6 +314,9 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
 <tr><td class="merge-center pcol">BC 2 TR</td><td class="pcol"><input class="prob-in" data-r="18" data-k="c1" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="18" data-k="c2" autocomplete="off"></td><td class="merge-center pcol">BC 2 TR</td><td class="pcol"><input class="prob-in" data-r="18" data-k="c4" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="18" data-k="c5" autocomplete="off"></td></tr>
 <tr><td class="bl" rowspan="2"><div class="sub-line"><span class="sub-lab2">TOTAL :</span><input class="prob-in lab-in" data-r="15" data-k="lab" autocomplete="off"></div></td><td class="merge-center pcol">BC 1 TR</td><td class="pcol"><input class="prob-in" data-r="15" data-k="c1" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="15" data-k="c2" autocomplete="off"></td><td class="merge-center pcol">BC 1 TR</td><td class="pcol"><input class="prob-in" data-r="15" data-k="c4" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="15" data-k="c5" autocomplete="off"></td></tr>
 <tr><td class="merge-center pcol">BC 2 TR</td><td class="pcol tfill"><input class="prob-in" data-r="19" data-k="c1" autocomplete="off"></td><td class="pcol tfill"><input class="prob-in" data-r="19" data-k="c2" autocomplete="off"></td><td class="merge-center pcol">BC 2 TR</td><td class="pcol tfill"><input class="prob-in" data-r="19" data-k="c4" autocomplete="off"></td><td class="pcol tfill"><input class="prob-in" data-r="19" data-k="c5" autocomplete="off"></td></tr>
+<tr><td colspan="2" class="merge-center">BC 1 TR</td><td class="merge-center pcol">BC 1 TR</td><td class="pcol"><input class="prob-in" data-r="20" data-k="c1" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="20" data-k="c2" autocomplete="off"></td><td class="merge-center pcol">BC 1 TR</td><td class="pcol"><input class="prob-in" data-r="20" data-k="c4" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="20" data-k="c5" autocomplete="off"></td></tr>
+<tr><td colspan="2" class="merge-center">BC 2 TR</td><td class="merge-center pcol">BC 2 TR</td><td class="pcol"><input class="prob-in" data-r="21" data-k="c1" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="21" data-k="c2" autocomplete="off"></td><td class="merge-center pcol">BC 2 TR</td><td class="pcol"><input class="prob-in" data-r="21" data-k="c4" autocomplete="off"></td><td class="pcol"><input class="prob-in" data-r="21" data-k="c5" autocomplete="off"></td></tr>
+<tr><td colspan="2" class="merge-center">TOTAL</td><td class="merge-center pcol">TOTAL</td><td class="pcol tfill"><input class="prob-in" data-r="22" data-k="c1" autocomplete="off" readonly title="Otomatis: BC 1 TR + BC 2 TR"></td><td class="pcol tfill"><input class="prob-in" data-r="22" data-k="c2" autocomplete="off" readonly title="Otomatis: BC 1 TR + BC 2 TR"></td><td class="merge-center pcol">TOTAL</td><td class="pcol tfill"><input class="prob-in" data-r="22" data-k="c4" autocomplete="off" readonly title="Otomatis: BC 1 TR + BC 2 TR"></td><td class="pcol tfill"><input class="prob-in" data-r="22" data-k="c5" autocomplete="off" readonly title="Otomatis: BC 1 TR + BC 2 TR"></td></tr>
       
     </table>
     </div>
@@ -457,6 +460,21 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   function updateProdTotalAll() {
     ['c0', 'c1', 'c2', 'c3', 'c4', 'c5'].forEach(updateProdTotalCol);
   }
+  function updatePlanTotalCol(c) {
+    function val(r) {
+      var el = document.querySelector('#secProd4 .prob-in[data-r="' + r + '"][data-k="' + c + '"]');
+      return el ? parseNum(el.value) : 0;
+    }
+    var out = document.querySelector('#secProd4 .prob-in[data-r="22"][data-k="' + c + '"]');
+    if (!out) return;
+    var a = document.querySelector('#secProd4 .prob-in[data-r="20"][data-k="' + c + '"]');
+    var b = document.querySelector('#secProd4 .prob-in[data-r="21"][data-k="' + c + '"]');
+    if (a && b && !a.value && !b.value) { out.value = ''; return; }
+    out.value = fmtNumID(val(20) + val(21));
+  }
+  function updatePlanTotalAll() {
+    ['c1', 'c2', 'c4', 'c5'].forEach(updatePlanTotalCol);
+  }
   function updateKehadiran() {
     var mpEl = document.querySelector('.absen-in[data-k="mp"]');
     var abEl = document.querySelector('.absen-in[data-k="absen"]');
@@ -483,6 +501,10 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     el.addEventListener('input', function () { updateProdTotalCol(el.dataset.k); });
   });
   updateProdTotalAll();
+  document.querySelectorAll('#secProd4 .prob-in[data-r="20"], #secProd4 .prob-in[data-r="21"]').forEach(function (el) {
+    el.addEventListener('input', function () { updatePlanTotalCol(el.dataset.k); });
+  });
+  updatePlanTotalAll();
   (function () {
     function pad2(n) { return ('0' + n).slice(-2); }
     function openLapCalendar() {
@@ -927,6 +949,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     updatePakaiAll();
     updatePakaiKwhAll();
     updateProdTotalAll();
+    updatePlanTotalAll();
   }
   /* Kirim berurutan (satu per shift): tanpa pengaman ini POST yg tumpang
      tindih bisa tiba terbalik di server sehingga snapshot BASI menimpa
@@ -1495,6 +1518,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     updatePakaiAll();
     updatePakaiKwhAll();
     updateProdTotalAll();
+    updatePlanTotalAll();
     markFormDirty();
     lapPdfStatus('');
   });
