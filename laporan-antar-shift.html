@@ -152,24 +152,26 @@ body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { 
 #secAbsen2 .mat-lab, #secProd4 .mat-lab, #secKwh .mat-lab, #secMaterial .mat-lab,
 #secProd4 td.bl, #secProd4 td:empty,
 #secProd4 .merge-center, #secProd4 .sub-h,
-#secAbsen2 .absen-subrow, #secKwh thead th, #secMaterial thead th { background: #e9edf3; }
+#secAbsen2 .absen-subrow, #secKwh thead th, #secMaterial thead th, #secFollow7 thead th { background: #e9edf3; }
 #secProd4 td.tfill { background: #e9edf3; }
 #secAbsen2 .prob-table td, #secAbsen2 .prob-table th,
 #secProd4 .prob-table td, #secProd4 .prob-table th,
 #secKwh .prob-table td, #secKwh .prob-table th,
-#secMaterial .prob-table td, #secMaterial .prob-table th { border-color: #9ca3af; }
+#secMaterial .prob-table td, #secMaterial .prob-table th,
+#secFollow7 .prob-table td, #secFollow7 .prob-table th { border-color: #9ca3af; }
 #secProd4 input[readonly] { background: #f1f5f9; color: #64748b; }
 /* Total seksi 4 sefill judul: font hitam (day) / putih (night) agar kontras */
 #secProd4 .prob-in[data-r="9"], #secProd4 .prob-in[data-r="22"] { background: #e9edf3; color: #000; }
 body.night #secAbsen2 .mat-lab, body.night #secProd4 .mat-lab, body.night #secKwh .mat-lab, body.night #secMaterial .mat-lab,
 body.night #secProd4 td.bl, body.night #secProd4 td:empty,
 body.night #secProd4 .merge-center, body.night #secProd4 .sub-h,
-body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th, body.night #secMaterial thead th { background: #41415e; }
+body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th, body.night #secMaterial thead th, body.night #secFollow7 thead th { background: #41415e; }
 body.night #secProd4 td.tfill { background: #41415e; }
 body.night #secAbsen2 .prob-table td, body.night #secAbsen2 .prob-table th,
 body.night #secProd4 .prob-table td, body.night #secProd4 .prob-table th,
 body.night #secKwh .prob-table td, body.night #secKwh .prob-table th,
-body.night #secMaterial .prob-table td, body.night #secMaterial .prob-table th { border-color: #888; }
+body.night #secMaterial .prob-table td, body.night #secMaterial .prob-table th,
+body.night #secFollow7 .prob-table td, body.night #secFollow7 .prob-table th { border-color: #888; }
 body.night #secProd4 input[readonly] { background: #2d2d44; color: #8a8aa3; }
 body.night #secProd4 .prob-in[data-r="9"], body.night #secProd4 .prob-in[data-r="22"] { background: #41415e; color: #fff; }
 /* ── Toggle indikator TR seksi 4 mengikuti Mode Produksi (indikator saja) ──
@@ -381,7 +383,26 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     </table>
     </div>
   </div>
-</div><script>
+</div>
+<div class="lap-sec" id="secFollow7">
+  <div class="lap-sec-title">7.FOLLOW UP</div>
+  <div class="prob-wrap">
+  <table class="prob-table">
+    <thead><tr><th style="width:34px">No</th><th style="width:130px">FAKTOR (4M)</th><th>HAL YANG PERLU DIPANTAU</th><th>DAMPAK (QCDMP)</th><th>HASIL PEMANTAUAN<br><span style="font-size:10px;font-weight:600;letter-spacing:0;text-transform:none">(Oleh Partner Shift)</span></th></tr></thead>
+    <tbody>
+<tr><td class="prob-no">1</td><td><input class="prob-in" data-r="0" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">2</td><td><input class="prob-in" data-r="1" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">3</td><td><input class="prob-in" data-r="2" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">4</td><td><input class="prob-in" data-r="3" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">5</td><td><input class="prob-in" data-r="4" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">6</td><td><input class="prob-in" data-r="5" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">7</td><td><input class="prob-in" data-r="6" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="hasil" autocomplete="off"></td></tr>
+<tr><td class="prob-no">8</td><td><input class="prob-in" data-r="7" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="hasil" autocomplete="off"></td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+<script>
 (function () {
   var HARI = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   function parseTanggal(str) {
@@ -697,10 +718,10 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   function lapSetSyncedAt(store, t) {
     try { localStorage.setItem('lap-synced-' + store, String(t)); } catch (e) {}
   }
-  /* Sistem lokal LAMA — khusus seksi 6 LINE STOP (belum diubah) */
+  /* Sistem lokal LAMA — seksi 6 LINE STOP + seksi 7 FOLLOW UP (per Day/Night) */
   function collectStop6() {
     var data = {};
-    document.querySelectorAll('#secStop6 .prob-in').forEach(function (el) {
+    document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (el) {
       data['prob_' + el.dataset.r + '_' + el.dataset.k] = el.value;
     });
     return data;
@@ -714,7 +735,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   function applyStop6(data) {
     data = data || {};
     var focusEl = document.activeElement;
-    document.querySelectorAll('#secStop6 .prob-in').forEach(function (e2) {
+    document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (e2) {
       if (e2 === focusEl) return;
       var k = 'prob_' + e2.dataset.r + '_' + e2.dataset.k;
       var v = data[k];
@@ -1067,7 +1088,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   document.querySelectorAll('.pic-chk, .shift-core').forEach(function (el) {
     el.addEventListener('change', markFormDirty);
   });
-  document.querySelectorAll('#secStop6 .prob-in').forEach(function (el) {
+  document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (el) {
     el.addEventListener('input', function () {
       saveLapData();
       if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
