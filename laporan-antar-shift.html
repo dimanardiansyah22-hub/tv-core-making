@@ -387,7 +387,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
   </div>
 </div>
 <div class="lap-sec" id="secFollow7">
-  <div class="lap-sec-title">7.FOLLOW UP</div>
+  <div class="lap-sec-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>7.FOLLOW UP</span><button type="button" class="lap-btn" id="lapFollowAddBtn" style="padding:4px 10px;font-size:11px" title="Tambah baris isian">+ Tambah Baris</button></div>
   <div class="prob-wrap">
   <table class="prob-table">
     <thead><tr><th style="width:34px">No</th><th style="width:130px">FAKTOR (4M)</th><th>HAL YANG PERLU DIPANTAU</th><th style="width:130px">DAMPAK (QCDMP)</th><th>HASIL PEMANTAUAN<br><span style="font-size:10px;font-weight:600;letter-spacing:0;text-transform:none">(Oleh Partner Shift)</span></th></tr></thead>
@@ -395,11 +395,6 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
 <tr><td class="prob-no">1</td><td><input class="prob-in" data-r="0" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="0" data-k="hasil" autocomplete="off"></td></tr>
 <tr><td class="prob-no">2</td><td><input class="prob-in" data-r="1" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="1" data-k="hasil" autocomplete="off"></td></tr>
 <tr><td class="prob-no">3</td><td><input class="prob-in" data-r="2" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="2" data-k="hasil" autocomplete="off"></td></tr>
-<tr><td class="prob-no">4</td><td><input class="prob-in" data-r="3" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="3" data-k="hasil" autocomplete="off"></td></tr>
-<tr><td class="prob-no">5</td><td><input class="prob-in" data-r="4" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="4" data-k="hasil" autocomplete="off"></td></tr>
-<tr><td class="prob-no">6</td><td><input class="prob-in" data-r="5" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="5" data-k="hasil" autocomplete="off"></td></tr>
-<tr><td class="prob-no">7</td><td><input class="prob-in" data-r="6" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="6" data-k="hasil" autocomplete="off"></td></tr>
-<tr><td class="prob-no">8</td><td><input class="prob-in" data-r="7" data-k="faktor" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="pantau" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="dampak" autocomplete="off"></td><td><input class="prob-in" data-r="7" data-k="hasil" autocomplete="off"></td></tr>
     </tbody>
   </table>
   </div>
@@ -760,6 +755,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     try { raw = localStorage.getItem(lapKey(lapActiveStore)); } catch (e) {}
     var data = {};
     try { data = raw ? JSON.parse(raw) : {}; } catch (e) { data = {}; }
+    if (typeof lapFollowEnsureRows === 'function') lapFollowEnsureRows(data);
     applyStop6(data);
   }
   function saveStop6To(store) {
@@ -899,6 +895,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
       lapSetLastTs(store, data.updatedAt);
       const values = mergeLapData(store, data);
       try { localStorage.setItem(lapKey(store), JSON.stringify(values)); } catch (e) {}
+      if (typeof lapFollowEnsureRows === 'function') lapFollowEnsureRows(values);
       applyStop6(values);
       if (needPush()) scheduleLapSave(store);
     } catch (e) {}
@@ -1095,6 +1092,53 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
       saveLapData();
       if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
     });
+  });
+  /* Seksi 7: 3 baris siap isi + tombol tambah manual. Baris dinamis pakai
+     data-r lanjutan; simpan/sinkron server otomatis ikut (kunci generik).
+     Saat data dimuat, baris kurang otomatis dilengkapi agar isian lama
+     (r>=3) tetap tampil. */
+  function lapFollowRows() {
+    return Array.from(document.querySelectorAll('#secFollow7 tbody tr')).filter(function (tr) { return tr.querySelector('.prob-in'); });
+  }
+  function lapFollowBindRow(tr) {
+    tr.querySelectorAll('.prob-in').forEach(function (el) {
+      el.addEventListener('input', function () { saveLapData(); });
+    });
+  }
+  function lapFollowAddRow() {
+    var maxR = -1;
+    lapFollowRows().forEach(function (tr) {
+      tr.querySelectorAll('.prob-in').forEach(function (el) {
+        var r = parseInt(el.dataset.r, 10);
+        if (!isNaN(r) && r > maxR) maxR = r;
+      });
+    });
+    var r = maxR + 1;
+    var tr = document.createElement('tr');
+    var html = '<td class="prob-no">' + (lapFollowRows().length + 1) + '</td>';
+    ['faktor', 'pantau', 'dampak', 'hasil'].forEach(function (k) {
+      html += '<td><input class="prob-in" data-r="' + r + '" data-k="' + k + '" autocomplete="off"></td>';
+    });
+    tr.innerHTML = html;
+    document.querySelector('#secFollow7 tbody').appendChild(tr);
+    lapFollowBindRow(tr);
+    return tr;
+  }
+  function lapFollowEnsureRows(data) {
+    data = data || {};
+    var need = 0;
+    Object.keys(data).forEach(function (k) {
+      var m = String(k).match(/^prob_(\d+)_(faktor|pantau|dampak|hasil)$/);
+      if (m && data[k] !== '' && data[k] != null) need = Math.max(need, parseInt(m[1], 10) + 1);
+    });
+    var guard = 0;
+    while (lapFollowRows().length < need && guard++ < 40) lapFollowAddRow();
+  }
+  document.getElementById('lapFollowAddBtn').addEventListener('click', function () {
+    if (isLapGuest()) return;
+    var tr = lapFollowAddRow();
+    var first = tr.querySelector('.prob-in');
+    if (first) first.focus();
   });
   /* ── Otomatisasi kolom Type seksi 6 dari DIE/MESIN + Mode Produksi ──
      Ratio    : ICM 002→Fr/Re 1 TR, 003→Wj/Sb 1 TR, 008→C/C 1 TR,
