@@ -1216,17 +1216,31 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   if (document.querySelector('.shift-time:checked')) {
     document.body.classList.toggle('night', document.querySelector('.shift-time:checked').value === 'Night');
   }
-  pullLapForm(lapActiveStore);
-  if (window.Sync) setInterval(function () { pullLapForm(lapActiveStore); }, Sync.pollMs);
-  if (typeof lapRefreshStop6 === 'function') {
-    lapRefreshStop6();
-    if (window.Sync) setInterval(lapRefreshStop6, Sync.pollMs);
-  } else {
-    syncStop6FromServer();
-    if (window.Sync) setInterval(syncStop6FromServer, Sync.pollMs);
+  /* Boot sinkron backend DITUNDA sampai sync-core.js siap (script inline ini
+     berjalan SEBELUM sync-core.js dimuat). Tanpa tunda, pull awal + interval
+     tak pernah jalan sehingga seksi 1-5 (murni backend, tanpa local) tampak
+     kosong/hilang sampai pengguna pindah tab. Tetap based on backend. */
+  var _lapBooted = false;
+  var _lapBootTries = 0;
+  function lapBootSync() {
+    if (_lapBooted) return;
+    if (!window.Sync || !Sync.hasUrl()) {
+      if (++_lapBootTries < 120) setTimeout(lapBootSync, 500);
+      return;
+    }
+    _lapBooted = true;
+    try { pullLapForm(lapActiveStore); } catch (e) {}
+    try {
+      if (typeof lapRefreshStop6 === 'function') lapRefreshStop6();
+      else syncStop6FromServer();
+    } catch (e) {}
+    try { lapSyncMode(); } catch (e) {}
+    setInterval(function () { try { pullLapForm(lapActiveStore); } catch (e) {} }, Sync.pollMs);
+    if (typeof lapRefreshStop6 === 'function') setInterval(function () { try { lapRefreshStop6(); } catch (e) {} }, Sync.pollMs);
+    else setInterval(function () { try { syncStop6FromServer(); } catch (e) {} }, Sync.pollMs);
+    setInterval(function () { try { lapSyncMode(); } catch (e) {} }, Sync.pollMs);
   }
-  lapSyncMode();
-  if (window.Sync) setInterval(lapSyncMode, Sync.pollMs);
+  lapBootSync();
 
   /* ── Header: Bersihkan Form / Arsip / Buat PDF ── */
   function lapConfirm(message) {
