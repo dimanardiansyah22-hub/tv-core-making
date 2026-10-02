@@ -131,6 +131,8 @@ body.night .sub-lab2 { color: #b0b0d0; }
 body.night .prob-table .mat-unit { color: #b0b0d0; }
 .prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
 #secStop6 .prob-in[data-k="type"], #secStop6 .prob-in[data-k="mesin"], #secStop6 .prob-in[data-k="durasi"], #secStop6 .prob-in[data-k="pic"] { text-align: center; }
+#stop6EmptyRow .stop6-emptycell { text-align: center; font-style: italic; color: #6b7280; padding: 10px 6px; cursor: pointer; }
+body.night #stop6EmptyRow .stop6-emptycell { color: #e8e8f0; }
 .mat-in, .kwh-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
 .prob-in:focus, .mat-in:focus, .kwh-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
 body.night .prob-wrap { border-color: #777; }
@@ -361,6 +363,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
 <tr><td class="prob-no">14</td><td style="width:80px"><input class="prob-in" data-r="13" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="13" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="13" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="13" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="13" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="13" data-k="pic" autocomplete="off"></td></tr>
 <tr><td class="prob-no">15</td><td style="width:80px"><input class="prob-in" data-r="14" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="14" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="14" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="14" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="14" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="14" data-k="pic" autocomplete="off"></td></tr>
 <tr><td class="prob-no">16</td><td style="width:80px"><input class="prob-in" data-r="15" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="15" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="15" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="15" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="15" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="15" data-k="pic" autocomplete="off"></td></tr>
+<tr id="stop6EmptyRow" style="display:none"><td colspan="7" class="stop6-emptycell" title="Tidak ada line stop — klik untuk tambah baris manual">Tidak ada Problem</td></tr>
       </tbody>
     </table>
     </div>
@@ -666,6 +669,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       e2.value = (v === undefined || v === null) ? '' : v;
     });
     if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
+    if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
   }
   function clearLapForm() {
     document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
@@ -936,7 +940,10 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     el.addEventListener('change', markFormDirty);
   });
   document.querySelectorAll('#secStop6 .prob-in').forEach(function (el) {
-    el.addEventListener('input', function () { saveLapData(); });
+    el.addEventListener('input', function () {
+      saveLapData();
+      if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
+    });
   });
   /* ── Otomatisasi kolom Type seksi 6 dari DIE/MESIN + Mode Produksi ──
      Ratio    : ICM 002→Fr/Re 1 TR, 003→Wj/Sb 1 TR, 008→C/C 1 TR,
@@ -1110,6 +1117,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     if (lapFillStop6FromWip(notes)) {
       if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
       saveLapData();
+      if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
     }
   }
   async function lapRefreshStop6() {
@@ -1150,10 +1158,68 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     });
     if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
     saveLapData();
+    if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
     var extra = notes.length > rows.length ? ' (+' + (notes.length - rows.length) + ' catatan melebihi 16 baris, tidak masuk)' : '';
     lapPdfStatus('Seksi 6 (' + tabName + ') direkap dari ' + notes.length + ' line stop WIP Shift ' + wipName + '.' + extra);
   }
   document.getElementById('lapWipRefreshBtn').addEventListener('click', function () { lapRebuildStop6FromWip(); });
+  /* ── Tampilan seksi 6 mengikuti isi: yg tampil = baris terisi (+1 baris
+     kosong untuk entry manual); kosong semua → "Tidak ada Problem" (klik
+     untuk buka baris manual). Nomor urut tampilan dinomori ulang; data-r
+     (kunci sinkron server) tidak berubah. Baris sembunyi tetap tersimpan. */
+  function lapRowActive(tr) {
+    var inputs = tr.querySelectorAll('.prob-in');
+    for (var i = 0; i < inputs.length; i++) {
+      if (inputs[i].value !== '' && inputs[i].value != null) return true;
+    }
+    return false;
+  }
+  function lapLayoutStop6() {
+    var dataRows = [];
+    document.querySelectorAll('#secStop6 tbody tr').forEach(function (tr) {
+      if (tr.id === 'stop6EmptyRow') return;
+      if (tr.querySelector('.prob-in')) dataRows.push(tr);
+    });
+    var ph = document.getElementById('stop6EmptyRow');
+    var n = 0, firstEmpty = null;
+    dataRows.forEach(function (tr) {
+      if (lapRowActive(tr)) {
+        tr.style.display = '';
+        n++;
+        var no = tr.querySelector('.prob-no');
+        if (no) no.textContent = n;
+      } else {
+        if (!firstEmpty) firstEmpty = tr;
+        tr.style.display = 'none';
+      }
+    });
+    var ae = null;
+    try { if (document.activeElement && document.activeElement.closest) ae = document.activeElement.closest('#secStop6 tbody tr'); } catch (e) {}
+    if (ae && ae.style.display === 'none' && ae.querySelector('.prob-in')) ae.style.display = '';
+    if (n === 0) {
+      if (ph) ph.style.display = '';
+    } else {
+      if (ph) ph.style.display = 'none';
+      if (firstEmpty) firstEmpty.style.display = '';
+    }
+  }
+  document.getElementById('stop6EmptyRow').addEventListener('click', function () {
+    if (isLapGuest()) return;
+    var rows = document.querySelectorAll('#secStop6 tbody tr');
+    for (var i = 0; i < rows.length; i++) {
+      var tr = rows[i];
+      if (tr.id === 'stop6EmptyRow' || !tr.querySelector('.prob-in')) continue;
+      var empty = true;
+      tr.querySelectorAll('.prob-in').forEach(function (el) { if (el.value) empty = false; });
+      if (empty) {
+        tr.style.display = '';
+        lapLayoutStop6();
+        var t = tr.querySelector('.prob-in[data-k="type"]');
+        if (t) t.focus();
+        break;
+      }
+    }
+  });
   /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
      Hanya berhenti di sel berisi input (sel label dilewati). */
   function bindTableNav() {
@@ -1173,8 +1239,12 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
           });
         });
         if (rIdx === -1) return;
+        function rowHidden(ri) {
+          var tr = rows[ri];
+          return !!(tr && tr.style && tr.style.display === 'none');
+        }
         function cellInput(ri, ci) {
-          if (ri < 0 || ri >= rows.length) return null;
+          if (ri < 0 || ri >= rows.length || rowHidden(ri)) return null;
           var tds = rows[ri].querySelectorAll('td');
           if (ci < 0 || ci >= tds.length) return null;
           return tds[ci].querySelector('input:not([type="checkbox"])');
