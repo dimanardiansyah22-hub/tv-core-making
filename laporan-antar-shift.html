@@ -887,24 +887,53 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     updatePakaiAll();
     updatePakaiKwhAll();
   }
+  /* Kirim berurutan (satu per shift): tanpa pengaman ini POST yg tumpang
+     tindih bisa tiba terbalik di server sehingga snapshot BASI menimpa
+     snapshot BARU — isian yg sudah diketik seakan hilang saat refresh.
+     _formSaving = kiriman sedang jalan; _formQueued = snapshot titipan
+     flush (tab lama) yg wajib dipakai lebih dulu daripada collect baru. */
+  var _formSaving = {};
+  var _formQueued = {};
   function pushLapForm(store, snapshot) {
     if (isLapGuest()) return Promise.resolve(false);
     if (!window.Sync || !Sync.hasUrl()) return Promise.resolve(false);
     store = store || lapActiveStore;
+    if (_formSaving[store]) {
+      _formUnsent[store] = true;
+      if (snapshot) _formQueued[store] = snapshot;
+      return Promise.resolve(false);
+    }
+    _formSaving[store] = true;
+    if (!snapshot && _formQueued[store]) { snapshot = _formQueued[store]; _formQueued[store] = null; }
     var data = snapshot || collectLapForm();
     if (store !== lapActiveStore) data.shiftTime = (store === 'night' ? 'Night' : 'Day');
     var timeout = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, 25000); });
+    function done(ok, ts) {
+      _formSaving[store] = false;
+      if (ok) {
+        if (ts) _formTs[store] = ts;
+        /* Sukses TAPI ada snapshot titipan flush yg belum terkirim:
+           anggap masih ada kiriman tertunda agar retry memakainya. */
+        _formUnsent[store] = !!_formQueued[store];
+      } else {
+        _formUnsent[store] = true;
+      }
+      if (_formUnsent[store]) {
+        clearTimeout(_formTimer[store]);
+        _formTimer[store] = setTimeout(function () { pushLapForm(store); }, 800);
+      }
+      return ok;
+    }
     return Promise.race([Sync.save('lapform', { shift: store, action: 'save', data: data }), timeout]).then(function (res) {
       if (!res || !res.ok) throw new Error('ditolak');
-      if (res.updatedAt) _formTs[store] = res.updatedAt;
-      _formUnsent[store] = false;
-      return true;
-    }).catch(function () { _formUnsent[store] = true; return false; });
+      return done(true, res.updatedAt);
+    }).catch(function () { return done(false); });
   }
   function markFormDirty() {
     if (isLapGuest()) return;
     var store = lapActiveStore;
     _formUnsent[store] = true;
+    _formQueued[store] = null;
     clearTimeout(_formTimer[store]);
     _formTimer[store] = setTimeout(function () { pushLapForm(store); }, 800);
   }
@@ -912,7 +941,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     store = store || lapActiveStore;
     if (isLapGuest() || !_formUnsent[store]) return;
     clearTimeout(_formTimer[store]);
-    pushLapForm(store);
+    pushLapForm(store, collectLapForm());
   }
   async function pullLapForm(store) {
     if (!window.Sync || !Sync.hasUrl()) return;
