@@ -1281,6 +1281,26 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
       if (tel && tel.value !== t) { tel.value = t; saveLapData(); }
     });
   });
+  /* Baca ulang prefix die (NomorDie/Mesin) dari baris Nomor Die seksi 4.
+     Menanggulangi nomor die yg telat diinput: dipanggil tiap polling dan
+     tiap nomor die diketik. Tak menghapus prefix yg diketik bila seksi 4
+     masih kosong. */
+  function lapRefreshDiePrefix() {
+    if (typeof lapFormatMesin !== 'function') return;
+    var focusEl = document.activeElement;
+    var changed = false;
+    document.querySelectorAll('#secStop6 .prob-in[data-k="mesin"]').forEach(function (mel) {
+      if (mel === focusEl) return;
+      var f = lapFormatMesin(mel.value);
+      if (f && f !== mel.value) { mel.value = f; changed = true; }
+    });
+    if (changed) saveLapData();
+  }
+  document.querySelectorAll('#secProd4 .prob-in[data-r="2"]').forEach(function (el) {
+    el.addEventListener('input', function () {
+      if (typeof lapRefreshDiePrefix === 'function') lapRefreshDiePrefix();
+    });
+  });
   /* ── Rekap draft line stop WIP Core ke seksi 6 (Day←Pagi, Night←Malam) ──
      Sumber: snapshot 'wip' server (keterangan per jam: mesin/problem/
      penanggulangan/menit). Jam kejadian diabaikan — semua catatan direkap
@@ -1455,6 +1475,8 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     try { await syncStop6FromServer(); } catch (e) {}
     if (lapActiveStore !== store) return;
     try { await lapPullStop6FromWip(store); } catch (e) {}
+    if (lapActiveStore !== store) return;
+    try { if (typeof lapRefreshDiePrefix === 'function') lapRefreshDiePrefix(); } catch (e) {}
   }
   /* ── Tampilan seksi 6 mengikuti isi: hanya baris terisi yg tampil
      (kosong semua → "Tidak ada Problem"). Nomor urut tampilan dinomori
