@@ -131,7 +131,7 @@ body.night .sub-lab2 { color: #b0b0d0; }
 body.night .prob-table .mat-unit { color: #b0b0d0; }
 .prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
 #secStop6 .prob-in[data-k="type"], #secStop6 .prob-in[data-k="mesin"], #secStop6 .prob-in[data-k="durasi"], #secStop6 .prob-in[data-k="pic"] { text-align: center; }
-#stop6EmptyRow .stop6-emptycell { text-align: center; font-style: italic; color: #6b7280; padding: 10px 6px; cursor: pointer; }
+#stop6EmptyRow .stop6-emptycell { text-align: center; font-style: italic; color: #6b7280; padding: 10px 6px; }
 body.night #stop6EmptyRow .stop6-emptycell { color: #e8e8f0; }
 .mat-in, .kwh-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; text-align: center; }
 .prob-in:focus, .mat-in:focus, .kwh-in:focus { outline: 2px solid #2563eb; background: #eff6ff; }
@@ -363,7 +363,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
 <tr><td class="prob-no">14</td><td style="width:80px"><input class="prob-in" data-r="13" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="13" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="13" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="13" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="13" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="13" data-k="pic" autocomplete="off"></td></tr>
 <tr><td class="prob-no">15</td><td style="width:80px"><input class="prob-in" data-r="14" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="14" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="14" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="14" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="14" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="14" data-k="pic" autocomplete="off"></td></tr>
 <tr><td class="prob-no">16</td><td style="width:80px"><input class="prob-in" data-r="15" data-k="type" autocomplete="off"></td><td style="width:130px"><input class="prob-in" data-r="15" data-k="mesin" autocomplete="off"></td><td><input class="prob-in" data-r="15" data-k="masalah" autocomplete="off"></td><td><input class="prob-in" data-r="15" data-k="pg" autocomplete="off"></td><td style="width:80px"><input class="prob-in" data-r="15" data-k="durasi" autocomplete="off" inputmode="decimal"></td><td style="width:120px"><input class="prob-in" data-r="15" data-k="pic" autocomplete="off"></td></tr>
-<tr id="stop6EmptyRow" style="display:none"><td colspan="7" class="stop6-emptycell" title="Tidak ada line stop — klik untuk tambah baris manual">Tidak ada Problem</td></tr>
+<tr id="stop6EmptyRow" style="display:none"><td colspan="7" class="stop6-emptycell">Tidak ada Problem</td></tr>
       </tbody>
     </table>
     </div>
@@ -1170,10 +1170,10 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     if (lapActiveStore !== store) return;
     try { await lapPullStop6FromWip(store); } catch (e) {}
   }
-  /* ── Tampilan seksi 6 mengikuti isi: yg tampil = baris terisi (+1 baris
-     kosong untuk entry manual); kosong semua → "Tidak ada Problem" (klik
-     untuk buka baris manual). Nomor urut tampilan dinomori ulang; data-r
-     (kunci sinkron server) tidak berubah. Baris sembunyi tetap tersimpan. */
+  /* ── Tampilan seksi 6 mengikuti isi: hanya baris terisi yg tampil
+     (kosong semua → "Tidak ada Problem"). Nomor urut tampilan dinomori
+     ulang; data-r (kunci sinkron server) tidak berubah. Baris sembunyi
+     tetap tersimpan. Baris yg sedang diketik tidak disembunyikan. */
   function lapRowActive(tr) {
     var inputs = tr.querySelectorAll('.prob-in');
     for (var i = 0; i < inputs.length; i++) {
@@ -1188,7 +1188,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       if (tr.querySelector('.prob-in')) dataRows.push(tr);
     });
     var ph = document.getElementById('stop6EmptyRow');
-    var n = 0, firstEmpty = null;
+    var n = 0;
     dataRows.forEach(function (tr) {
       if (lapRowActive(tr)) {
         tr.style.display = '';
@@ -1196,36 +1196,20 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
         var no = tr.querySelector('.prob-no');
         if (no) no.textContent = n;
       } else {
-        if (!firstEmpty) firstEmpty = tr;
         tr.style.display = 'none';
       }
     });
     var ae = null;
     try { if (document.activeElement && document.activeElement.closest) ae = document.activeElement.closest('#secStop6 tbody tr'); } catch (e) {}
-    if (ae && ae.style.display === 'none' && ae.querySelector('.prob-in')) ae.style.display = '';
-    if (n === 0) {
-      if (ph) ph.style.display = '';
-    } else {
-      if (ph) ph.style.display = 'none';
-      if (firstEmpty) firstEmpty.style.display = '';
+    if (ae && ae.style.display === 'none' && ae.querySelector('.prob-in')) {
+      ae.style.display = '';
+      var ano = ae.querySelector('.prob-no');
+      if (ano) ano.textContent = '–';
     }
+    if (ph) ph.style.display = (n === 0) ? '' : 'none';
   }
-  document.getElementById('stop6EmptyRow').addEventListener('click', function () {
-    if (isLapGuest()) return;
-    var rows = document.querySelectorAll('#secStop6 tbody tr');
-    for (var i = 0; i < rows.length; i++) {
-      var tr = rows[i];
-      if (tr.id === 'stop6EmptyRow' || !tr.querySelector('.prob-in')) continue;
-      var empty = true;
-      tr.querySelectorAll('.prob-in').forEach(function (el) { if (el.value) empty = false; });
-      if (empty) {
-        tr.style.display = '';
-        lapLayoutStop6();
-        var t = tr.querySelector('.prob-in[data-k="type"]');
-        if (t) t.focus();
-        break;
-      }
-    }
+  document.getElementById('secStop6').addEventListener('focusout', function () {
+    if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
   });
   /* Navigasi keyboard semua tabel isian: panah kiri/kanan/atas/bawah, Enter = ke bawah.
      Hanya berhenti di sel berisi input (sel label dilewati). */
