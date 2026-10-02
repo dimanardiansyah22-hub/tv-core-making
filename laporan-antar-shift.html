@@ -1265,7 +1265,7 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     });
     return changed;
   }
-  async function lapGetWipNotes(store) {
+  async function lapGetWipSnapshot(store) {
     var wipShift = lapWipShiftFor(store);
     var data = null;
     try {
@@ -1275,17 +1275,43 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
       }
     } catch (e) { data = null; }
     if (!data) return null;
-    return lapParseWipNotes(data);
+    return { data: data, notes: lapParseWipNotes(data) };
+  }
+  /* Cermin Planning Produksi WIP → kolom Plan/Actual MOULDING (Day←Pagi,
+     Night←Malam), update terus seperti seksi 6. Core Making Actual tetap
+     manual. Sel yg sedang diketik tidak ditimpa. */
+  function lapMirrorPlanningFromWip(data) {
+    if (!data) return false;
+    var map = [
+      ['20', 'c1', '_prod_1tr_plan'],
+      ['20', 'c2', '_prod_1tr_act'],
+      ['21', 'c1', '_prod_2tr_plan'],
+      ['21', 'c2', '_prod_2tr_act']
+    ];
+    var focusEl = document.activeElement;
+    var changed = false;
+    map.forEach(function (m) {
+      var el = document.querySelector('#secProd4 .prob-in[data-r="' + m[0] + '"][data-k="' + m[1] + '"]');
+      var v = data[m[2]];
+      v = (v === undefined || v === null) ? '' : String(v);
+      if (!el || el === focusEl || el.value === v) return;
+      el.value = v; changed = true;
+    });
+    return changed;
   }
   async function lapPullStop6FromWip(store) {
     store = store || lapActiveStore;
-    var notes = await lapGetWipNotes(store);
+    var snap = await lapGetWipSnapshot(store);
     if (store !== lapActiveStore) return;
-    if (notes === null) return;
-    var ch = lapMirrorStop6FromWip(notes);
+    if (!snap) return;
+    var ch = lapMirrorStop6FromWip(snap.notes);
     if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
     if (ch) saveLapData();
     if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
+    if (lapMirrorPlanningFromWip(snap.data)) {
+      if (typeof updatePlanTotalAll === 'function') updatePlanTotalAll();
+      markFormDirty();
+    }
   }
   async function lapRefreshStop6() {
     var store = lapActiveStore;
