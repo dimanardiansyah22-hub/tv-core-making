@@ -155,7 +155,9 @@ body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { 
 #secAbsen2 .mat-lab, #secProd4 .mat-lab, #secKwh .mat-lab, #secMaterial .mat-lab,
 #secProd4 td.bl, #secProd4 td:empty,
 #secProd4 .merge-center, #secProd4 .sub-h,
-#secAbsen2 .absen-subrow, #secKwh thead th, #secMaterial thead th, #secFollow7 thead th, #secSign thead th { background: #e9edf3; }
+#secAbsen2 .absen-subrow, #secKwh thead th, #secMaterial thead th, #secFollow7 thead th { background: #e9edf3; }
+#secSign .merge-center { background: #e9edf3; }
+#secSign .sig-space td { height: 70px; }
 #secProd4 td.tfill { background: #e9edf3; }
 #secAbsen2 .prob-table td, #secAbsen2 .prob-table th,
 #secProd4 .prob-table td, #secProd4 .prob-table th,
@@ -169,7 +171,8 @@ body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { 
 body.night #secAbsen2 .mat-lab, body.night #secProd4 .mat-lab, body.night #secKwh .mat-lab, body.night #secMaterial .mat-lab,
 body.night #secProd4 td.bl, body.night #secProd4 td:empty,
 body.night #secProd4 .merge-center, body.night #secProd4 .sub-h,
-body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th, body.night #secMaterial thead th, body.night #secFollow7 thead th, body.night #secSign thead th { background: #41415e; }
+body.night #secAbsen2 .absen-subrow, body.night #secKwh thead th, body.night #secMaterial thead th, body.night #secFollow7 thead th { background: #41415e; }
+body.night #secSign .merge-center { background: #41415e; }
 body.night #secProd4 td.tfill { background: #41415e; }
 body.night #secAbsen2 .prob-table td, body.night #secAbsen2 .prob-table th,
 body.night #secProd4 .prob-table td, body.night #secProd4 .prob-table th,
@@ -405,18 +408,28 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
   </table>
   </div>
 </div>
-<div class="lap-sec" id="secSign">
-  <div class="lap-sec-title">8.TANDA TANGAN</div>
-  <div class="prob-wrap">
-  <table class="prob-table">
-    <thead><tr><th style="width:130px">SHIFT</th><th style="width:130px">JABATAN</th><th>NAMA</th></tr></thead>
-    <tbody>
-<tr><td class="mat-lab">Red</td><td class="mat-lab">TL</td><td><input class="prob-in" data-r="0" data-k="ttnama" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">Red</td><td class="mat-lab">GL</td><td><input class="prob-in" data-r="1" data-k="ttnama" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">White</td><td class="mat-lab">TL</td><td><input class="prob-in" data-r="2" data-k="ttnama" autocomplete="off"></td></tr>
-<tr><td class="mat-lab">White</td><td class="mat-lab">GL</td><td><input class="prob-in" data-r="3" data-k="ttnama" autocomplete="off"></td></tr>
-    </tbody>
-  </table>
+<div class="sec-row" id="secSign">
+  <div class="lap-sec" style="flex:none;width:20%">
+    <div class="prob-wrap">
+    <table class="prob-table">
+      <tbody>
+<tr><td colspan="2" class="merge-center">Shift Red</td></tr>
+<tr class="sig-space"><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td class="merge-center">TL</td><td class="merge-center">GL</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <div class="lap-sec" style="flex:none;width:20%">
+    <div class="prob-wrap">
+    <table class="prob-table">
+      <tbody>
+<tr><td colspan="2" class="merge-center">Shift White</td></tr>
+<tr class="sig-space"><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr><td class="merge-center">TL</td><td class="merge-center">GL</td></tr>
+      </tbody>
+    </table>
+    </div>
   </div>
 </div>
 <script>
