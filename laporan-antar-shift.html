@@ -158,6 +158,10 @@ body.night .prob-in:focus, body.night .mat-in:focus, body.night .kwh-in:focus { 
 #secAbsen2 .absen-subrow, #secKwh thead th, #secMaterial thead th, #secFollow7 thead th { background: #e9edf3; }
 #secSign .merge-center { background: #e9edf3; }
 #secSign .sig-space td { height: 70px; }
+#secSign td.sig-cell { position: relative; padding: 0; }
+#secSign canvas.sig-pad { display: block; width: 100%; height: 70px; touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
+#secSign button.sig-clear { position: absolute; top: 1px; right: 1px; width: 20px; height: 20px; line-height: 1; padding: 0; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; color: #6b7280; font-size: 13px; font-weight: 800; cursor: pointer; }
+body.night #secSign button.sig-clear { background: #2d2d44; border-color: #555; color: #b0b0d0; }
 #secProd4 td.tfill { background: #e9edf3; }
 #secAbsen2 .prob-table td, #secAbsen2 .prob-table th,
 #secProd4 .prob-table td, #secProd4 .prob-table th,
@@ -414,7 +418,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     <table class="prob-table">
       <tbody>
 <tr><td colspan="2" class="merge-center">Shift Red</td></tr>
-<tr class="sig-space"><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr class="sig-space"><td class="sig-cell"><canvas class="sig-pad" data-sig="red-tl"></canvas><button type="button" class="sig-clear" data-sig="red-tl" title="Hapus tanda tangan">×</button></td><td class="sig-cell"><canvas class="sig-pad" data-sig="red-gl"></canvas><button type="button" class="sig-clear" data-sig="red-gl" title="Hapus tanda tangan">×</button></td></tr>
 <tr><td class="merge-center">TL</td><td class="merge-center">GL</td></tr>
       </tbody>
     </table>
@@ -425,7 +429,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     <table class="prob-table">
       <tbody>
 <tr><td colspan="2" class="merge-center">Shift White</td></tr>
-<tr class="sig-space"><td>&nbsp;</td><td>&nbsp;</td></tr>
+<tr class="sig-space"><td class="sig-cell"><canvas class="sig-pad" data-sig="white-tl"></canvas><button type="button" class="sig-clear" data-sig="white-tl" title="Hapus tanda tangan">×</button></td><td class="sig-cell"><canvas class="sig-pad" data-sig="white-gl"></canvas><button type="button" class="sig-clear" data-sig="white-gl" title="Hapus tanda tangan">×</button></td></tr>
 <tr><td class="merge-center">TL</td><td class="merge-center">GL</td></tr>
       </tbody>
     </table>
@@ -681,6 +685,10 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
       } else {
         document.body.classList.remove('night');
       }
+      /* Tinta TTD mengikuti tema: gambar ulang semua pad. */
+      try {
+        if (typeof lapDrawPad === 'function') document.querySelectorAll('#secSign .sig-pad').forEach(lapDrawPad);
+      } catch (e) {}
       var next = lapStore();
       if (next !== lapActiveStore) {
         var oldStore = lapActiveStore;
@@ -748,11 +756,16 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
   function lapSetSyncedAt(store, t) {
     try { localStorage.setItem('lap-synced-' + store, String(t)); } catch (e) {}
   }
-  /* Sistem lokal LAMA — seksi 6 LINE STOP + seksi 7 FOLLOW UP + seksi 8 TTD (per Day/Night) */
+  /* Sistem lokal LAMA — seksi 6 LINE STOP + seksi 7 FOLLOW UP (per Day/Night).
+     TTD seksi 8 (kanvas) ikut snapshot yg sama dengan kunci sig_*. */
   function collectStop6() {
     var data = {};
-    document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in, #secSign .prob-in').forEach(function (el) {
+    document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (el) {
       data['prob_' + el.dataset.r + '_' + el.dataset.k] = el.value;
+    });
+    document.querySelectorAll('#secSign .sig-pad').forEach(function (el) {
+      try { data['sig_' + el.dataset.sig] = JSON.stringify(el._strokes || []); }
+      catch (e) { data['sig_' + el.dataset.sig] = '[]'; }
     });
     return data;
   }
@@ -765,7 +778,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
   function applyStop6(data) {
     data = data || {};
     var focusEl = document.activeElement;
-    document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in, #secSign .prob-in').forEach(function (e2) {
+    document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (e2) {
       if (e2 === focusEl) return;
       var k = 'prob_' + e2.dataset.r + '_' + e2.dataset.k;
       var v = data[k];
@@ -785,6 +798,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     });
     if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
     if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
+    if (typeof lapApplySigPads === 'function') lapApplySigPads(data);
   }
   function clearLapForm() {
     document.querySelectorAll('.absen-in, .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
@@ -1235,6 +1249,124 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     tr.remove();
     lapFollowRenumber();
   });
+  /* ── Kanvas tanda tangan seksi 8 (mouse/pencil tablet) ──
+     Guratan disimpan ternormalisasi 0-1 (kunci sig_* ikut snapshot
+     Day/Night + sinkron seperti biasa); warna tinta mengikuti tema
+     (hitam Day, putih Night) sehingga kontras. Tamu view-only. */
+  function lapSigInk() {
+    return (document.body && document.body.classList.contains('night')) ? '#ffffff' : '#111111';
+  }
+  function lapSizePad(cv) {
+    var r = cv.getBoundingClientRect();
+    var dpr = 1;
+    try { dpr = window.devicePixelRatio || 1; } catch (e) {}
+    var w = Math.max(1, Math.round(r.width * dpr));
+    var h = Math.max(1, Math.round((r.height || 70) * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  }
+  function lapDrawPad(cv) {
+    try {
+      lapSizePad(cv);
+      var ctx = cv.getContext('2d');
+      var dpr = 1;
+      try { dpr = window.devicePixelRatio || 1; } catch (e) {}
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.strokeStyle = lapSigInk();
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      var strokes = cv._strokes || [];
+      var W = cv.width / dpr, H = cv.height / dpr;
+      strokes.forEach(function (st) {
+        if (!st || st.length < 1) return;
+        ctx.beginPath();
+        if (st.length === 1) {
+          ctx.arc(st[0][0] * W, st[0][1] * H, 1.25, 0, 6.2832);
+          ctx.fillStyle = lapSigInk();
+          ctx.fill();
+          return;
+        }
+        st.forEach(function (p, i) {
+          if (i === 0) ctx.moveTo(p[0] * W, p[1] * H);
+          else ctx.lineTo(p[0] * W, p[1] * H);
+        });
+        ctx.stroke();
+      });
+    } catch (e) {}
+  }
+  function lapApplySigPads(data) {
+    data = data || {};
+    document.querySelectorAll('#secSign .sig-pad').forEach(function (cv) {
+      if (cv._drawing) return;
+      var v = data['sig_' + cv.dataset.sig];
+      var strokes = [];
+      if (v !== undefined && v !== null && v !== '') {
+        try { strokes = JSON.parse(v) || []; } catch (e) { strokes = []; }
+      }
+      if (!Array.isArray(strokes)) strokes = [];
+      cv._strokes = strokes;
+      lapDrawPad(cv);
+    });
+  }
+  (function lapBindSigPads() {
+    var guest = false;
+    try { guest = isLapGuest(); } catch (e) {}
+    if (guest) {
+      document.querySelectorAll('#secSign .sig-pad').forEach(function (cv) {
+        cv.style.pointerEvents = 'none';
+      });
+      document.querySelectorAll('#secSign .sig-clear').forEach(function (b) {
+        b.style.display = 'none';
+      });
+      return;
+    }
+    document.querySelectorAll('#secSign .sig-pad').forEach(function (cv) {
+      if (!cv._strokes) cv._strokes = [];
+      lapDrawPad(cv);
+      cv.addEventListener('pointerdown', function (e) {
+        try { e.preventDefault(); } catch (_e) {}
+        try { cv.setPointerCapture(e.pointerId); } catch (_e) {}
+        lapSizePad(cv);
+        var r = cv.getBoundingClientRect();
+        cv._drawing = true;
+        cv._cur = [[(e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height || 70)]];
+        cv._strokes.push(cv._cur);
+        lapDrawPad(cv);
+      });
+      cv.addEventListener('pointermove', function (e) {
+        if (!cv._drawing || !cv._cur) return;
+        try { e.preventDefault(); } catch (_e) {}
+        var r = cv.getBoundingClientRect();
+        cv._cur.push([(e.clientX - r.left) / Math.max(1, r.width), (e.clientY - r.top) / Math.max(1, r.height || 70)]);
+        lapDrawPad(cv);
+      });
+      function endStroke(e) {
+        if (!cv._drawing) return;
+        cv._drawing = false;
+        cv._cur = null;
+        saveLapData();
+      }
+      cv.addEventListener('pointerup', endStroke);
+      cv.addEventListener('pointercancel', endStroke);
+    });
+    document.querySelectorAll('#secSign .sig-clear').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var cv = document.querySelector('#secSign .sig-pad[data-sig="' + b.dataset.sig + '"]');
+        if (!cv) return;
+        cv._strokes = [];
+        lapDrawPad(cv);
+        saveLapData();
+      });
+    });
+    var _sigRsz = null;
+    window.addEventListener('resize', function () {
+      clearTimeout(_sigRsz);
+      _sigRsz = setTimeout(function () {
+        document.querySelectorAll('#secSign .sig-pad').forEach(lapDrawPad);
+      }, 300);
+    });
+  })();
   /* ── Otomatisasi kolom Type seksi 6 dari DIE/MESIN + Mode Produksi ──
      Ratio    : ICM 002→Fr/Re 1 TR, 003→Wj/Sb 1 TR, 008→C/C 1 TR,
                 007→Fr/Re 2 TR, 006→Wj/Sb 2 TR, 009→C/C 2 TR.
@@ -1742,7 +1874,29 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     try {
       if (typeof html2canvas === 'undefined') throw new Error('Pustaka render belum termuat');
       const sheet = document.getElementById('lapReport');
-      const canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false });
+      /* html2canvas tak me-render <canvas>: tukar sementara kanvas TTD dgn
+         <img> lalu kembalikan apa pun yg terjadi. */
+      const sigSwap = [];
+      try {
+        document.querySelectorAll('#secSign .sig-pad').forEach(function (cv) {
+          var img = document.createElement('img');
+          try { img.src = cv.toDataURL('image/png'); } catch (e) { img.src = ''; }
+          img.style.width = '100%';
+          img.style.height = '70px';
+          img.style.display = 'block';
+          cv.parentNode.insertBefore(img, cv);
+          cv.style.display = 'none';
+          sigSwap.push([img, cv]);
+        });
+      } catch (e) {}
+      let canvas;
+      try {
+        canvas = await html2canvas(sheet, { scale: 2, backgroundColor: '#ffffff', logging: false });
+      } finally {
+        sigSwap.forEach(function (pair) {
+          try { pair[1].style.display = ''; pair[0].remove(); } catch (e) {}
+        });
+      }
       const MX = 10, MY = 10;
       const pdf = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pw = pdf.internal.pageSize.getWidth();
