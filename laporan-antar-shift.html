@@ -609,6 +609,10 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
         flushLapForm(oldStore);
         flushStop6(oldStore);
         lapActiveStore = next;
+        /* Kosongkan tampilan seksi 1-5 dulu agar isian shift lama tak terbawa
+           ke tab ini; pull di bawah mengisi data shift tujuan yg benar. */
+        blankLapFormDisplay();
+        _formShown = null;
         /* Tampilkan mode shift tujuan seketika dari kunci lokal per shift
            (Day=Pagi, Night=Malam) sebelum snapshot server tiba. */
         syncLapModeFromKey(next);
@@ -853,6 +857,12 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
   var _formTs = {};
   var _formUnsent = {};
   var _formTimer = {};
+  /* _formShown = shift yg datanya sedang tampil di seksi 1-5 (null = belum
+     tentu/baru dikosongkan). Tanpa ini, optimasi "server tak berubah →
+     jangan gambar ulang" salah mengira tampilan masih data shift itu
+     padahal pengguna sudah pindah tab → isian lama tak pernah kembali. */
+  var _formShown = null;
+  var _formLoading = {};
   function collectLapForm() {
     var data = {};
     var t = document.getElementById('lapTanggal');
@@ -921,6 +931,12 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     if (isLapGuest()) return Promise.resolve(false);
     if (!window.Sync || !Sync.hasUrl()) return Promise.resolve(false);
     store = store || lapActiveStore;
+    if (_formLoading[store]) {
+      _formUnsent[store] = true;
+      clearTimeout(_formTimer[store]);
+      _formTimer[store] = setTimeout(function () { pushLapForm(store); }, 800);
+      return Promise.resolve(false);
+    }
     if (_formSaving[store]) {
       _formUnsent[store] = true;
       if (snapshot) _formQueued[store] = snapshot;
@@ -972,17 +988,47 @@ body.night #lapHeader, body.night #lapHeader * { color: #fff; }
     try {
       if (_formUnsent[store]) {
         if (isLapGuest()) return;
-        await pushLapForm(store);
-        if (_formUnsent[store]) return;
+        /* Dorong dulu HANYA bila tampilan memang data shift ini (atau ada
+           snapshot titipan flush yg aman). Mendorong tampilan shift lain
+           justru mencampuri dokumen shift ini. */
+        if (_formShown === store || _formShown === null || _formQueued[store]) {
+          await pushLapForm(store);
+          if (_formUnsent[store]) return;
+        }
       }
-      const res = await Sync.get('lapform', { shift: store, action: 'get' });
+      _formLoading[store] = true;
+      var res = null;
+      try { res = await Sync.get('lapform', { shift: store, action: 'get' }); }
+      finally { _formLoading[store] = false; }
       if (store !== lapActiveStore) return;
       const data = (res && res.ok && res.data) ? res.data : null;
-      if (!data || !data.updatedAt) return;
-      if (data.updatedAt === _formTs[store]) return;
-      _formTs[store] = data.updatedAt;
-      applyLapForm(data);
-    } catch (e) {}
+      if (!data) return;
+      if (data.updatedAt) {
+        if (data.updatedAt === _formTs[store] && _formShown === store) return;
+        _formTs[store] = data.updatedAt;
+        applyLapForm(data);
+        _formShown = store;
+      } else if (_formShown !== store && !_formUnsent[store]) {
+        /* Dokumen shift ini memang kosong: tampilkan kosong (jujur) agar
+           isian shift lain tak terbawa; tandai supaya pull berikut normal. */
+        blankLapFormDisplay();
+        _formShown = store;
+      }
+    } catch (e) { try { _formLoading[store] = false; } catch (_e) {} }
+  }
+  /* Kosongkan TAMPILAN seksi 1-5 (tanpa menyimpan): dipakai saat pindah tab
+     agar isian shift lama tak terbawa. Kotak Day/Night dibiarkan (identitas
+     tab); pull berikutnya mengisi dari server. */
+  function blankLapFormDisplay() {
+    document.querySelectorAll('.absen-in, #secProd4 .prob-in, .mat-in, .kwh-in').forEach(function (el) { el.value = ''; });
+    var t = document.getElementById('lapTanggal');
+    if (t) t.value = '';
+    document.querySelectorAll('.pic-chk, .shift-core').forEach(function (el) { el.checked = false; });
+    updateHari();
+    updateKehadiran();
+    updatePakaiAll();
+    updatePakaiKwhAll();
+    if (typeof updateProdTotalAll === 'function') updateProdTotalAll();
   }
   /* binding: seksi 1-5 -> backend-only (admin kirim, tamu diam); seksi 6 -> sistem lama */
   document.getElementById('lapTanggal').addEventListener('input', markFormDirty);
