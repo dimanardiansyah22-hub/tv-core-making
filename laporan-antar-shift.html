@@ -387,7 +387,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
   </div>
 </div>
 <div class="lap-sec" id="secFollow7">
-  <div class="lap-sec-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>7.FOLLOW UP</span><button type="button" class="lap-btn" id="lapFollowAddBtn" style="padding:4px 10px;font-size:11px" title="Tambah baris isian">+ Tambah Baris</button></div>
+  <div class="lap-sec-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>7.FOLLOW UP</span><span style="display:flex;gap:6px"><button type="button" class="lap-btn" id="lapFollowAddBtn" style="padding:4px 10px;font-size:11px" title="Tambah baris isian">+ Tambah Baris</button><button type="button" class="lap-btn" id="lapFollowDelBtn" style="padding:4px 10px;font-size:11px" title="Hapus baris terakhir (ikut tersinkron)">− Kurangi Baris</button></span></div>
   <div class="prob-wrap">
   <table class="prob-table">
     <thead><tr><th style="width:34px">No</th><th style="width:130px">FAKTOR (4M)</th><th>HAL YANG PERLU DIPANTAU</th><th style="width:130px">DAMPAK (QCDMP)</th><th>HASIL PEMANTAUAN<br><span style="font-size:10px;font-weight:600;letter-spacing:0;text-transform:none">(Oleh Partner Shift)</span></th></tr></thead>
@@ -1139,6 +1139,24 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     var tr = lapFollowAddRow();
     var first = tr.querySelector('.prob-in');
     if (first) first.focus();
+  });
+  function lapFollowRenumber() {
+    lapFollowRows().forEach(function (tr, i) {
+      var no = tr.querySelector('.prob-no');
+      if (no) no.textContent = i + 1;
+    });
+  }
+  document.getElementById('lapFollowDelBtn').addEventListener('click', function () {
+    if (isLapGuest()) return;
+    var rows = lapFollowRows();
+    if (rows.length <= 1) return;
+    var tr = rows[rows.length - 1];
+    /* Kosongkan dulu agar transisi berisi→kosong tercatat sebagai hapus
+       eksplisit (merambat ke server + perangkat lain), lalu buang barisnya. */
+    tr.querySelectorAll('.prob-in').forEach(function (el) { el.value = ''; });
+    saveLapData();
+    tr.remove();
+    lapFollowRenumber();
   });
   /* ── Otomatisasi kolom Type seksi 6 dari DIE/MESIN + Mode Produksi ──
      Ratio    : ICM 002→Fr/Re 1 TR, 003→Wj/Sb 1 TR, 008→C/C 1 TR,
