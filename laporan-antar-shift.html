@@ -1855,6 +1855,10 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     updateProdTotalAll();
     updatePlanTotalAll();
     markFormDirty();
+    document.querySelectorAll('#secSign .sig-pad').forEach(function (cv) {
+      cv._strokes = [];
+      if (typeof lapDrawPad === 'function') lapDrawPad(cv);
+    });
     saveLapData();
     lapPdfStatus('');
   });
