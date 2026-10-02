@@ -133,6 +133,8 @@ body.night .sub-lab2 { color: #b0b0d0; }
 body.night .prob-table .mat-unit { color: #b0b0d0; }
 .prob-in { width: 100%; border: none; background: transparent; padding: 7px 6px; font: inherit; box-sizing: border-box; color: inherit; }
 #secStop6 .prob-in[data-k="type"], #secStop6 .prob-in[data-k="mesin"], #secStop6 .prob-in[data-k="durasi"], #secStop6 .prob-in[data-k="pic"] { text-align: center; }
+#secStop6 select.prob-in { text-align: center; background: transparent; }
+body.night #secStop6 select.prob-in option { color: #111827; }
 #secFollow7 .prob-in[data-k="faktor"], #secFollow7 .prob-in[data-k="dampak"] { text-align: center; }
 #stop6EmptyRow .stop6-emptycell { text-align: center; font-style: italic; color: #6b7280; padding: 10px 6px; }
 body.night #stop6EmptyRow .stop6-emptycell { color: #e8e8f0; }
@@ -740,7 +742,16 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
       /* Snapshot adalah kebenaran per-shift (Day/Malam terpisah): kunci yang
          tak ada/kosong HARUS dikosongkan — jangan tampilkan sisa tab shift
          lain (itu yg membuat 2 shift tercampur). */
-      e2.value = (v === undefined || v === null) ? '' : v;
+      if (v === undefined || v === null) { e2.value = ''; return; }
+      e2.value = v;
+      if (e2.tagName === 'SELECT' && v !== '' && e2.value !== v) {
+        /* Nilai lama di luar daftar opsi dropdown: pertahankan sebagai opsi
+           agar tidak hilang dari tampilan. */
+        var o = document.createElement('option');
+        o.value = v; o.textContent = v;
+        e2.insertBefore(o, e2.firstChild.nextSibling);
+        e2.value = v;
+      }
     });
     if (typeof lapRemapStop6Types === 'function') lapRemapStop6Types();
     if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
@@ -1088,11 +1099,46 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
   document.querySelectorAll('.pic-chk, .shift-core').forEach(function (el) {
     el.addEventListener('change', markFormDirty);
   });
-  document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (el) {
-    el.addEventListener('input', function () {
-      saveLapData();
-      if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
+  /* PIC seksi 6 = dropdown tetap (Prod/Maintenance/DM/Engineering).
+     Dibangun saat runtime dari input agar opsi terpusat di satu tempat;
+     nilai lama di luar daftar dipertahankan sebagai opsi tambahan.
+     Tamu dikunci (guest-lock tidak mengunci <select>). */
+  var LAP_PIC_OPTS = ['Prod', 'Maintenance', 'DM', 'Engineering'];
+  (function lapPicDropdown() {
+    var guest = false;
+    try { guest = isLapGuest(); } catch (e) {}
+    document.querySelectorAll('#secStop6 input.prob-in[data-k="pic"]').forEach(function (inp) {
+      var sel = document.createElement('select');
+      sel.className = inp.className;
+      sel.dataset.r = inp.dataset.r;
+      sel.dataset.k = inp.dataset.k;
+      sel.setAttribute('autocomplete', 'off');
+      var html = '<option value=""></option>';
+      LAP_PIC_OPTS.forEach(function (o) { html += '<option value="' + o + '">' + o + '</option>'; });
+      sel.innerHTML = html;
+      var old = inp.value;
+      if (old && LAP_PIC_OPTS.indexOf(old) === -1) {
+        var extra = document.createElement('option');
+        extra.value = old; extra.textContent = old;
+        sel.insertBefore(extra, sel.firstChild.nextSibling);
+      }
+      if (old) { try { sel.value = old; } catch (e) {} }
+      if (guest) {
+        sel.disabled = true;
+        sel.setAttribute('aria-disabled', 'true');
+        sel.style.opacity = '0.55';
+        sel.style.pointerEvents = 'none';
+      }
+      inp.replaceWith(sel);
     });
+  })();
+  function lapSecInputChanged() {
+    saveLapData();
+    if (typeof lapLayoutStop6 === 'function') lapLayoutStop6();
+  }
+  document.querySelectorAll('#secStop6 .prob-in, #secFollow7 .prob-in').forEach(function (el) {
+    el.addEventListener('input', lapSecInputChanged);
+    if (el.tagName === 'SELECT') el.addEventListener('change', lapSecInputChanged);
   });
   /* Seksi 7: 3 baris siap isi + tombol tambah manual. Baris dinamis pakai
      data-r lanjutan; simpan/sinkron server otomatis ikut (kunci generik).
@@ -1489,7 +1535,7 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
           for (var c = 0; c < span.length; c++) if (span[c] > 0) span[c]--;
         });
         function cellInp(td) {
-          return td ? td.querySelector('input:not([type="checkbox"])') : null;
+          return td ? td.querySelector('input:not([type="checkbox"]),select') : null;
         }
         var rIdx = -1, cIdx = -1;
         rows.forEach(function (tr, ri) {
