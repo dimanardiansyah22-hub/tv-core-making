@@ -1685,19 +1685,16 @@ body.night #lapReport input::placeholder { color: #b0b0d0; opacity: 1; }
     el.style.color = isErr ? '#dc2626' : '';
   }
   document.getElementById('lapClearBtn').addEventListener('click', async () => {
-    const ok = await lapConfirm('Hapus isian seksi 1-5 (kecuali Day/Night)?');
+    const ok = await lapConfirm('Hapus isian seksi 2,3,4,5 & 7?');
     if (!ok) return;
-    document.querySelectorAll('.absen-in, #secProd4 .prob-in, .mat-in, .kwh-in').forEach(el => { el.value = ''; });
-    const t = document.getElementById('lapTanggal');
-    if (t) t.value = '';
-    document.querySelectorAll('.pic-chk, .shift-core').forEach(el => { el.checked = false; });
-    updateHari();
+    document.querySelectorAll('.absen-in, #secProd4 .prob-in, .mat-in, .kwh-in, #secFollow7 .prob-in').forEach(el => { el.value = ''; });
     updateKehadiran();
     updatePakaiAll();
     updatePakaiKwhAll();
     updateProdTotalAll();
     updatePlanTotalAll();
     markFormDirty();
+    saveLapData();
     lapPdfStatus('');
   });
   function lapFileName() {
