@@ -1101,14 +1101,15 @@ function applyWipData(data) {
   const focusedCell = (focusEl && focusEl.classList && focusEl.classList.contains('cell-input')) ? focusEl : null;
   const shift = currentShift();
   const cleared = _wipCleared[shift] || {};
+  const guest = isGuestMode();
   document.querySelectorAll('#wip-core-table .cell-input').forEach(el => {
-    if (el === focusedCell) return;
+    if (!guest && el === focusedCell) return;
     const slot = el.dataset.slot;
     const idx = el.dataset.idx;
     const key = `${slot}_${idx}`;
     const v = data[key];
     if (v !== undefined && v !== '') el.value = v;
-    else if (cleared[key]) el.value = ''; /* dihapus device lain: kosongkan */
+    else if (cleared[key] || (guest && v === undefined)) el.value = ''; /* dihapus device lain: kosongkan */
   });
   document.querySelectorAll('#wip-core-table .note-pane').forEach(el => {
     const slot = el.dataset.slot;
@@ -1151,10 +1152,25 @@ function mergeWipData(shift, server) {
   try { localTs = Number(localStorage.getItem('wip-core-ts2-' + shift)) || 0; } catch (e) {}
   let serverTs = 0;
   try { serverTs = new Date(server.updatedAt).getTime() || 0; } catch (e) {}
-  const merged = Object.assign({}, local);
   _wipCleared[shift] = {};
   const delMap = (server._deleted && typeof server._deleted === 'object') ? server._deleted : {};
   const guest = isGuestMode(); /* tamu = pengikut murni: selalu ikut server terbaru */
+  if (guest) {
+    /* Tamu tidak punya data lokal yg perlu dipertahankan: pakai snapshot server
+       apa adanya, termasuk nilai kosong (hasil hapus di device admin). */
+    const fresh = {};
+    Object.keys(server).forEach(k => {
+      if (k === 'updatedAt' || k === '_deleted' || k === '_planMode') return;
+      fresh[k] = (server[k] === undefined || server[k] === null) ? '' : server[k];
+      if (fresh[k] === '') _wipCleared[shift][k] = true;
+    });
+    Object.keys(delMap).forEach(k => {
+      fresh[k] = '';
+      _wipCleared[shift][k] = true;
+    });
+    return fresh;
+  }
+  const merged = Object.assign({}, local);
   Object.keys(server).forEach(k => {
     if (k === 'updatedAt' || k === '_deleted' || k === '_planMode') return;
     const sv = server[k];
@@ -1192,6 +1208,7 @@ function mergeWipData(shift, server) {
 
 async function wipSyncFromServer() {
   if (!window.Sync || !Sync.hasUrl()) return;
+  const guest = isGuestMode();
   const shift = currentShift();
   if (_wipPendingSave[shift]) return;
   if (!_wipDeleted[shift]) { try { _wipDeleted[shift] = JSON.parse(localStorage.getItem('wip-core-del-' + shift) || '{}') || {}; } catch (e) { _wipDeleted[shift] = {}; } }
@@ -1202,10 +1219,12 @@ async function wipSyncFromServer() {
     const data = (res && res.ok && res.data) ? res.data : null;
     const needPush = () => Object.keys(_wipDirty[shift] || {}).length || Object.keys(_wipDeleted[shift] || {}).length;
     if (!data || !data.updatedAt) { if (needPush()) scheduleWipSave(); return; }
-    if (data.updatedAt === getLastTs(shift)) {
+    if (!guest && data.updatedAt === getLastTs(shift)) {
       /* Server TAK BERUBAH sejak terakhir terlihat: bukti pasti tak ada yg baru
          di mana pun -> diam total (jangan gabung, jangan dorong basi).
-         KECUALI simpanan lokal lebih baru drpd sinkron terakhir -> dorong susulan. */
+         KECUALI simpanan lokal lebih baru drpd sinkron terakhir -> dorong susulan.
+         Tamu dikecualikan: selalu terapkan snapshot server agar tampilannya
+         dipastikan sama dengan device admin, termasuk saat stempel tak berubah. */
       let localTs = 0;
       try { localTs = Number(localStorage.getItem('wip-core-ts2-' + shift)) || 0; } catch (e) {}
       if (localTs > getSyncedAt(shift)) scheduleWipSave();
@@ -2664,6 +2683,11 @@ window.addEventListener('storage', (e) => {
 wipSyncFromServer();
 wipSyncModeFromServer();
 if (window.Sync) { setInterval(wipSyncFromServer, Sync.pollMs); setInterval(wipSyncModeFromServer, Sync.pollMs); }
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  wipSyncFromServer();
+  wipSyncModeFromServer();
+});
 setInterval(checkAutoPdf, 30000);
 setTimeout(checkAutoPdf, 5000);
 
