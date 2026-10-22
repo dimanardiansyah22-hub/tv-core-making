@@ -662,6 +662,9 @@ html.dark ::-webkit-scrollbar-thumb {
             html.classList.toggle('light', !isDark);
             darkModeIcon.textContent = isDark ? 'dark_mode' : 'light_mode';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.querySelectorAll('#main-content iframe').forEach(function (f) {
+                try { f.contentWindow.postMessage({ type: 'tvc-theme', dark: isDark }, '*'); } catch (e) {}
+            });
         }
 
         const savedTheme = localStorage.getItem('theme');

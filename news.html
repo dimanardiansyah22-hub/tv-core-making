@@ -9,12 +9,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script>
     (function () {
-        try {
-            if (localStorage.getItem('theme') === 'dark') {
-                document.documentElement.classList.remove('light');
-                document.documentElement.classList.add('dark');
-            }
-        } catch (e) {}
+        'use strict';
+        function isDark() {
+            try {
+                var p = window.parent;
+                if (p && p !== window && p.document && p.document.documentElement) {
+                    if (p.document.documentElement.classList.contains('dark')) return true;
+                    if (p.document.documentElement.classList.contains('light')) return false;
+                }
+            } catch (e) {}
+            try {
+                var t = localStorage.getItem('theme');
+                if (t === 'dark') return true;
+                if (t === 'light') return false;
+            } catch (e) {}
+            try {
+                return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            } catch (e) { return false; }
+        }
+        function apply() {
+            var dark = isDark();
+            var el = document.documentElement;
+            el.classList.toggle('dark', dark);
+            el.classList.toggle('light', !dark);
+        }
+        window.__tvcNewsApplyTheme = apply;
+        apply();
     })();
 </script>
 <style>
@@ -53,7 +73,12 @@
         --shadow: rgba(0, 0, 0, 0.5);
     }
     * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    html.dark { color-scheme: dark; }
     html, body { min-height: 100%; }
+    body, .card, .ticker-preview, .empty, .count {
+        transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+    }
     body {
         margin: 0;
         background: var(--background);
@@ -282,6 +307,31 @@
 </div>
 
 <script src="news-data.js"></script>
+<script>
+/* Ikuti perubahan mode terang/gelap dari index.html secara langsung. */
+(function () {
+    'use strict';
+    function apply() {
+        try {
+            if (typeof window.__tvcNewsApplyTheme === 'function') window.__tvcNewsApplyTheme();
+        } catch (e) {}
+    }
+    try {
+        if (window.parent && window.parent !== window && window.parent.document && typeof MutationObserver === 'function') {
+            new MutationObserver(apply).observe(window.parent.document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+    } catch (e) {}
+    window.addEventListener('storage', function (e) {
+        if (!e.key || e.key === 'theme') apply();
+    });
+    window.addEventListener('message', function (e) {
+        if (e && e.data && e.data.type === 'tvc-theme') apply();
+    });
+})();
+</script>
 <script>
 (function () {
     'use strict';
