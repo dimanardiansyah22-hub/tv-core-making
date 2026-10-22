@@ -77,7 +77,7 @@
     html { color-scheme: light; }
     html.dark { color-scheme: dark; }
     html, body { min-height: 100%; }
-    body, .card, .ticker-preview, .empty, .count, .editor, .field input, .field textarea, .icon-btn {
+    body, .card, .empty, .count, .editor, .field input, .field textarea, .icon-btn {
         transition: background-color .25s ease, border-color .25s ease, color .25s ease;
     }
     body {
@@ -172,7 +172,14 @@
         grid-template-columns: 170px minmax(0, 1fr);
         gap: 12px;
     }
-    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field { position: relative; display: flex; flex-direction: column; gap: 6px; }
+    .field-label-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        min-height: 28px;
+    }
     .field label {
         color: var(--secondary);
         font-size: 11px;
@@ -193,6 +200,110 @@
         outline: none;
     }
     .field textarea { min-height: 76px; resize: vertical; line-height: 1.6; }
+    .emoji-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-height: 28px;
+        padding: 0 9px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--secondary);
+        font: inherit;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+    .emoji-toggle:hover,
+    .emoji-toggle[aria-expanded="true"] {
+        color: var(--primary);
+        border-color: var(--primary);
+        background: var(--primary-soft);
+    }
+    .emoji-face {
+        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        font-size: 15px;
+        line-height: 1;
+    }
+    .emoji-pop {
+        position: absolute;
+        z-index: 30;
+        top: 34px;
+        right: 0;
+        width: min(368px, calc(100vw - 40px));
+        padding: 10px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 12px;
+        background: var(--surface-container-lowest);
+        box-shadow: 0 18px 50px var(--shadow);
+    }
+    .emoji-search {
+        width: 100%;
+        height: 34px;
+        margin-bottom: 8px;
+        padding: 0 10px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 8px;
+        outline: none;
+        background: var(--surface-container-low);
+        color: var(--on-surface);
+        font: inherit;
+        font-size: 12px;
+    }
+    .emoji-search:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .emoji-tabs {
+        display: flex;
+        gap: 2px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid var(--outline-variant);
+        scrollbar-width: thin;
+    }
+    .emoji-tab {
+        flex: 0 0 auto;
+        padding: 5px 6px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--secondary);
+        font-size: 17px;
+        line-height: 1;
+        cursor: pointer;
+        opacity: .55;
+    }
+    .emoji-tab:hover { opacity: 1; background: var(--surface-container); }
+    .emoji-tab.active { opacity: 1; background: var(--primary-soft); box-shadow: inset 0 0 0 1px var(--primary); }
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 2px;
+        max-height: 264px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+    .emoji-item {
+        padding: 5px 0;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        font-size: 21px;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .emoji-item:hover { background: var(--surface-container); }
+    .emoji-empty {
+        grid-column: 1 / -1;
+        padding: 20px 8px;
+        color: var(--secondary);
+        font-size: 12px;
+        text-align: center;
+    }
     .field input:focus,
     .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
     .editor-actions {
@@ -238,57 +349,6 @@
         color: var(--secondary);
     }
     .btn-secondary:hover { color: var(--on-surface); border-color: var(--outline); }
-    .ticker-preview {
-        display: none;
-        align-items: stretch;
-        height: 42px;
-        border-radius: 12px;
-        overflow: hidden;
-        background: var(--surface-container-lowest);
-        border: 1px solid var(--outline-variant);
-        box-shadow: 0 6px 22px var(--shadow);
-        margin-bottom: 20px;
-    }
-    .ticker-preview.on { display: flex; }
-    .ticker-preview .label {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 16px;
-        background: var(--primary);
-        color: var(--on-primary);
-        font-family: "Hanken Grotesk", sans-serif;
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-    }
-    .ticker-preview .label .material-symbols-outlined { font-size: 17px; }
-    .ticker-preview .viewport { flex: 1; overflow: hidden; position: relative; }
-    .ticker-preview .track {
-        display: inline-flex;
-        align-items: center;
-        height: 100%;
-        white-space: nowrap;
-        will-change: transform;
-        transform: translate3d(0, 0, 0);
-        backface-visibility: hidden;
-    }
-    .ticker-preview .item {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 0 26px;
-        font-size: 13.5px;
-        font-weight: 600;
-        color: var(--on-surface);
-    }
-    .ticker-preview .dot {
-        width: 6px; height: 6px; border-radius: 50%;
-        background: var(--primary);
-        flex: 0 0 auto;
-    }
     .news-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -414,8 +474,18 @@
                     <input id="newsDate" type="date" required>
                 </div>
                 <div class="field">
-                    <label for="newsText">Isi berita</label>
+                    <div class="field-label-row">
+                        <label for="newsText">Isi berita</label>
+                        <button class="emoji-toggle" type="button" id="emojiToggle" aria-label="Sisipkan emoji" aria-haspopup="true" aria-controls="emojiPop" aria-expanded="false" title="Sisipkan emoji">
+                            <span class="emoji-face" aria-hidden="true">😀</span><span class="emoji-label">Emoji</span>
+                        </button>
+                    </div>
                     <textarea id="newsText" rows="3" placeholder="Tulis isi berita..." required></textarea>
+                    <div class="emoji-pop" id="emojiPop" role="group" aria-label="Pilihan emoji" hidden>
+                        <input class="emoji-search" id="emojiSearch" type="search" placeholder="Cari emoji..." autocomplete="off" aria-label="Cari emoji">
+                        <div class="emoji-tabs" id="emojiTabs"></div>
+                        <div class="emoji-grid" id="emojiGrid"></div>
+                    </div>
                 </div>
             </div>
             <div class="editor-actions">
@@ -428,16 +498,12 @@
         </form>
     </section>
 
-    <div class="ticker-preview" id="tickerPreview">
-        <div class="label"><span class="material-symbols-outlined">campaign</span> News</div>
-        <div class="viewport"><div class="track" id="tickerTrack"></div></div>
-    </div>
-
     <div class="news-grid" id="newsGrid"></div>
 </div>
 
 <script src="sync-core.js"></script>
 <script src="news-data.js"></script>
+<script src="emoji-data.js"></script>
 <script>
 /* Ikuti perubahan mode terang/gelap dari index.html secara langsung. */
 (function () {
@@ -478,19 +544,15 @@
     var statusEl = document.getElementById('newsStatus');
     var gridEl = document.getElementById('newsGrid');
     var countEl = document.getElementById('newsCount');
-    var previewEl = document.getElementById('tickerPreview');
-    var trackEl = document.getElementById('tickerTrack');
+    var emojiToggleEl = document.getElementById('emojiToggle');
+    var emojiPopEl = document.getElementById('emojiPop');
+    var emojiTabsEl = document.getElementById('emojiTabs');
+    var emojiGridEl = document.getElementById('emojiGrid');
+    var emojiSearchEl = document.getElementById('emojiSearch');
 
     var items = [];
     var editing = -1;
     var lastSig = '';
-    var tickerToken = 0;
-    var tickerRaf = 0;
-    var tickerLast = 0;
-    var tickerOffset = 0;
-    var tickerCycle = 0;
-    var tickerSpeed = 80;
-    var tickerPaused = false;
     var isAdmin = getRole() === 'admin';
 
     function esc(s) {
@@ -515,6 +577,55 @@
     function todayStr() {
         var d = new Date();
         return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+
+    var EMOJI_GROUPS = Array.isArray(window.TVC_EMOJI_GROUPS) ? window.TVC_EMOJI_GROUPS : [];
+    var emojiGroup = 0;
+
+    function renderEmojiTabs() {
+        emojiTabsEl.innerHTML = EMOJI_GROUPS.map(function (g, i) {
+            return '<button class="emoji-tab' + (i === emojiGroup ? ' active' : '') + '" type="button" data-emoji-group="' + i + '" title="' + esc(g.label) + '" aria-label="' + esc(g.label) + '">' + g.icon + '</button>';
+        }).join('');
+    }
+
+    function renderEmojiGrid(query) {
+        var q = String(query || '').trim().toLowerCase();
+        var list = [];
+        if (q) {
+            EMOJI_GROUPS.forEach(function (g) {
+                var groupText = String(g.label || '').toLowerCase();
+                g.items.forEach(function (item) {
+                    if (item[2].indexOf(q) !== -1 || groupText.indexOf(q) !== -1) list.push(item);
+                });
+            });
+        } else if (EMOJI_GROUPS[emojiGroup]) {
+            list = EMOJI_GROUPS[emojiGroup].items;
+        }
+        if (!list.length) {
+            emojiGridEl.innerHTML = '<div class="emoji-empty">Emoji tidak ditemukan.</div>';
+            return;
+        }
+        emojiGridEl.innerHTML = list.map(function (item) {
+            return '<button class="emoji-item" type="button" data-emoji="' + esc(item[0]) + '" title="' + esc(item[1]) + '" aria-label="' + esc(item[1]) + '">' + esc(item[0]) + '</button>';
+        }).join('');
+    }
+
+    function openEmoji(open) {
+        emojiPopEl.hidden = !open;
+        emojiToggleEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function insertEmoji(ch) {
+        var start = textEl.selectionStart;
+        var end = textEl.selectionEnd;
+        if (typeof start !== 'number') {
+            start = textEl.value.length;
+            end = start;
+        }
+        textEl.value = textEl.value.slice(0, start) + ch + textEl.value.slice(end);
+        var pos = start + ch.length;
+        try { textEl.setSelectionRange(pos, pos); } catch (e) {}
+        textEl.focus();
     }
 
     function getRole() {
@@ -603,82 +714,13 @@
 
     function resetForm(clearStatus) {
         editing = -1;
+        openEmoji(false);
         formEl.reset();
         dateEl.value = todayStr();
         titleEl.textContent = 'Tambah berita';
         submitEl.innerHTML = '<span class="material-symbols-outlined">save</span> Simpan berita';
         cancelEl.hidden = true;
         if (clearStatus !== false) setStatus('', '');
-    }
-
-    function stopTicker() {
-        if (tickerRaf) cancelAnimationFrame(tickerRaf);
-        tickerRaf = 0;
-        tickerLast = 0;
-    }
-
-    function startTicker() {
-        stopTicker();
-        if (tickerPaused || !tickerCycle) return;
-        function frame(ts) {
-            if (tickerPaused || !tickerCycle) {
-                tickerRaf = 0;
-                return;
-            }
-            if (!tickerLast) tickerLast = ts;
-            var dt = ts - tickerLast;
-            tickerLast = ts;
-            if (dt > 100) dt = 100;
-            tickerOffset += tickerSpeed * dt / 1000;
-            if (tickerOffset >= tickerCycle) tickerOffset %= tickerCycle;
-            trackEl.style.transform = 'translate3d(' + (-tickerOffset).toFixed(2) + 'px, 0, 0)';
-            tickerRaf = requestAnimationFrame(frame);
-        }
-        tickerRaf = requestAnimationFrame(frame);
-    }
-
-    function renderTicker(list) {
-        var active = list.filter(function (n) { return n.active !== false; });
-        if (!active.length) {
-            previewEl.classList.remove('on');
-            stopTicker();
-            tickerCycle = 0;
-            trackEl.innerHTML = '';
-            trackEl.style.transform = 'translate3d(0, 0, 0)';
-            return;
-        }
-        previewEl.classList.add('on');
-        var one = active.map(function (n) {
-            return '<span class="item"><span class="dot"></span>' + esc(newsText(n)) + '</span>';
-        }).join('');
-        buildTicker(one);
-    }
-
-    function buildTicker(one) {
-        var token = ++tickerToken;
-        var tries = 0;
-        stopTicker();
-        function attempt() {
-            if (token !== tickerToken) return;
-            trackEl.style.transform = 'translate3d(0, 0, 0)';
-            trackEl.innerHTML = one;
-            var viewport = trackEl.parentElement.clientWidth || 800;
-            var oneWidth = trackEl.scrollWidth || 0;
-            if (!oneWidth && tries++ < 10) {
-                requestAnimationFrame(attempt);
-                return;
-            }
-            if (!oneWidth) return;
-            var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
-            var full = one.repeat(copies);
-            trackEl.innerHTML = full + full;
-            tickerCycle = oneWidth * copies;
-            tickerOffset = 0;
-            var durationSec = Math.max(18, Math.round(tickerCycle / 70));
-            tickerSpeed = tickerCycle / durationSec;
-            startTicker();
-        }
-        attempt();
     }
 
     function render() {
@@ -694,7 +736,6 @@
                     '<strong>Belum ada berita</strong>' +
                     '<span>' + hint + '</span>' +
                 '</div>';
-            renderTicker([]);
             return;
         }
 
@@ -713,8 +754,6 @@
             var top = (date || actions) ? '<div class="card-top">' + date + actions + '</div>' : '';
             return '<article class="card">' + top + '<p>' + esc(newsText(n)) + '</p></article>';
         }).join('');
-
-        renderTicker(items);
     }
 
     function applyData(list) {
@@ -781,6 +820,7 @@
         var n = items[i];
         if (!n || !isAdmin) return;
         editing = i;
+        openEmoji(false);
         dateEl.value = n.date || todayStr();
         textEl.value = newsText(n);
         titleEl.textContent = 'Edit berita';
@@ -836,6 +876,52 @@
         persist();
     });
 
+    emojiToggleEl.addEventListener('click', function () {
+        if (emojiPopEl.hidden) {
+            emojiSearchEl.value = '';
+            renderEmojiTabs();
+            renderEmojiGrid('');
+            openEmoji(true);
+            emojiSearchEl.focus();
+        } else {
+            openEmoji(false);
+        }
+    });
+
+    emojiSearchEl.addEventListener('input', function () {
+        renderEmojiGrid(emojiSearchEl.value);
+    });
+
+    emojiTabsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('[data-emoji-group]') : null;
+        if (!btn) return;
+        e.stopPropagation();
+        emojiGroup = parseInt(btn.getAttribute('data-emoji-group'), 10) || 0;
+        emojiSearchEl.value = '';
+        renderEmojiTabs();
+        renderEmojiGrid('');
+    });
+
+    emojiGridEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('[data-emoji]') : null;
+        if (!btn) return;
+        e.stopPropagation();
+        insertEmoji(btn.getAttribute('data-emoji'));
+    });
+
+    document.addEventListener('click', function (e) {
+        if (emojiPopEl.hidden) return;
+        if (e.target.closest && (e.target.closest('#emojiPop') || e.target.closest('#emojiToggle'))) return;
+        openEmoji(false);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !emojiPopEl.hidden) {
+            openEmoji(false);
+            if (isAdmin) textEl.focus();
+        }
+    });
+
     window.addEventListener('storage', function (e) {
         if (e.key !== LS_KEY || editing >= 0) return;
         var local = readLocal();
@@ -847,27 +933,6 @@
         var local = readLocal();
         if (local) applyData(local.items);
         loadFromServer(true);
-    });
-
-    var resizeTimer;
-    window.addEventListener('resize', function () {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function () {
-            if (items.length) renderTicker(items);
-        }, 180);
-    });
-
-    previewEl.addEventListener('mouseenter', function () {
-        tickerPaused = true;
-        stopTicker();
-    });
-    previewEl.addEventListener('mouseleave', function () {
-        tickerPaused = false;
-        startTicker();
-    });
-    document.addEventListener('visibilitychange', function () {
-        if (document.hidden) stopTicker();
-        else if (!tickerPaused) startTicker();
     });
 
     editorEl.hidden = !isAdmin;
