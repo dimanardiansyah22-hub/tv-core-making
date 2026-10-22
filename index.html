@@ -955,52 +955,143 @@ html.dark ::-webkit-scrollbar-thumb {
         })();
     </script>
     <script>
-        /* Running text News — sumber data: news-data.js */
+        /* Running text News — server (app=news), fallback news-data.js / cache lokal */
         (function () {
             'use strict';
+            var LS_KEY = 'tvcm-news';
+            var track = document.getElementById('newsTickerTrack');
+            var preview = document.getElementById('newsTicker');
+            if (!track || !preview) return;
+
+            var items = [];
+            var lastSig = '';
+            var tickerToken = 0;
+
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
                     return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
                 });
             }
-            var items = (Array.isArray(window.TVC_NEWS) ? window.TVC_NEWS : []).filter(function (n) {
-                return n && n.active !== false && (n.text || n.title);
-            });
-            if (!items.length) return;
 
-            var track = document.getElementById('newsTickerTrack');
-            var preview = document.getElementById('newsTicker');
-            if (!track || !preview) return;
-
-            var one = items.map(function (n) {
-                return '<span class="nt-item"><span class="nt-dot"></span>' + esc(n.text || n.title) + '</span>';
-            }).join('');
-
-            var buildTries = 0;
-            function build() {
-                track.innerHTML = one;
-                var viewport = track.parentElement.clientWidth || 800;
-                var oneWidth = track.scrollWidth || 0;
-                if (!oneWidth && buildTries++ < 10) {
-                    requestAnimationFrame(build);
-                    return;
-                }
-                if (!oneWidth) return;
-                var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
-                var full = one.repeat(copies);
-                track.innerHTML = full + full;
-                var cycleWidth = oneWidth * copies;
-                track.style.setProperty('--nt-dur', Math.max(18, Math.round(cycleWidth / 80)) + 's');
+            function newsText(n) {
+                return String((n && (n.text || n.title)) || '').trim();
             }
 
-            document.body.classList.add('ticker-on');
-            build();
+            function cleanItems(list) {
+                return (Array.isArray(list) ? list : []).filter(function (n) {
+                    return n && newsText(n);
+                }).map(function (n) {
+                    return { date: String(n.date || ''), text: newsText(n), active: n.active !== false };
+                });
+            }
 
-            var t;
-            window.addEventListener('resize', function () {
-                clearTimeout(t);
-                t = setTimeout(build, 180);
+            function readLocal() {
+                try {
+                    var raw = localStorage.getItem(LS_KEY);
+                    if (!raw) return null;
+                    var v = JSON.parse(raw);
+                    var list = Array.isArray(v) ? v : (v && Array.isArray(v.items) ? v.items : null);
+                    if (!list) return null;
+                    return {
+                        items: cleanItems(list),
+                        synced: Array.isArray(v) || v.synced !== false
+                    };
+                } catch (e) { return null; }
+            }
+
+            function buildTicker(one) {
+                var token = ++tickerToken;
+                var tries = 0;
+                function attempt() {
+                    if (token !== tickerToken) return;
+                    track.innerHTML = one;
+                    var viewport = track.parentElement.clientWidth || 800;
+                    var oneWidth = track.scrollWidth || 0;
+                    if (!oneWidth && tries++ < 10) {
+                        requestAnimationFrame(attempt);
+                        return;
+                    }
+                    if (!oneWidth) return;
+                    var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
+                    var full = one.repeat(copies);
+                    track.innerHTML = full + full;
+                    var cycleWidth = oneWidth * copies;
+                    track.style.setProperty('--nt-dur', Math.max(18, Math.round(cycleWidth / 80)) + 's');
+                }
+                attempt();
+            }
+
+            function render() {
+                if (!items.length) {
+                    document.body.classList.remove('ticker-on');
+                    track.innerHTML = '';
+                    return;
+                }
+                document.body.classList.add('ticker-on');
+                var one = items.filter(function (n) { return n.active !== false; }).map(function (n) {
+                    return '<span class="nt-item"><span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
+                }).join('');
+                if (!one) {
+                    document.body.classList.remove('ticker-on');
+                    track.innerHTML = '';
+                    return;
+                }
+                buildTicker(one);
+            }
+
+            function setItems(list) {
+                var next = cleanItems(list);
+                var sig = JSON.stringify(next);
+                if (sig === lastSig) return;
+                lastSig = sig;
+                items = next;
+                render();
+            }
+
+            function load() {
+                var local = readLocal();
+                if (local) setItems(local.items);
+                else setItems(Array.isArray(window.TVC_NEWS) ? window.TVC_NEWS : []);
+
+                if (!(window.Sync && Sync.hasUrl())) return;
+                Sync.get('news', { action: 'get' }).then(function (r) {
+                    if (!r || !r.ok) return;
+                    var data = r.data;
+                    var list = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
+                    if (!list) return;
+                    var nowLocal = readLocal();
+                    if (nowLocal && nowLocal.synced === false) return;
+                    setItems(list);
+                    try {
+                        localStorage.setItem(LS_KEY, JSON.stringify({
+                            items: cleanItems(list),
+                            savedAt: Date.now(),
+                            synced: true
+                        }));
+                    } catch (e) {}
+                }).catch(function () {});
+            }
+
+            window.addEventListener('storage', function (e) {
+                if (e.key !== LS_KEY) return;
+                var local = readLocal();
+                if (local) setItems(local.items);
             });
+
+            window.addEventListener('message', function (e) {
+                if (e && e.data && e.data.type === 'tvc-news-updated') load();
+            });
+
+            var resizeTimer;
+            window.addEventListener('resize', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(render, 180);
+            });
+
+            load();
+            if (window.Sync && Sync.hasUrl()) {
+                setInterval(load, 30000);
+            }
         })();
     </script>
 

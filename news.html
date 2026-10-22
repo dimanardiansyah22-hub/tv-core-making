@@ -73,10 +73,11 @@
         --shadow: rgba(0, 0, 0, 0.5);
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     html { color-scheme: light; }
     html.dark { color-scheme: dark; }
     html, body { min-height: 100%; }
-    body, .card, .ticker-preview, .empty, .count {
+    body, .card, .ticker-preview, .empty, .count, .editor, .field input, .field textarea, .icon-btn {
         transition: background-color .25s ease, border-color .25s ease, color .25s ease;
     }
     body {
@@ -137,6 +138,106 @@
         white-space: nowrap;
     }
     .count b { color: var(--on-surface); font-family: "JetBrains Mono", monospace; }
+    .editor {
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 8px 24px var(--shadow);
+        margin-bottom: 18px;
+    }
+    .editor-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+    .editor-head h2 {
+        margin: 0;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -.01em;
+    }
+    .editor-head p {
+        margin: 5px 0 0;
+        color: var(--secondary);
+        font-size: 12.5px;
+        line-height: 1.55;
+    }
+    .editor-grid {
+        display: grid;
+        grid-template-columns: 170px minmax(0, 1fr);
+        gap: 12px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+        color: var(--secondary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .field input,
+    .field textarea {
+        width: 100%;
+        border: 1px solid var(--outline-variant);
+        border-radius: 10px;
+        background: var(--surface-container-low);
+        color: var(--on-surface);
+        font: inherit;
+        font-size: 13.5px;
+        padding: 10px 12px;
+        outline: none;
+    }
+    .field textarea { min-height: 76px; resize: vertical; line-height: 1.6; }
+    .field input:focus,
+    .field textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .editor-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+    .status { margin-right: auto; color: var(--secondary); font-size: 12px; line-height: 1.4; }
+    .status.ok { color: #15803d; }
+    .status.err { color: #dc2626; }
+    .status.warn { color: #b45309; }
+    html.dark .status.ok { color: #4ade80; }
+    html.dark .status.err { color: #f87171; }
+    html.dark .status.warn { color: #fbbf24; }
+    .btn-primary,
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 9px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 800;
+        padding: 9px 14px;
+        cursor: pointer;
+    }
+    .btn-primary {
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: var(--on-primary);
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:disabled { opacity: .6; cursor: default; }
+    .btn-primary .material-symbols-outlined,
+    .btn-secondary .material-symbols-outlined { font-size: 17px; }
+    .btn-secondary {
+        border: 1px solid var(--outline-variant);
+        background: transparent;
+        color: var(--secondary);
+    }
+    .btn-secondary:hover { color: var(--on-surface); border-color: var(--outline); }
     .ticker-preview {
         display: none;
         align-items: stretch;
@@ -219,8 +320,26 @@
         align-items: center;
         gap: 10px;
         flex-wrap: wrap;
+        justify-content: space-between;
         margin-bottom: 10px;
     }
+    .card-actions { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+    .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--secondary);
+        cursor: pointer;
+        padding: 0;
+    }
+    .icon-btn:hover { color: var(--on-surface); border-color: var(--outline-variant); background: var(--surface-container-low); }
+    .icon-btn.danger:hover { color: #dc2626; border-color: rgba(220, 38, 38, .35); }
+    .icon-btn .material-symbols-outlined { font-size: 17px; }
     .date {
         display: inline-flex;
         align-items: center;
@@ -268,6 +387,9 @@
     @media (max-width: 640px) {
         body { padding: 20px 16px 36px; }
         .news-grid { grid-template-columns: 1fr; }
+        .editor-grid { grid-template-columns: 1fr; }
+        .editor-actions { justify-content: stretch; }
+        .status { flex: 1 0 100%; margin-right: 0; }
     }
 </style>
 </head>
@@ -282,6 +404,34 @@
         <div class="count"><span class="material-symbols-outlined" style="font-size:16px">feed</span> <b id="newsCount">0</b> berita</div>
     </div>
 
+    <section class="editor" id="newsEditor" hidden>
+        <div class="editor-head">
+            <div>
+                <h2 id="editorTitle">Tambah berita</h2>
+                <p>Cukup isi tanggal dan isi berita. Berita yang disimpan otomatis aktif di running text.</p>
+            </div>
+        </div>
+        <form id="newsForm">
+            <div class="editor-grid">
+                <div class="field">
+                    <label for="newsDate">Tanggal</label>
+                    <input id="newsDate" type="date" required>
+                </div>
+                <div class="field">
+                    <label for="newsText">Isi berita</label>
+                    <textarea id="newsText" rows="3" placeholder="Tulis isi berita..." required></textarea>
+                </div>
+            </div>
+            <div class="editor-actions">
+                <span class="status" id="newsStatus" role="status"></span>
+                <button class="btn-secondary" type="button" id="newsCancel" hidden>Batal</button>
+                <button class="btn-primary" type="submit" id="newsSubmit">
+                    <span class="material-symbols-outlined">save</span> Simpan berita
+                </button>
+            </div>
+        </form>
+    </section>
+
     <div class="ticker-preview" id="tickerPreview">
         <div class="label"><span class="material-symbols-outlined">campaign</span> News</div>
         <div class="viewport"><div class="track" id="tickerTrack"></div></div>
@@ -290,6 +440,7 @@
     <div class="news-grid" id="newsGrid"></div>
 </div>
 
+<script src="sync-core.js"></script>
 <script src="news-data.js"></script>
 <script>
 /* Ikuti perubahan mode terang/gelap dari index.html secara langsung. */
@@ -320,6 +471,26 @@
 (function () {
     'use strict';
 
+    var LS_KEY = 'tvcm-news';
+    var editorEl = document.getElementById('newsEditor');
+    var formEl = document.getElementById('newsForm');
+    var dateEl = document.getElementById('newsDate');
+    var textEl = document.getElementById('newsText');
+    var titleEl = document.getElementById('editorTitle');
+    var submitEl = document.getElementById('newsSubmit');
+    var cancelEl = document.getElementById('newsCancel');
+    var statusEl = document.getElementById('newsStatus');
+    var gridEl = document.getElementById('newsGrid');
+    var countEl = document.getElementById('newsCount');
+    var previewEl = document.getElementById('tickerPreview');
+    var trackEl = document.getElementById('tickerTrack');
+
+    var items = [];
+    var editing = -1;
+    var lastSig = '';
+    var tickerToken = 0;
+    var isAdmin = getRole() === 'admin';
+
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
             return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
@@ -334,71 +505,335 @@
     }
 
     function newsText(n) {
-        return n.text || n.title || '';
+        return String((n && (n.text || n.title)) || '').trim();
     }
 
-    function inTicker(n) {
-        return n.active !== false;
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function todayStr() {
+        var d = new Date();
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
     }
 
-    var items = (Array.isArray(window.TVC_NEWS) ? window.TVC_NEWS : []).filter(function (n) {
-        return n && newsText(n);
-    });
-
-    document.getElementById('newsCount').textContent = items.length;
-
-    if (!items.length) {
-        document.getElementById('newsGrid').innerHTML =
-            '<div class="empty">' +
-                '<span class="material-symbols-outlined">newspaper</span>' +
-                '<strong>Belum ada berita</strong>' +
-                '<span>Tambahkan tanggal dan isi berita pada <b>news-data.js</b>. Berita yang aktif akan tampil di sini dan berjalan sebagai running text di halaman utama.</span>' +
-            '</div>';
-        return;
+    function getRole() {
+        try {
+            var p = window.parent;
+            if (p && p !== window && typeof p.tvcSession === 'function') {
+                var ps = p.tvcSession();
+                if (ps && ps.role) return ps.role;
+            }
+        } catch (e) {}
+        try {
+            var q = new URLSearchParams(window.location.search).get('role');
+            if (q) return q;
+        } catch (e) {}
+        try {
+            var s = JSON.parse(localStorage.getItem('tvcm-pin-auth') || 'null');
+            if (s && s.t && Date.now() < (s.exp || 0) && s.role) return s.role;
+        } catch (e) {}
+        return 'guest';
     }
 
-    document.getElementById('newsGrid').innerHTML = items.map(function (n) {
-        var date = n.date ? '<time class="date" datetime="' + esc(n.date) + '"><span class="material-symbols-outlined">event</span>' + esc(fmtDate(n.date)) + '</time>' : '';
-        var top = date ? '<div class="card-top">' + date + '</div>' : '';
-        return '<article class="card">' +
-            top +
-            '<p>' + esc(newsText(n)) + '</p>' +
-        '</article>';
-    }).join('');
+    function normalizePayload(data) {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.items)) return data.items;
+        return null;
+    }
 
-    var tickerItems = items.filter(inTicker);
-    if (!tickerItems.length) return;
+    function cleanItems(list) {
+        return (Array.isArray(list) ? list : []).filter(function (n) {
+            return n && newsText(n);
+        }).map(function (n) {
+            return {
+                date: String(n.date || ''),
+                text: newsText(n),
+                active: n.active !== false
+            };
+        });
+    }
 
-    var preview = document.getElementById('tickerPreview');
-    var track = document.getElementById('tickerTrack');
-    var one = tickerItems.map(function (n) {
-        return '<span class="item"><span class="dot"></span>' + esc(newsText(n)) + '</span>';
-    }).join('');
+    function sortItems(list) {
+        return list.slice().sort(function (a, b) {
+            var da = String(a.date || '');
+            var db = String(b.date || '');
+            if (da === db) return 0;
+            return db.localeCompare(da);
+        });
+    }
 
-    var buildTries = 0;
-    function buildTicker() {
-        preview.classList.add('on');
-        track.innerHTML = one;
-        var viewport = track.parentElement.clientWidth || 800;
-        var oneWidth = track.scrollWidth || 0;
-        if (!oneWidth && buildTries++ < 10) {
-            requestAnimationFrame(buildTicker);
+    function readLocal() {
+        try {
+            var raw = localStorage.getItem(LS_KEY);
+            if (!raw) return null;
+            var v = JSON.parse(raw);
+            var list = normalizePayload(v);
+            if (!list) return null;
+            return {
+                items: cleanItems(list),
+                savedAt: Number(v && v.savedAt) || 0,
+                synced: !v || Array.isArray(v) || v.synced !== false
+            };
+        } catch (e) { return null; }
+    }
+
+    function writeLocal(synced) {
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify({
+                items: items,
+                savedAt: Date.now(),
+                synced: !!synced
+            }));
+        } catch (e) {}
+    }
+
+    function setStatus(msg, type) {
+        statusEl.textContent = msg || '';
+        statusEl.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function notifyParent() {
+        try {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'tvc-news-updated' }, '*');
+            }
+        } catch (e) {}
+    }
+
+    function resetForm(clearStatus) {
+        editing = -1;
+        formEl.reset();
+        dateEl.value = todayStr();
+        titleEl.textContent = 'Tambah berita';
+        submitEl.innerHTML = '<span class="material-symbols-outlined">save</span> Simpan berita';
+        cancelEl.hidden = true;
+        if (clearStatus !== false) setStatus('', '');
+    }
+
+    function renderTicker(list) {
+        var active = list.filter(function (n) { return n.active !== false; });
+        if (!active.length) {
+            previewEl.classList.remove('on');
+            trackEl.innerHTML = '';
             return;
         }
-        if (!oneWidth) return;
-        var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
-        var full = one.repeat(copies);
-        track.innerHTML = full + full;
-        var cycleWidth = oneWidth * copies;
-        track.style.setProperty('--dur', Math.max(18, Math.round(cycleWidth / 80)) + 's');
+        previewEl.classList.add('on');
+        var one = active.map(function (n) {
+            return '<span class="item"><span class="dot"></span>' + esc(newsText(n)) + '</span>';
+        }).join('');
+        buildTicker(one);
     }
 
-    buildTicker();
-    var t;
-    window.addEventListener('resize', function () {
-        clearTimeout(t);
-        t = setTimeout(buildTicker, 180);
+    function buildTicker(one) {
+        var token = ++tickerToken;
+        var tries = 0;
+        function attempt() {
+            if (token !== tickerToken) return;
+            trackEl.innerHTML = one;
+            var viewport = trackEl.parentElement.clientWidth || 800;
+            var oneWidth = trackEl.scrollWidth || 0;
+            if (!oneWidth && tries++ < 10) {
+                requestAnimationFrame(attempt);
+                return;
+            }
+            if (!oneWidth) return;
+            var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
+            var full = one.repeat(copies);
+            trackEl.innerHTML = full + full;
+            var cycleWidth = oneWidth * copies;
+            trackEl.style.setProperty('--dur', Math.max(18, Math.round(cycleWidth / 80)) + 's');
+        }
+        attempt();
+    }
+
+    function render() {
+        countEl.textContent = items.length;
+
+        if (!items.length) {
+            var hint = isAdmin
+                ? 'Tambahkan tanggal dan isi berita lewat form di atas.'
+                : 'Berita yang diinput admin akan tampil di sini.';
+            gridEl.innerHTML =
+                '<div class="empty">' +
+                    '<span class="material-symbols-outlined">newspaper</span>' +
+                    '<strong>Belum ada berita</strong>' +
+                    '<span>' + hint + '</span>' +
+                '</div>';
+            renderTicker([]);
+            return;
+        }
+
+        gridEl.innerHTML = items.map(function (n, i) {
+            var date = n.date
+                ? '<time class="date" datetime="' + esc(n.date) + '"><span class="material-symbols-outlined">event</span>' + esc(fmtDate(n.date)) + '</time>'
+                : '';
+            var actions = '';
+            if (isAdmin) {
+                actions =
+                    '<div class="card-actions">' +
+                        '<button class="icon-btn" type="button" data-edit="' + i + '" title="Edit berita" aria-label="Edit berita"><span class="material-symbols-outlined">edit</span></button>' +
+                        '<button class="icon-btn danger" type="button" data-delete="' + i + '" title="Hapus berita" aria-label="Hapus berita"><span class="material-symbols-outlined">delete</span></button>' +
+                    '</div>';
+            }
+            var top = (date || actions) ? '<div class="card-top">' + date + actions + '</div>' : '';
+            return '<article class="card">' + top + '<p>' + esc(newsText(n)) + '</p></article>';
+        }).join('');
+
+        renderTicker(items);
+    }
+
+    function applyData(list) {
+        var next = sortItems(cleanItems(list));
+        var sig = JSON.stringify(next);
+        if (sig === lastSig) { items = next; return; }
+        if (editing >= 0) return;
+        items = next;
+        lastSig = sig;
+        render();
+    }
+
+    function persist() {
+        writeLocal(false);
+        notifyParent();
+        if (!(window.Sync && Sync.hasUrl())) {
+            setStatus('Tersimpan di perangkat ini. Atur sinkronisasi agar tampil di perangkat lain.', 'warn');
+            return Promise.resolve(false);
+        }
+        setStatus('Menyimpan ke server...', '');
+        submitEl.disabled = true;
+        return Sync.save('news', { action: 'save', data: { items: items } }).then(function (r) {
+            if (!r || !r.ok) throw new Error((r && r.error) || 'respon server tidak valid');
+            writeLocal(true);
+            setStatus('Berita tersimpan dan aktif di running text.', 'ok');
+            return true;
+        }).catch(function (err) {
+            setStatus('Tersimpan di perangkat ini, gagal sinkron: ' + (err && err.message ? err.message : 'server tidak merespons'), 'err');
+            return false;
+        }).then(function (ok) {
+            submitEl.disabled = false;
+            return ok;
+        });
+    }
+
+    function loadFromServer(silent) {
+        if (!(window.Sync && Sync.hasUrl())) return Promise.resolve(false);
+        return Sync.get('news', { action: 'get' }).then(function (r) {
+            if (!r) throw new Error('respon kosong');
+            if (!r.ok) throw new Error(r.error || 'server menolak permintaan');
+            var list = normalizePayload(r.data);
+            if (!list) return false;
+            var local = readLocal();
+            if (local && local.synced === false) {
+                if (isAdmin && !silent) {
+                    setStatus('Data lokal belum tersinkron ke server. Tekan Simpan untuk mencoba lagi.', 'warn');
+                }
+                return false;
+            }
+            if (editing < 0) {
+                applyData(list);
+                writeLocal(true);
+            }
+            return true;
+        }).catch(function (err) {
+            if (isAdmin && !silent) {
+                setStatus('Gagal memuat news dari server: ' + (err && err.message ? err.message : 'server tidak merespons') + '.', 'warn');
+            }
+            return false;
+        });
+    }
+
+    function startEdit(i) {
+        var n = items[i];
+        if (!n || !isAdmin) return;
+        editing = i;
+        dateEl.value = n.date || todayStr();
+        textEl.value = newsText(n);
+        titleEl.textContent = 'Edit berita';
+        submitEl.innerHTML = '<span class="material-symbols-outlined">save</span> Perbarui berita';
+        cancelEl.hidden = false;
+        setStatus('', '');
+        editorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        textEl.focus({ preventScroll: true });
+    }
+
+    formEl.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!isAdmin) return;
+        var date = dateEl.value;
+        var text = textEl.value.trim();
+        if (!date || !text) {
+            setStatus('Tanggal dan isi berita wajib diisi.', 'err');
+            return;
+        }
+        var base = editing >= 0 && items[editing] ? items[editing] : {};
+        var next = { date: date, text: text, active: base.active !== false };
+        if (editing >= 0) items[editing] = next;
+        else items.unshift(next);
+        items = sortItems(cleanItems(items));
+        lastSig = JSON.stringify(items);
+        resetForm(false);
+        render();
+        persist();
     });
+
+    cancelEl.addEventListener('click', function () {
+        resetForm();
+    });
+
+    gridEl.addEventListener('click', function (e) {
+        if (!isAdmin) return;
+        var editBtn = e.target.closest ? e.target.closest('[data-edit]') : null;
+        if (editBtn) {
+            startEdit(parseInt(editBtn.getAttribute('data-edit'), 10));
+            return;
+        }
+        var delBtn = e.target.closest ? e.target.closest('[data-delete]') : null;
+        if (!delBtn) return;
+        var i = parseInt(delBtn.getAttribute('data-delete'), 10);
+        if (isNaN(i) || i < 0 || i >= items.length) return;
+        var previewText = newsText(items[i]);
+        if (!window.confirm('Hapus berita ini?\n\n' + (previewText.length > 100 ? previewText.slice(0, 100) + '...' : previewText))) return;
+        items.splice(i, 1);
+        lastSig = JSON.stringify(items);
+        if (editing === i) resetForm();
+        else if (editing > i) editing--;
+        render();
+        persist();
+    });
+
+    window.addEventListener('storage', function (e) {
+        if (e.key !== LS_KEY || editing >= 0) return;
+        var local = readLocal();
+        if (local) applyData(local.items);
+    });
+
+    window.addEventListener('message', function (e) {
+        if (!e || !e.data || e.data.type !== 'tvc-news-updated' || editing >= 0) return;
+        var local = readLocal();
+        if (local) applyData(local.items);
+        loadFromServer(true);
+    });
+
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            if (items.length) renderTicker(items);
+        }, 180);
+    });
+
+    editorEl.hidden = !isAdmin;
+    resetForm();
+    var initialLocal = readLocal();
+    if (initialLocal) applyData(initialLocal.items);
+    else if (Array.isArray(window.TVC_NEWS) && window.TVC_NEWS.length) applyData(window.TVC_NEWS);
+    render();
+
+    if (window.Sync && Sync.hasUrl()) {
+        loadFromServer(false);
+        setInterval(function () {
+            if (editing < 0) loadFromServer(true);
+        }, 30000);
+    }
 })();
 </script>
 </body>

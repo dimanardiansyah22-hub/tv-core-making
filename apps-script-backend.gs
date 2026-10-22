@@ -7,6 +7,7 @@
  *   - Visualisasi WIP Core (pagi / malam)
  *   - Planning Cuti Core (red / white)
  *   - Laporan Antar Shift (PNG + metadata di Drive) [legacy]
+ *   - News / running text Core Making
  *
  * Cara pakai:
  * 1. Buka script.google.com, buat project baru (Drive diizinkan).
@@ -21,6 +22,7 @@
  *   ?app=mapping&core=red&action=get              → {ok:true,data:{...}}
  *   ?app=wip&shift=pagi&action=get                → {ok:true,data:{...}}
  *   ?app=planning-cuti&core=red&action=get        → {ok:true,data:{...}}
+ *   ?app=news&action=get                        → {ok:true,data:{items:[...]}}
  *   ?app=laporan&action=list                      → {ok:true,reports:[...]}
  *   ?app=laporan&action=get&id=...                → {ok:true,image:...}
  *   ?app=laporan&action=pdf&id=...                → {ok:true,b64:...}
@@ -32,6 +34,7 @@
  *   {"app":"mapping","core":"red","action":"save","data":{...}}
  *   {"app":"wip","shift":"pagi","action":"save","data":{...}}
  *   {"app":"planning-cuti","core":"red","action":"save","data":{...}}
+ *   {"app":"news","action":"save","data":{"items":[...]}}
  *   {"app":"laporan","action":"save"|"update", ...}
  ***************************************************************/
 
@@ -55,6 +58,7 @@ var DOC_NAMES = {
   wip_malam: 'wip-malam.json',
   planning_red: 'planning-cuti-red.json',
   planning_white: 'planning-cuti-white.json',
+  news: 'news.json',
   machines: 'machines.json',
   capability_red: 'capability-red.json',
   capability_white: 'capability-white.json',
@@ -113,6 +117,8 @@ function doGet(e) {
     result = (action === 'get') ? appGet_('planning', p.core) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'corecap') {
     result = (action === 'get') ? appGet_('capability', p.core) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'news') {
+    result = (action === 'get') ? appGet_('news') : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'bnf') {
     if (action === 'list') result = listBnfPdfs_();
     else if (action === 'getpdf') result = getWipPdf_(p.id);
@@ -168,6 +174,8 @@ function doPost(e) {
     result = appSave_('planning', body.core, body.data);
   } else if (app === 'corecap') {
     result = appSave_('capability', body.core, body.data);
+  } else if (app === 'news') {
+    result = appSave_('news', null, body.data);
   } else {
     result = { ok: false, error: 'App tidak dikenal: ' + app };
   }
@@ -190,6 +198,7 @@ function appKey_(app, variant) {
   if (app === 'planning') return (variant === 'white') ? DOC_NAMES.planning_white : DOC_NAMES.planning_red;
   if (app === 'machines') return DOC_NAMES.machines;
   if (app === 'capability') return (variant === 'white') ? DOC_NAMES.capability_white : DOC_NAMES.capability_red;
+  if (app === 'news') return DOC_NAMES.news;
   return null;
 }
 
