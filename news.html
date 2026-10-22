@@ -221,40 +221,24 @@
         flex-wrap: wrap;
         margin-bottom: 10px;
     }
-    .tag {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 9px;
-        border-radius: 999px;
-        background: var(--primary-soft);
-        color: var(--primary);
-        font-size: 10.5px;
-        font-weight: 800;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-    }
     .date {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        color: var(--secondary);
-        font-size: 11.5px;
-        font-weight: 600;
+        padding: 4px 9px;
+        border-radius: 999px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .04em;
     }
     .date .material-symbols-outlined { font-size: 14px; }
-    .card h2 {
-        margin: 0 0 8px;
-        font-family: "Hanken Grotesk", sans-serif;
-        font-size: 18px;
-        line-height: 1.28;
-        font-weight: 800;
-        letter-spacing: -.01em;
-    }
     .card p {
         margin: 0;
         color: var(--on-surface-variant);
-        font-size: 13.5px;
-        line-height: 1.65;
+        font-size: 14.5px;
+        line-height: 1.7;
         white-space: pre-line;
     }
     .empty {
@@ -293,7 +277,7 @@
         <div>
             <div class="eyebrow"><span class="material-symbols-outlined">campaign</span> News &amp; Information</div>
             <h1>News Core Making</h1>
-            <p class="subtitle">Informasi terbaru seputar aktivitas dan pengumuman Core Making. Berita terbaru juga tampil sebagai running text di halaman utama.</p>
+            <p class="subtitle">Informasi terbaru seputar aktivitas dan pengumuman Core Making. Setiap berita yang aktif juga tampil sebagai running text di halaman utama.</p>
         </div>
         <div class="count"><span class="material-symbols-outlined" style="font-size:16px">feed</span> <b id="newsCount">0</b> berita</div>
     </div>
@@ -349,12 +333,16 @@
         return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
-    function tickerText(n) {
-        return n.ticker || n.text || n.title || '';
+    function newsText(n) {
+        return n.text || n.title || '';
+    }
+
+    function inTicker(n) {
+        return n.active !== false;
     }
 
     var items = (Array.isArray(window.TVC_NEWS) ? window.TVC_NEWS : []).filter(function (n) {
-        return n && (n.title || n.text || n.ticker);
+        return n && newsText(n);
     });
 
     document.getElementById('newsCount').textContent = items.length;
@@ -364,26 +352,27 @@
             '<div class="empty">' +
                 '<span class="material-symbols-outlined">newspaper</span>' +
                 '<strong>Belum ada berita</strong>' +
-                '<span>Konten News akan tampil di sini dan berjalan sebagai running text di halaman utama.</span>' +
+                '<span>Tambahkan tanggal dan isi berita pada <b>news-data.js</b>. Berita yang aktif akan tampil di sini dan berjalan sebagai running text di halaman utama.</span>' +
             '</div>';
         return;
     }
 
     document.getElementById('newsGrid').innerHTML = items.map(function (n) {
-        var tag = n.tag ? '<span class="tag">' + esc(n.tag) + '</span>' : '';
-        var date = n.date ? '<span class="date"><span class="material-symbols-outlined">event</span>' + esc(fmtDate(n.date)) + '</span>' : '';
-        var title = n.title ? '<h2>' + esc(n.title) + '</h2>' : '';
-        var text = n.text ? '<p>' + esc(n.text) + '</p>' : '';
+        var date = n.date ? '<time class="date" datetime="' + esc(n.date) + '"><span class="material-symbols-outlined">event</span>' + esc(fmtDate(n.date)) + '</time>' : '';
+        var top = date ? '<div class="card-top">' + date + '</div>' : '';
         return '<article class="card">' +
-            '<div class="card-top">' + tag + date + '</div>' +
-            title + text +
+            top +
+            '<p>' + esc(newsText(n)) + '</p>' +
         '</article>';
     }).join('');
 
+    var tickerItems = items.filter(inTicker);
+    if (!tickerItems.length) return;
+
     var preview = document.getElementById('tickerPreview');
     var track = document.getElementById('tickerTrack');
-    var one = items.map(function (n) {
-        return '<span class="item"><span class="dot"></span>' + esc(tickerText(n)) + '</span>';
+    var one = tickerItems.map(function (n) {
+        return '<span class="item"><span class="dot"></span>' + esc(newsText(n)) + '</span>';
     }).join('');
 
     var buildTries = 0;

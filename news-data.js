@@ -1,12 +1,13 @@
 /*
  * Data News / Running Text — TV Core Making
  * ------------------------------------------------
- * Tambahkan berita di array di bawah. Contoh format:
+ * Cukup isi tanggal dan isi berita:
  *
- *   { tag: 'INFO', date: '2026-10-21', title: 'Judul berita', text: 'Isi berita singkat...' }
+ *   { date: '2026-10-22', text: 'Isi berita...' }
  *
- * - field opsional "ticker" untuk teks khusus running text
- * - ticker di index.html memakai "ticker" (fallback ke "text", lalu "title")
- * - halaman news.html menampilkan tag, tanggal, judul, dan isi
+ * - Semua berita otomatis tampil di halaman News dan running text index.
+ * - Tambahkan "active: false" jika berita tetap ingin ditampilkan di halaman
+ *   News, tetapi tidak diikutkan pada running text.
+ * - Urutan tampil mengikuti urutan array (terbaru di atas).
  */
 window.TVC_NEWS = [];

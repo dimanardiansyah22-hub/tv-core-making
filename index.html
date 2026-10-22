@@ -964,7 +964,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 });
             }
             var items = (Array.isArray(window.TVC_NEWS) ? window.TVC_NEWS : []).filter(function (n) {
-                return n && (n.ticker || n.text || n.title);
+                return n && n.active !== false && (n.text || n.title);
             });
             if (!items.length) return;
 
@@ -973,7 +973,7 @@ html.dark ::-webkit-scrollbar-thumb {
             if (!track || !preview) return;
 
             var one = items.map(function (n) {
-                return '<span class="nt-item"><span class="nt-dot"></span>' + esc(n.ticker || n.text || n.title) + '</span>';
+                return '<span class="nt-item"><span class="nt-dot"></span>' + esc(n.text || n.title) + '</span>';
             }).join('');
 
             var buildTries = 0;
