@@ -388,9 +388,9 @@ html.dark ::-webkit-scrollbar-thumb {
             height: 100%;
             white-space: nowrap;
             will-change: transform;
-            animation: tvc-news-scroll var(--nt-dur, 30s) linear infinite;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
         }
-        #newsTicker:hover .nt-track { animation-play-state: paused; }
         #newsTicker .nt-item {
             display: inline-flex;
             align-items: center;
@@ -406,10 +406,6 @@ html.dark ::-webkit-scrollbar-thumb {
             border-radius: 50%;
             background: var(--primary);
             flex: 0 0 auto;
-        }
-        @keyframes tvc-news-scroll {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
         }
         @media (max-width: 767px) {
             #newsTicker { left: 0; }
@@ -970,6 +966,12 @@ html.dark ::-webkit-scrollbar-thumb {
             var items = [];
             var lastSig = '';
             var tickerToken = 0;
+            var tickerRaf = 0;
+            var tickerLast = 0;
+            var tickerOffset = 0;
+            var tickerCycle = 0;
+            var tickerSpeed = 80;
+            var tickerPaused = false;
 
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1003,11 +1005,39 @@ html.dark ::-webkit-scrollbar-thumb {
                 } catch (e) { return null; }
             }
 
+            function stopTicker() {
+                if (tickerRaf) cancelAnimationFrame(tickerRaf);
+                tickerRaf = 0;
+                tickerLast = 0;
+            }
+
+            function startTicker() {
+                stopTicker();
+                if (tickerPaused || !tickerCycle) return;
+                function frame(ts) {
+                    if (tickerPaused || !tickerCycle) {
+                        tickerRaf = 0;
+                        return;
+                    }
+                    if (!tickerLast) tickerLast = ts;
+                    var dt = ts - tickerLast;
+                    tickerLast = ts;
+                    if (dt > 100) dt = 100;
+                    tickerOffset += tickerSpeed * dt / 1000;
+                    if (tickerOffset >= tickerCycle) tickerOffset %= tickerCycle;
+                    track.style.transform = 'translate3d(' + (-tickerOffset).toFixed(2) + 'px, 0, 0)';
+                    tickerRaf = requestAnimationFrame(frame);
+                }
+                tickerRaf = requestAnimationFrame(frame);
+            }
+
             function buildTicker(one) {
                 var token = ++tickerToken;
                 var tries = 0;
+                stopTicker();
                 function attempt() {
                     if (token !== tickerToken) return;
+                    track.style.transform = 'translate3d(0, 0, 0)';
                     track.innerHTML = one;
                     var viewport = track.parentElement.clientWidth || 800;
                     var oneWidth = track.scrollWidth || 0;
@@ -1019,8 +1049,11 @@ html.dark ::-webkit-scrollbar-thumb {
                     var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
                     var full = one.repeat(copies);
                     track.innerHTML = full + full;
-                    var cycleWidth = oneWidth * copies;
-                    track.style.setProperty('--nt-dur', Math.max(18, Math.round(cycleWidth / 80)) + 's');
+                    tickerCycle = oneWidth * copies;
+                    tickerOffset = 0;
+                    var durationSec = Math.max(18, Math.round(tickerCycle / 80));
+                    tickerSpeed = tickerCycle / durationSec;
+                    startTicker();
                 }
                 attempt();
             }
@@ -1028,7 +1061,10 @@ html.dark ::-webkit-scrollbar-thumb {
             function render() {
                 if (!items.length) {
                     document.body.classList.remove('ticker-on');
+                    stopTicker();
+                    tickerCycle = 0;
                     track.innerHTML = '';
+                    track.style.transform = 'translate3d(0, 0, 0)';
                     return;
                 }
                 document.body.classList.add('ticker-on');
@@ -1037,7 +1073,10 @@ html.dark ::-webkit-scrollbar-thumb {
                 }).join('');
                 if (!one) {
                     document.body.classList.remove('ticker-on');
+                    stopTicker();
+                    tickerCycle = 0;
                     track.innerHTML = '';
+                    track.style.transform = 'translate3d(0, 0, 0)';
                     return;
                 }
                 buildTicker(one);
@@ -1090,6 +1129,19 @@ html.dark ::-webkit-scrollbar-thumb {
             window.addEventListener('resize', function () {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(render, 180);
+            });
+
+            preview.addEventListener('mouseenter', function () {
+                tickerPaused = true;
+                stopTicker();
+            });
+            preview.addEventListener('mouseleave', function () {
+                tickerPaused = false;
+                startTicker();
+            });
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) stopTicker();
+                else if (!tickerPaused) startTicker();
             });
 
             load();

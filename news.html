@@ -272,9 +272,9 @@
         height: 100%;
         white-space: nowrap;
         will-change: transform;
-        animation: news-scroll var(--dur, 26s) linear infinite;
+        transform: translate3d(0, 0, 0);
+        backface-visibility: hidden;
     }
-    .ticker-preview:hover .track { animation-play-state: paused; }
     .ticker-preview .item {
         display: inline-flex;
         align-items: center;
@@ -288,10 +288,6 @@
         width: 6px; height: 6px; border-radius: 50%;
         background: var(--primary);
         flex: 0 0 auto;
-    }
-    @keyframes news-scroll {
-        from { transform: translateX(0); }
-        to { transform: translateX(-50%); }
     }
     .news-grid {
         display: grid;
@@ -489,6 +485,12 @@
     var editing = -1;
     var lastSig = '';
     var tickerToken = 0;
+    var tickerRaf = 0;
+    var tickerLast = 0;
+    var tickerOffset = 0;
+    var tickerCycle = 0;
+    var tickerSpeed = 80;
+    var tickerPaused = false;
     var isAdmin = getRole() === 'admin';
 
     function esc(s) {
@@ -609,11 +611,40 @@
         if (clearStatus !== false) setStatus('', '');
     }
 
+    function stopTicker() {
+        if (tickerRaf) cancelAnimationFrame(tickerRaf);
+        tickerRaf = 0;
+        tickerLast = 0;
+    }
+
+    function startTicker() {
+        stopTicker();
+        if (tickerPaused || !tickerCycle) return;
+        function frame(ts) {
+            if (tickerPaused || !tickerCycle) {
+                tickerRaf = 0;
+                return;
+            }
+            if (!tickerLast) tickerLast = ts;
+            var dt = ts - tickerLast;
+            tickerLast = ts;
+            if (dt > 100) dt = 100;
+            tickerOffset += tickerSpeed * dt / 1000;
+            if (tickerOffset >= tickerCycle) tickerOffset %= tickerCycle;
+            trackEl.style.transform = 'translate3d(' + (-tickerOffset).toFixed(2) + 'px, 0, 0)';
+            tickerRaf = requestAnimationFrame(frame);
+        }
+        tickerRaf = requestAnimationFrame(frame);
+    }
+
     function renderTicker(list) {
         var active = list.filter(function (n) { return n.active !== false; });
         if (!active.length) {
             previewEl.classList.remove('on');
+            stopTicker();
+            tickerCycle = 0;
             trackEl.innerHTML = '';
+            trackEl.style.transform = 'translate3d(0, 0, 0)';
             return;
         }
         previewEl.classList.add('on');
@@ -626,8 +657,10 @@
     function buildTicker(one) {
         var token = ++tickerToken;
         var tries = 0;
+        stopTicker();
         function attempt() {
             if (token !== tickerToken) return;
+            trackEl.style.transform = 'translate3d(0, 0, 0)';
             trackEl.innerHTML = one;
             var viewport = trackEl.parentElement.clientWidth || 800;
             var oneWidth = trackEl.scrollWidth || 0;
@@ -639,8 +672,11 @@
             var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
             var full = one.repeat(copies);
             trackEl.innerHTML = full + full;
-            var cycleWidth = oneWidth * copies;
-            trackEl.style.setProperty('--dur', Math.max(18, Math.round(cycleWidth / 80)) + 's');
+            tickerCycle = oneWidth * copies;
+            tickerOffset = 0;
+            var durationSec = Math.max(18, Math.round(tickerCycle / 80));
+            tickerSpeed = tickerCycle / durationSec;
+            startTicker();
         }
         attempt();
     }
@@ -819,6 +855,19 @@
         resizeTimer = setTimeout(function () {
             if (items.length) renderTicker(items);
         }, 180);
+    });
+
+    previewEl.addEventListener('mouseenter', function () {
+        tickerPaused = true;
+        stopTicker();
+    });
+    previewEl.addEventListener('mouseleave', function () {
+        tickerPaused = false;
+        startTicker();
+    });
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) stopTicker();
+        else if (!tickerPaused) startTicker();
     });
 
     editorEl.hidden = !isAdmin;
