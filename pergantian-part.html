@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1600">
+<title>Pergantian Part — TV Core Making</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script>
+    (function () {
+        'use strict';
+        function isDark() {
+            try {
+                var p = window.parent;
+                if (p && p !== window && p.document && p.document.documentElement) {
+                    if (p.document.documentElement.classList.contains('dark')) return true;
+                    if (p.document.documentElement.classList.contains('light')) return false;
+                }
+            } catch (e) {}
+            try {
+                var t = localStorage.getItem('theme');
+                if (t === 'dark') return true;
+                if (t === 'light') return false;
+            } catch (e) {}
+            try {
+                return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            } catch (e) { return false; }
+        }
+        function apply() {
+            var dark = isDark();
+            var el = document.documentElement;
+            el.classList.toggle('dark', dark);
+            el.classList.toggle('light', !dark);
+        }
+        window.__tvcPartApplyTheme = apply;
+        apply();
+    })();
+</script>
+<style>
+    :root {
+        --background: #f9f9f9;
+        --surface: #f9f9f9;
+        --surface-container-lowest: #ffffff;
+        --surface-container-low: #f3f3f3;
+        --surface-container: #eeeeee;
+        --surface-container-high: #e8e8e8;
+        --outline-variant: #e9bcb7;
+        --outline: #936e6a;
+        --on-surface: #1a1c1c;
+        --on-surface-variant: #5e3f3b;
+        --secondary: #5f5e5e;
+        --primary: #bd0014;
+        --on-primary: #ffffff;
+        --primary-soft: rgba(189, 0, 20, 0.08);
+        --shadow: rgba(0, 0, 0, 0.10);
+    }
+    html.dark {
+        --background: #0b0d14;
+        --surface: #101219;
+        --surface-container-lowest: #06080d;
+        --surface-container-low: #13151d;
+        --surface-container: #171922;
+        --surface-container-high: #222436;
+        --outline-variant: #404354;
+        --outline: #8e92a0;
+        --on-surface: #e4e4ec;
+        --on-surface-variant: #c4c6d0;
+        --secondary: #bcc7d4;
+        --primary: #4a8cff;
+        --on-primary: #ffffff;
+        --primary-soft: rgba(74, 140, 255, 0.12);
+        --shadow: rgba(0, 0, 0, 0.5);
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { color-scheme: light; }
+    html.dark { color-scheme: dark; }
+    html, body { min-height: 100%; }
+    body, .card, .empty {
+        transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+    }
+    body {
+        margin: 0;
+        background: var(--background);
+        color: var(--on-surface);
+        font-family: "Inter", system-ui, sans-serif;
+        padding: 26px 24px 48px;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; }
+    .head { margin-bottom: 18px; }
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .eyebrow .material-symbols-outlined { font-size: 18px; }
+    h1 {
+        margin: 0;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: clamp(26px, 3vw, 38px);
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+    .subtitle {
+        margin: 8px 0 0;
+        color: var(--secondary);
+        font-size: 14px;
+        line-height: 1.6;
+        max-width: 620px;
+    }
+    .card {
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 8px 24px var(--shadow);
+    }
+    .empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 8px;
+        padding: 64px 24px;
+        border: 1px dashed var(--outline-variant);
+        border-radius: 16px;
+        background: var(--surface-container-lowest);
+        color: var(--secondary);
+    }
+    .empty .material-symbols-outlined {
+        font-size: 46px;
+        color: var(--primary);
+        opacity: .8;
+    }
+    .empty strong {
+        color: var(--on-surface);
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 17px;
+    }
+    .empty span { font-size: 13.5px; max-width: 460px; line-height: 1.6; }
+    @media (max-width: 640px) {
+        body { padding: 20px 16px 36px; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <div class="head">
+        <div class="eyebrow"><span class="material-symbols-outlined">published_with_changes</span> Pergantian Part</div>
+        <h1>Pergantian Part Core Making</h1>
+        <p class="subtitle">Pencatatan penggantian part / komponen pada proses Core Making.</p>
+    </div>
+
+    <div class="empty">
+        <span class="material-symbols-outlined">engineering</span>
+        <strong>Halaman masih disiapkan</strong>
+        <span>Isi dan alur pencatatan Pergantian Part akan ditambahkan setelah kebutuhan datanya ditentukan.</span>
+    </div>
+</div>
+
+<script>
+/* Ikuti perubahan mode terang/gelap dari index.html secara langsung. */
+(function () {
+    'use strict';
+    function apply() {
+        try {
+            if (typeof window.__tvcPartApplyTheme === 'function') window.__tvcPartApplyTheme();
+        } catch (e) {}
+    }
+    try {
+        if (window.parent && window.parent !== window && window.parent.document && typeof MutationObserver === 'function') {
+            new MutationObserver(apply).observe(window.parent.document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+    } catch (e) {}
+    window.addEventListener('storage', function (e) {
+        if (!e.key || e.key === 'theme') apply();
+    });
+    window.addEventListener('message', function (e) {
+        if (e && e.data && e.data.type === 'tvc-theme') apply();
+    });
+})();
+</script>
+</body>
+</html>
