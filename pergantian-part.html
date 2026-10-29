@@ -1132,7 +1132,7 @@
         }).forEach(function (p) {
             var s = info(p).status;
             if (s !== 'warn' && s !== 'crit' && s !== 'over') return;
-            var who = p.machine ? p.name + ' & ' + p.machine : p.name;
+            var who = p.machine ? p.name + ' ' + p.machine : p.name;
             var text;
             if (s === 'warn') {
                 text = '<b>' + esc(who) + '</b> mendekati batas Lifetime, segera buat planning pergantian part.';
