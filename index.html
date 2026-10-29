@@ -423,6 +423,16 @@ html.dark ::-webkit-scrollbar-thumb {
         }
         #newsTicker .nt-tag.warn { color: #3d2600; background: #fbbf24; }
         #newsTicker .nt-tag.ng { color: #ffffff; background: #dc2626; }
+        #newsTicker .nt-item.stock-up { color: #dc2626; }
+        #newsTicker .nt-item.stock-down { color: #16a34a; }
+        #newsTicker .nt-item.stock-flat { color: var(--secondary); }
+        #newsTicker .nt-item.stock-up .nt-dot { background: #dc2626; }
+        #newsTicker .nt-item.stock-down .nt-dot { background: #16a34a; }
+        #newsTicker .nt-item.stock-flat .nt-dot { background: var(--secondary); }
+        html.dark #newsTicker .nt-item.stock-up { color: #f87171; }
+        html.dark #newsTicker .nt-item.stock-down { color: #4ade80; }
+        html.dark #newsTicker .nt-item.stock-up .nt-dot { background: #f87171; }
+        html.dark #newsTicker .nt-item.stock-down .nt-dot { background: #4ade80; }
         #newsTicker .nt-empty { padding: 0 26px; color: var(--secondary); font-size: 12.5px; }
         #newsTicker .nt-refresh {
             flex: 0 0 auto;
@@ -1015,8 +1025,10 @@ html.dark ::-webkit-scrollbar-thumb {
 
             var items = [];
             var alerts = [];
+            var stock = [];
             var lastSig = '';
             var alertSig = '';
+            var stockSig = '';
             var tickerToken = 0;
             var tickerRaf = 0;
             var tickerLast = 0;
@@ -1119,6 +1131,122 @@ html.dark ::-webkit-scrollbar-thumb {
                 }).catch(function () { return false; });
             }
 
+            /* ── Pareto Defect Core Making vs hari sebelumnya ── */
+            var STOCK_KEY = 'tvcm-qc-defects';
+            var CORE_DEFECT_FALLBACK = ['Gas Hole', 'Gomi', 'Gyakubari', 'Mejashi', 'Togata Tare', 'Vinning'];
+
+            function pad2(n) { return String(n).padStart(2, '0'); }
+            function stockNorm(s) {
+                return String(s == null ? '' : s).trim().replace(/\s+/g, ' ').toLowerCase();
+            }
+            function stockCount(v) {
+                if (v && typeof v === 'object') return Math.max(0, Number(v.count) || 0);
+                return Math.max(0, Number(v) || 0);
+            }
+            function matchCore(name, coreNames) {
+                var a = stockNorm(name).replace(/\s+/g, '');
+                if (!a) return false;
+                for (var i = 0; i < coreNames.length; i++) {
+                    var b = stockNorm(coreNames[i]).replace(/\s+/g, '');
+                    if (b && (a.indexOf(b) !== -1 || b.indexOf(a) !== -1)) return true;
+                }
+                return false;
+            }
+            function prevDateStr(date) {
+                var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+                if (!m) return '';
+                var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+                d.setDate(d.getDate() - 1);
+                return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+            }
+            function readStockStore() {
+                try {
+                    var raw = localStorage.getItem(STOCK_KEY);
+                    var v = raw ? JSON.parse(raw) : null;
+                    return v && v.days && typeof v.days === 'object' ? v : { days: {} };
+                } catch (e) { return { days: {} }; }
+            }
+            function saveStockStore(store) {
+                try {
+                    var dates = Object.keys(store.days || {}).sort().slice(-14);
+                    var days = {};
+                    dates.forEach(function (d) { days[d] = store.days[d]; });
+                    store.days = days;
+                    localStorage.setItem(STOCK_KEY, JSON.stringify({ days: days, updatedAt: Date.now() }));
+                } catch (e) {}
+            }
+            function buildStock(state, mappings, store) {
+                if (!state) return [];
+                var list = Array.isArray(mappings) ? mappings.filter(function (m) {
+                    return m && m.line === 'Core Making';
+                }) : [];
+                var coreNames = list.map(function (m) { return m.defectName; });
+                if (!coreNames.length) coreNames = CORE_DEFECT_FALLBACK.slice();
+                var counts = state.defectData && typeof state.defectData === 'object' ? state.defectData : {};
+                var today = {};
+                Object.keys(counts).forEach(function (name) {
+                    if (!matchCore(name, coreNames)) return;
+                    var n = Math.max(0, Number(counts[name]) || 0);
+                    if (!n) return;
+                    var key = stockNorm(name);
+                    if (!today[key] || today[key].count < n) today[key] = { name: name, count: n };
+                });
+                var date = String(state.date || '').slice(0, 10);
+                if (!date) return [];
+                var day = store.days[date] || (store.days[date] = {});
+                Object.keys(today).forEach(function (key) {
+                    var prev = stockCount(day[key]);
+                    day[key] = { name: today[key].name, count: Math.max(prev, today[key].count) };
+                });
+                saveStockStore(store);
+                var prevDate = prevDateStr(date);
+                var prev = prevDate && store.days[prevDate] ? store.days[prevDate] : {};
+                var keys = {};
+                Object.keys(today).forEach(function (k) { keys[k] = 1; });
+                Object.keys(prev).forEach(function (k) { keys[k] = 1; });
+                var out = [];
+                Object.keys(keys).forEach(function (key) {
+                    var current = today[key] ? today[key].count : 0;
+                    var yesterday = stockCount(prev[key]);
+                    if (!current && !yesterday) return;
+                    var delta = current - yesterday;
+                    var dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+                    var arrow = delta > 0 ? '^' + delta : delta < 0 ? 'v' + Math.abs(delta) : '0';
+                    var name = (today[key] && today[key].name) || (prev[key] && prev[key].name) || key;
+                    out.push({
+                        text: name + ' ' + arrow,
+                        active: true,
+                        kind: 'stock-' + dir,
+                        title: 'Hari ini ' + current + ', kemarin ' + yesterday,
+                        current: current
+                    });
+                });
+                out.sort(function (a, b) {
+                    if (a.current !== b.current) return b.current - a.current;
+                    return a.text.localeCompare(b.text);
+                });
+                return out;
+            }
+            function setStock(list) {
+                var next = Array.isArray(list) ? list : [];
+                var sig = JSON.stringify(next);
+                if (sig === stockSig) return;
+                stockSig = sig;
+                stock = next;
+                render();
+            }
+            function loadStock() {
+                if (!window.fetch) return Promise.resolve(false);
+                return fetch('/api/qc-state', { cache: 'no-store' }).then(function (r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                }).then(function (data) {
+                    if (!data || !data.success) return false;
+                    setStock(buildStock(data.state, data.mappings, readStockStore()));
+                    return true;
+                }).catch(function () { return false; });
+            }
+
             function stopTicker() {
                 if (tickerRaf) cancelAnimationFrame(tickerRaf);
                 tickerRaf = 0;
@@ -1183,7 +1311,7 @@ html.dark ::-webkit-scrollbar-thumb {
             }
 
             function render() {
-                var all = alerts.concat(items);
+                var all = alerts.concat(stock).concat(items);
                 if (!all.length) {
                     document.body.classList.add('ticker-on');
                     stopTicker();
@@ -1199,7 +1327,8 @@ html.dark ::-webkit-scrollbar-thumb {
                     if (kind === 'over') tag = '<span class="nt-tag ng">NG</span>';
                     else if (kind === 'crit') tag = '<span class="nt-tag ng">KRITIS</span>';
                     else if (kind === 'warn') tag = '<span class="nt-tag warn">WARNING</span>';
-                    return '<span class="nt-item ' + kind + '">' + tag +
+                    var title = n.title ? ' title="' + esc(n.title) + '"' : '';
+                    return '<span class="nt-item ' + kind + '"' + title + '>' + tag +
                         '<span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
                 }).join('');
                 if (!one) {
@@ -1292,7 +1421,7 @@ html.dark ::-webkit-scrollbar-thumb {
                     refreshBtn.classList.remove('spin');
                 };
                 var timer = setTimeout(done, 5000);
-                Promise.all([load(), loadAlerts()]).then(function () {
+                Promise.all([load(), loadAlerts(), loadStock()]).then(function () {
                     clearTimeout(timer);
                     done();
                 }, function () {
@@ -1304,6 +1433,7 @@ html.dark ::-webkit-scrollbar-thumb {
 
             load();
             loadAlerts();
+            loadStock();
         })();
     </script>
 
