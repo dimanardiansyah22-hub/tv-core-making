@@ -440,13 +440,12 @@
     .foot {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-end;
         gap: 8px;
         padding-top: 10px;
         border-top: 1px solid var(--outline-variant);
         margin-top: auto;
     }
-    .foot .period { color: var(--secondary); font-size: 11px; line-height: 1.4; }
     .actions { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }
     .icon-btn {
         display: inline-flex;
@@ -1205,10 +1204,7 @@
             '</div>' +
             '<div class="bar"><i style="width:' + barWidth + '%"></i></div>' +
             '<div class="bar-note"><span>' + periodText + '</span><span>' + pctText + '</span></div>' +
-            '<div class="foot">' +
-                '<span class="period">Warning &le;' + WARN_PCT + '% &middot; Kritis &le;' + CRIT_PCT + '% sisa</span>' +
-                actions +
-            '</div>' +
+            (actions ? '<div class="foot">' + actions + '</div>' : '') +
         '</article>';
     }
 
