@@ -89,6 +89,26 @@
     html { color-scheme: light; }
     html.dark { color-scheme: dark; }
     html, body { min-height: 100%; }
+    /* Scrollbar tipis yang menempel di tepi kanan layar dan mengikuti tema */
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: var(--outline) var(--surface-container-low);
+    }
+    html.dark { scrollbar-color: var(--primary) var(--surface-container-low); }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: var(--surface-container-low); }
+    ::-webkit-scrollbar-thumb {
+        background: var(--outline);
+        border: 2px solid var(--surface-container-low);
+        border-radius: 999px;
+        background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); background-clip: padding-box; }
+    html.dark ::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-color: var(--surface-container-low);
+        background-clip: padding-box;
+    }
     body, .card, .empty, .panel, .stat, .modal-card, input, select, textarea, button {
         transition: background-color .2s ease, border-color .2s ease, color .2s ease;
     }
@@ -149,6 +169,7 @@
     }
     .stat.warn b { color: var(--warn); }
     .stat.crit b { color: var(--crit); }
+    .stat.ok b { color: var(--ok); }
 
     .banner {
         display: flex;
@@ -615,7 +636,7 @@
         </div>
         <div class="stats">
             <div class="stat"><span>Total part</span><b id="statTotal">0</b></div>
-            <div class="stat"><span>Belum diset</span><b id="statUnset">0</b></div>
+            <div class="stat ok"><span>Aman</span><b id="statSafe">0</b></div>
             <div class="stat warn"><span>Warning</span><b id="statWarn">0</b></div>
             <div class="stat crit"><span>Perlu ganti</span><b id="statCrit">0</b></div>
         </div>
@@ -797,6 +818,20 @@
     </form>
 </div>
 
+<!-- Modal: konfirmasi hapus (dialog bawaan browser bisa mematikan fullscreen) -->
+<div class="modal" id="confirmModal">
+    <div class="modal-card" style="max-width:420px">
+        <h3>Hapus part?</h3>
+        <p class="hint" id="confirmText">—</p>
+        <div class="modal-actions">
+            <button class="btn-secondary" type="button" data-close="confirmModal">Batal</button>
+            <button class="btn-primary" type="button" id="confirmYes">
+                <span class="material-symbols-outlined">delete</span> Hapus
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="sync-core.js"></script>
 <script>
 /* Ikuti perubahan mode terang/gelap dari index.html secara langsung. */
@@ -836,6 +871,7 @@
     var editingId = null;   // part yang sedang di-edit
     var usageId = null;     // part untuk input pemakaian
     var replaceId = null;   // part untuk ganti part
+    var deleteId = null;    // part yang menunggu konfirmasi hapus
     var query = '';
     var historyOpen = false;
     var lastSig = '';
@@ -1074,15 +1110,15 @@
     }
 
     function renderStats() {
-        var total = state.parts.length, warn = 0, crit = 0, unset = 0;
+        var total = state.parts.length, warn = 0, crit = 0, safe = 0;
         state.parts.forEach(function (p) {
             var i = info(p);
             if (i.status === 'warn') warn++;
             else if (i.status === 'crit' || i.status === 'over') crit++;
-            else if (i.status === 'unset') unset++;
+            else if (i.status === 'ok') safe++;
         });
         $('statTotal').textContent = num(total);
-        $('statUnset').textContent = num(unset);
+        $('statSafe').textContent = num(safe);
         $('statWarn').textContent = num(warn);
         $('statCrit').textContent = num(crit);
 
@@ -1389,6 +1425,26 @@
         if (state.history.length > 500) state.history = state.history.slice(0, 500);
     }
 
+    /* ── Konfirmasi hapus (modal sendiri, bukan dialog browser) ── */
+    function askDelete(part) {
+        deleteId = part.id;
+        $('confirmText').textContent = 'Part "' + part.name + (part.machine ? ' — ' + part.machine : '') +
+            '" akan dihapus dari monitoring. Riwayat pemakaiannya tetap tersimpan.';
+        openModal('confirmModal');
+    }
+
+    $('confirmYes').addEventListener('click', function () {
+        if (!isAdmin) return;
+        var id = deleteId;
+        deleteId = null;
+        closeModal('confirmModal');
+        if (!id) return;
+        state.parts = state.parts.filter(function (x) { return x.id !== id; });
+        lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+        render();
+        persist();
+    });
+
     /* ── Form part ── */
     function openPartForm(part) {
         editingId = part ? part.id : null;
@@ -1567,11 +1623,7 @@
             var id = btn.getAttribute('data-del');
             var pd = findPart(id);
             if (!pd) return;
-            if (!window.confirm('Hapus part "' + pd.name + '" dari monitoring?\nRiwayat pemakaiannya tetap tersimpan.')) return;
-            state.parts = state.parts.filter(function (x) { return x.id !== id; });
-            lastSig = JSON.stringify({ parts: state.parts, history: state.history });
-            render();
-            persist();
+            askDelete(pd);
         }
     });
 

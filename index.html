@@ -701,7 +701,14 @@ html.dark ::-webkit-scrollbar-thumb {
             if (gas) u.searchParams.set('gas', gas);
             const sess = (window.tvcSession && window.tvcSession()) || null;
             if (sess && sess.role) u.searchParams.set('role', sess.role);
-            main.innerHTML = `<iframe data-internal="${url.indexOf('http') === 0 ? '0' : '1'}" src="${u.href}" class="w-full h-full border-none" style="min-height: calc(100vh - 112px - var(--ticker-h));"></iframe>`;
+            /* Halaman yang mengatur padding sendiri (mis. Pergantian Part) dibuat
+               full-bleed agar scrollbar-nya menempel di tepi kanan layar. */
+            const flush = url.indexOf('pergantian-part.html') === 0;
+            main.style.padding = flush ? '0' : '';
+            const minH = flush
+                ? 'calc(100vh - 64px - var(--ticker-h))'
+                : 'calc(100vh - 112px - var(--ticker-h))';
+            main.innerHTML = `<iframe data-internal="${url.indexOf('http') === 0 ? '0' : '1'}" src="${u.href}" class="w-full h-full border-none" style="min-height:${minH};"></iframe>`;
             if (url.indexOf('planning-cuti-') === 0) {
                 localStorage.setItem('planning-cuti-last', url);
             }
