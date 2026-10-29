@@ -54,6 +54,12 @@
         --on-primary: #ffffff;
         --primary-soft: rgba(189, 0, 20, 0.08);
         --shadow: rgba(0, 0, 0, 0.10);
+        --ok: #15803d;
+        --ok-soft: rgba(21, 128, 61, 0.10);
+        --warn: #b45309;
+        --warn-soft: rgba(180, 83, 9, 0.12);
+        --crit: #dc2626;
+        --crit-soft: rgba(220, 38, 38, 0.12);
     }
     html.dark {
         --background: #0b0d14;
@@ -71,14 +77,20 @@
         --on-primary: #ffffff;
         --primary-soft: rgba(74, 140, 255, 0.12);
         --shadow: rgba(0, 0, 0, 0.5);
+        --ok: #4ade80;
+        --ok-soft: rgba(74, 222, 128, 0.14);
+        --warn: #fbbf24;
+        --warn-soft: rgba(251, 191, 36, 0.16);
+        --crit: #f87171;
+        --crit-soft: rgba(248, 113, 113, 0.16);
     }
     * { box-sizing: border-box; }
     [hidden] { display: none !important; }
     html { color-scheme: light; }
     html.dark { color-scheme: dark; }
     html, body { min-height: 100%; }
-    body, .card, .empty {
-        transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+    body, .card, .empty, .panel, .stat, .modal-card, input, select, textarea, button {
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease;
     }
     body {
         margin: 0;
@@ -87,8 +99,15 @@
         font-family: "Inter", system-ui, sans-serif;
         padding: 26px 24px 48px;
     }
-    .wrap { max-width: 1180px; margin: 0 auto; }
-    .head { margin-bottom: 18px; }
+    .wrap { max-width: 1280px; margin: 0 auto; }
+    .head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
     h1 {
         margin: 0;
         font-family: "Hanken Grotesk", sans-serif;
@@ -104,13 +123,283 @@
         line-height: 1.6;
         max-width: 620px;
     }
+    .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+    .stat {
+        min-width: 104px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--outline-variant);
+        background: var(--surface-container-lowest);
+        box-shadow: 0 6px 18px var(--shadow);
+    }
+    .stat span {
+        display: block;
+        color: var(--secondary);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .stat b {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 22px;
+        line-height: 1;
+        color: var(--on-surface);
+    }
+    .stat.warn b { color: var(--warn); }
+    .stat.crit b { color: var(--crit); }
+
+    .banner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 16px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+        border: 1px solid var(--crit);
+        background: var(--crit-soft);
+        color: var(--on-surface);
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+    .banner .material-symbols-outlined { font-size: 22px; color: var(--crit); flex: 0 0 auto; }
+    .banner b { font-weight: 800; }
+
+    .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+    .search {
+        position: relative;
+        flex: 1 1 260px;
+        max-width: 380px;
+    }
+    .search .material-symbols-outlined {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        color: var(--secondary);
+        pointer-events: none;
+    }
+    .search input {
+        width: 100%;
+        height: 38px;
+        padding: 0 12px 0 34px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 10px;
+        background: var(--surface-container-lowest);
+        color: var(--on-surface);
+        font: inherit;
+        font-size: 13px;
+        outline: none;
+    }
+    .search input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .tools { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .status { color: var(--secondary); font-size: 12px; line-height: 1.4; max-width: 320px; }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--crit); }
+    .status.warn { color: var(--warn); }
+
+    .btn-primary, .btn-secondary, .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 9px;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 800;
+        padding: 9px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .btn-primary {
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: var(--on-primary);
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:disabled { opacity: .6; cursor: default; }
+    .btn-secondary {
+        border: 1px solid var(--outline-variant);
+        background: var(--surface-container-lowest);
+        color: var(--secondary);
+    }
+    .btn-secondary:hover { color: var(--on-surface); border-color: var(--outline); }
+    .btn-ghost {
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--secondary);
+    }
+    .btn-ghost:hover { border-color: var(--outline-variant); color: var(--on-surface); }
+    .btn-primary .material-symbols-outlined,
+    .btn-secondary .material-symbols-outlined,
+    .btn-ghost .material-symbols-outlined { font-size: 17px; }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+        gap: 16px;
+    }
     .card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
         background: var(--surface-container-lowest);
         border: 1px solid var(--outline-variant);
         border-radius: 14px;
-        padding: 20px;
+        padding: 18px 18px 14px 20px;
         box-shadow: 0 8px 24px var(--shadow);
+        overflow: hidden;
     }
+    .card::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 4px;
+        background: var(--ok);
+    }
+    .card.warn::before { background: var(--warn); }
+    .card.crit::before, .card.over::before { background: var(--crit); }
+    .card.over { border-color: var(--crit); }
+
+    .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .card-head h3 {
+        margin: 0;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -.01em;
+        line-height: 1.25;
+    }
+    .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .chip {
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--surface-container-low);
+        border: 1px solid var(--outline-variant);
+        color: var(--secondary);
+        font-size: 10.5px;
+        font-weight: 700;
+        letter-spacing: .03em;
+        white-space: nowrap;
+    }
+    .badge {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .badge .material-symbols-outlined { font-size: 14px; }
+    .badge.ok { color: var(--ok); background: var(--ok-soft); }
+    .badge.warn { color: var(--warn); background: var(--warn-soft); }
+    .badge.crit, .badge.over { color: var(--crit); background: var(--crit-soft); }
+
+    .numbers {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .numbers div {
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: var(--surface-container-low);
+        border: 1px solid transparent;
+    }
+    .numbers span {
+        display: block;
+        color: var(--secondary);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+    }
+    .numbers b {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 15px;
+        line-height: 1;
+        color: var(--on-surface);
+    }
+    .numbers .remain b { color: var(--ok); }
+    .card.warn .numbers .remain b { color: var(--warn); }
+    .card.crit .numbers .remain b,
+    .card.over .numbers .remain b { color: var(--crit); }
+
+    .bar {
+        position: relative;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--surface-container);
+        overflow: hidden;
+    }
+    .bar i {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: var(--ok);
+        transition: width .35s ease;
+    }
+    .card.warn .bar i { background: var(--warn); }
+    .card.crit .bar i, .card.over .bar i { background: var(--crit); }
+    .bar-note {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        color: var(--secondary);
+        font-size: 11px;
+        line-height: 1.4;
+        margin-top: -6px;
+    }
+
+    .foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--outline-variant);
+        margin-top: auto;
+    }
+    .foot .period { color: var(--secondary); font-size: 11px; line-height: 1.4; }
+    .actions { display: flex; align-items: center; gap: 3px; flex: 0 0 auto; }
+    .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--secondary);
+        cursor: pointer;
+        padding: 0;
+    }
+    .icon-btn:hover { color: var(--on-surface); border-color: var(--outline-variant); background: var(--surface-container-low); }
+    .icon-btn.danger:hover { color: var(--crit); border-color: rgba(220, 38, 38, .35); }
+    .icon-btn .material-symbols-outlined { font-size: 17px; }
+
     .empty {
         display: flex;
         flex-direction: column;
@@ -124,36 +413,360 @@
         background: var(--surface-container-lowest);
         color: var(--secondary);
     }
-    .empty .material-symbols-outlined {
-        font-size: 46px;
-        color: var(--primary);
-        opacity: .8;
-    }
-    .empty strong {
-        color: var(--on-surface);
-        font-family: "Hanken Grotesk", sans-serif;
-        font-size: 17px;
-    }
+    .empty .material-symbols-outlined { font-size: 46px; color: var(--primary); opacity: .8; }
+    .empty strong { color: var(--on-surface); font-family: "Hanken Grotesk", sans-serif; font-size: 17px; }
     .empty span { font-size: 13.5px; max-width: 460px; line-height: 1.6; }
+
+    .panel {
+        margin-top: 20px;
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 14px;
+        box-shadow: 0 8px 24px var(--shadow);
+        overflow: hidden;
+    }
+    .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--outline-variant);
+    }
+    .panel-head h2 {
+        margin: 0;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+    }
+    .hist-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 18px;
+        border-bottom: 1px solid var(--outline-variant);
+        font-size: 12.5px;
+        line-height: 1.5;
+    }
+    .hist-row:last-child { border-bottom: none; }
+    .hist-row .type {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 104px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+    }
+    .hist-row .type.usage { color: var(--secondary); background: var(--surface-container-low); }
+    .hist-row .type.replace { color: var(--primary); background: var(--primary-soft); }
+    .hist-row .type .material-symbols-outlined { font-size: 13px; }
+    .hist-row .body { flex: 1 1 auto; min-width: 0; }
+    .hist-row .body b { font-weight: 700; }
+    .hist-row .body .sub { color: var(--secondary); font-size: 11.5px; }
+    .hist-row .qty {
+        flex: 0 0 auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .hist-empty { padding: 28px 18px; text-align: center; color: var(--secondary); font-size: 13px; }
+
+    .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(15, 23, 42, .5);
+    }
+    .modal.on { display: flex; }
+    .modal-card {
+        width: min(94vw, 520px);
+        max-height: 90vh;
+        overflow-y: auto;
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 16px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, .4);
+        padding: 20px;
+    }
+    .modal-card h3 {
+        margin: 0 0 4px;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+    }
+    .modal-card .hint { margin: 0 0 16px; color: var(--secondary); font-size: 12.5px; line-height: 1.5; }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fields .full { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+        color: var(--secondary);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .field input, .field select, .field textarea {
+        width: 100%;
+        border: 1px solid var(--outline-variant);
+        border-radius: 9px;
+        background: var(--surface-container-low);
+        color: var(--on-surface);
+        font: inherit;
+        font-size: 13px;
+        padding: 9px 11px;
+        outline: none;
+    }
+    .field textarea { min-height: 62px; resize: vertical; line-height: 1.5; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+    .quick { display: flex; gap: 6px; flex-wrap: wrap; }
+    .quick button {
+        padding: 5px 10px;
+        border: 1px solid var(--outline-variant);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--secondary);
+        font: inherit;
+        font-size: 11px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .quick button:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
+    .modal-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 9px;
+        margin-top: 18px;
+    }
+    .modal-msg { margin-right: auto; font-size: 12px; color: var(--secondary); }
+    .modal-msg.err { color: var(--crit); }
+    .warn-note {
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--warn-soft);
+        color: var(--on-surface);
+        font-size: 12px;
+        line-height: 1.5;
+        margin-bottom: 14px;
+    }
+    .warn-note .material-symbols-outlined { font-size: 18px; color: var(--warn); flex: 0 0 auto; }
+
     @media (max-width: 640px) {
         body { padding: 20px 16px 36px; }
+        .grid { grid-template-columns: 1fr; }
+        .fields { grid-template-columns: 1fr; }
+        .hist-row .type { min-width: 0; }
     }
 </style>
 </head>
 <body>
 <div class="wrap">
     <div class="head">
-        <h1>Pergantian Part Core Making</h1>
-        <p class="subtitle">Monitoring Lifetime Part</p>
+        <div>
+            <h1>Pergantian Part Core Making</h1>
+            <p class="subtitle">Monitoring Lifetime Part</p>
+        </div>
+        <div class="stats">
+            <div class="stat"><span>Total part</span><b id="statTotal">0</b></div>
+            <div class="stat warn"><span>Warning</span><b id="statWarn">0</b></div>
+            <div class="stat crit"><span>Perlu ganti</span><b id="statCrit">0</b></div>
+        </div>
     </div>
 
-    <div class="empty">
-        <span class="material-symbols-outlined">engineering</span>
-        <strong>Halaman masih disiapkan</strong>
-        <span>Isi dan alur pencatatan Pergantian Part akan ditambahkan setelah kebutuhan datanya ditentukan.</span>
+    <div class="banner" id="alertBanner" hidden>
+        <span class="material-symbols-outlined">notification_important</span>
+        <div id="alertText"></div>
     </div>
+
+    <section class="toolbar">
+        <div class="search">
+            <span class="material-symbols-outlined">search</span>
+            <input id="searchInput" type="search" placeholder="Cari nama, kode, atau line part..." autocomplete="off" aria-label="Cari part">
+        </div>
+        <div class="tools">
+            <span class="status" id="syncStatus" role="status"></span>
+            <button class="btn-secondary" type="button" id="historyBtn">
+                <span class="material-symbols-outlined">history</span> Riwayat
+            </button>
+            <button class="btn-primary" type="button" id="addBtn" hidden>
+                <span class="material-symbols-outlined">add</span> Tambah Part
+            </button>
+        </div>
+    </section>
+
+    <div class="grid" id="partGrid"></div>
+
+    <div class="empty" id="emptyState" hidden>
+        <span class="material-symbols-outlined">precision_manufacturing</span>
+        <strong>Belum ada part terdaftar</strong>
+        <span id="emptyHint">Part yang dimonitor akan tampil di sini beserta sisa lifetime-nya.</span>
+    </div>
+
+    <section class="panel" id="historyPanel" hidden>
+        <div class="panel-head">
+            <h2>Riwayat Pemakaian &amp; Pergantian</h2>
+            <button class="btn-ghost" type="button" id="historyClose">
+                <span class="material-symbols-outlined">close</span> Tutup
+            </button>
+        </div>
+        <div id="historyList"></div>
+    </section>
 </div>
 
+<!-- Modal: tambah / edit part -->
+<div class="modal" id="partModal">
+    <form class="modal-card" id="partForm" autocomplete="off">
+        <h3 id="partModalTitle">Tambah Part</h3>
+        <p class="hint">Isi lifetime part dalam satuan shot/cycle dan batas sisa untuk peringatan.</p>
+        <div class="fields">
+            <div class="field full">
+                <label for="pName">Nama part</label>
+                <input id="pName" type="text" placeholder="Contoh: Upper Die Core A" required>
+            </div>
+            <div class="field">
+                <label for="pCode">Kode part</label>
+                <input id="pCode" type="text" placeholder="Contoh: UDC-A01">
+            </div>
+            <div class="field">
+                <label for="pStation">Line / Station</label>
+                <input id="pStation" type="text" placeholder="Contoh: Line 1 - St.3">
+            </div>
+            <div class="field">
+                <label for="pLifetime">Lifetime (shot)</label>
+                <input id="pLifetime" type="number" min="1" step="1" placeholder="10000" required>
+            </div>
+            <div class="field">
+                <label for="pUsed">Terpakai saat ini (shot)</label>
+                <input id="pUsed" type="number" min="0" step="1" placeholder="0" value="0">
+            </div>
+            <div class="field">
+                <label for="pWarn">Warning saat sisa &le;</label>
+                <input id="pWarn" type="number" min="0" step="1" placeholder="500" value="500">
+            </div>
+            <div class="field">
+                <label for="pCrit">Kritis saat sisa &le;</label>
+                <input id="pCrit" type="number" min="0" step="1" placeholder="100" value="100">
+            </div>
+            <div class="field">
+                <label for="pInstalled">Tanggal pasang</label>
+                <input id="pInstalled" type="date">
+            </div>
+            <div class="field">
+                <label for="pNote">Catatan</label>
+                <input id="pNote" type="text" placeholder="Opsional">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <span class="modal-msg" id="partMsg"></span>
+            <button class="btn-secondary" type="button" data-close="partModal">Batal</button>
+            <button class="btn-primary" type="submit">
+                <span class="material-symbols-outlined">save</span> Simpan
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal: input pemakaian -->
+<div class="modal" id="usageModal">
+    <form class="modal-card" id="usageForm" autocomplete="off">
+        <h3>Input Pemakaian</h3>
+        <p class="hint" id="usagePartName">—</p>
+        <div class="fields">
+            <div class="field">
+                <label for="uDate">Tanggal</label>
+                <input id="uDate" type="date" required>
+            </div>
+            <div class="field">
+                <label for="uShift">Shift</label>
+                <select id="uShift">
+                    <option value="White">White</option>
+                    <option value="Red">Red</option>
+                </select>
+            </div>
+            <div class="field full">
+                <label for="uQty">Jumlah pemakaian (shot)</label>
+                <input id="uQty" type="number" min="1" step="1" placeholder="0" required>
+                <div class="quick">
+                    <button type="button" data-add="10">+10</button>
+                    <button type="button" data-add="50">+50</button>
+                    <button type="button" data-add="100">+100</button>
+                    <button type="button" data-add="500">+500</button>
+                </div>
+            </div>
+            <div class="field">
+                <label for="uBy">Operator / pencatat</label>
+                <input id="uBy" type="text" placeholder="Nama">
+            </div>
+            <div class="field">
+                <label for="uNote">Catatan</label>
+                <input id="uNote" type="text" placeholder="Opsional">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <span class="modal-msg" id="usageMsg"></span>
+            <button class="btn-secondary" type="button" data-close="usageModal">Batal</button>
+            <button class="btn-primary" type="submit">
+                <span class="material-symbols-outlined">save</span> Simpan pemakaian
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal: ganti part -->
+<div class="modal" id="replaceModal">
+    <form class="modal-card" id="replaceForm" autocomplete="off">
+        <h3>Konfirmasi Ganti Part</h3>
+        <p class="hint" id="replacePartName">—</p>
+        <div class="warn-note">
+            <span class="material-symbols-outlined">warning</span>
+            <div>Counter pemakaian part ini akan <b>direset ke 0</b> dan tanggal pasang diperbarui. Tindakan ini tercatat di riwayat.</div>
+        </div>
+        <div class="fields">
+            <div class="field">
+                <label for="rDate">Tanggal ganti</label>
+                <input id="rDate" type="date" required>
+            </div>
+            <div class="field">
+                <label for="rShift">Shift</label>
+                <select id="rShift">
+                    <option value="White">White</option>
+                    <option value="Red">Red</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="rBy">Petugas</label>
+                <input id="rBy" type="text" placeholder="Nama">
+            </div>
+            <div class="field">
+                <label for="rNote">Catatan</label>
+                <input id="rNote" type="text" placeholder="Contoh: retak / aus">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <span class="modal-msg" id="replaceMsg"></span>
+            <button class="btn-secondary" type="button" data-close="replaceModal">Batal</button>
+            <button class="btn-primary" type="submit">
+                <span class="material-symbols-outlined">published_with_changes</span> Ganti part
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="sync-core.js"></script>
 <script>
 /* Ikuti perubahan mode terang/gelap dari index.html secara langsung. */
 (function () {
@@ -177,6 +790,661 @@
     window.addEventListener('message', function (e) {
         if (e && e.data && e.data.type === 'tvc-theme') apply();
     });
+})();
+</script>
+<script>
+(function () {
+    'use strict';
+
+    var LS_KEY = 'tvcm-pergantian-part';
+    var APP = 'part';
+    var POLL_MS = 30000;
+    var HIST_LIMIT = 80;
+
+    var state = { parts: [], history: [] };
+    var editingId = null;   // part yang sedang di-edit
+    var usageId = null;     // part untuk input pemakaian
+    var replaceId = null;   // part untuk ganti part
+    var query = '';
+    var historyOpen = false;
+    var lastSig = '';
+    var isAdmin = getRole() === 'admin';
+
+    function $(id) { return document.getElementById(id); }
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    var nf = new Intl.NumberFormat('id-ID');
+
+    function num(v) {
+        var n = Number(v);
+        if (!isFinite(n)) n = 0;
+        return nf.format(Math.round(n));
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function todayStr() {
+        var d = new Date();
+        return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+    }
+
+    function fmtDate(v) {
+        if (!v) return '';
+        var d = new Date(String(v) + 'T00:00:00');
+        if (isNaN(d.getTime())) return String(v);
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function uid() {
+        return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function getRole() {
+        try {
+            var p = window.parent;
+            if (p && p !== window && typeof p.tvcSession === 'function') {
+                var ps = p.tvcSession();
+                if (ps && ps.role) return ps.role;
+            }
+        } catch (e) {}
+        try {
+            var q = new URLSearchParams(window.location.search).get('role');
+            if (q) return q;
+        } catch (e) {}
+        try {
+            var s = JSON.parse(localStorage.getItem('tvcm-pin-auth') || 'null');
+            if (s && s.t && Date.now() < (s.exp || 0) && s.role) return s.role;
+        } catch (e) {}
+        return 'guest';
+    }
+
+    /* ── Perhitungan status ── */
+    function info(part) {
+        var lifetime = Math.max(1, Number(part.lifetime) || 1);
+        var used = Math.max(0, Number(part.used) || 0);
+        var warnAt = Math.max(0, Number(part.warnAt) || 0);
+        var critAt = Math.max(0, Number(part.critAt) || 0);
+        var remain = lifetime - used;
+        var pct = Math.min(100, Math.round((used / lifetime) * 100));
+        var status = 'ok';
+        if (remain <= 0) status = 'over';
+        else if (remain <= critAt) status = 'crit';
+        else if (remain <= warnAt) status = 'warn';
+        return {
+            lifetime: lifetime,
+            used: used,
+            warnAt: warnAt,
+            critAt: critAt,
+            remain: remain,
+            pct: pct,
+            status: status
+        };
+    }
+
+    var LABEL = { ok: 'Aman', warn: 'Warning', crit: 'Kritis', over: 'Minta ganti' };
+    var ICON = { ok: 'check_circle', warn: 'warning', crit: 'error', over: 'error' };
+    var RANK = { over: 0, crit: 1, warn: 2, ok: 3 };
+
+    /* ── Penyimpanan ── */
+    function cleanParts(list) {
+        return (Array.isArray(list) ? list : []).filter(function (p) {
+            return p && (p.name || p.code);
+        }).map(function (p) {
+            return {
+                id: String(p.id || uid()),
+                name: String(p.name || p.code || 'Part'),
+                code: String(p.code || ''),
+                station: String(p.station || ''),
+                lifetime: Math.max(1, Number(p.lifetime) || 1),
+                used: Math.max(0, Number(p.used) || 0),
+                warnAt: Math.max(0, Number(p.warnAt != null ? p.warnAt : 500) || 0),
+                critAt: Math.max(0, Number(p.critAt != null ? p.critAt : 100) || 0),
+                installedAt: String(p.installedAt || ''),
+                note: String(p.note || '')
+            };
+        });
+    }
+
+    function cleanHistory(list) {
+        return (Array.isArray(list) ? list : []).filter(function (h) {
+            return h && h.partName;
+        }).map(function (h) {
+            return {
+                id: String(h.id || uid()),
+                partId: String(h.partId || ''),
+                partName: String(h.partName || ''),
+                type: h.type === 'replace' ? 'replace' : 'usage',
+                date: String(h.date || ''),
+                shift: String(h.shift || ''),
+                qty: Number(h.qty) || 0,
+                by: String(h.by || ''),
+                note: String(h.note || ''),
+                ts: String(h.ts || new Date().toISOString())
+            };
+        }).sort(function (a, b) { return String(b.ts).localeCompare(String(a.ts)); });
+    }
+
+    function normalize(data) {
+        if (!data || typeof data !== 'object') return null;
+        if (!Array.isArray(data.parts)) return null;
+        return {
+            parts: cleanParts(data.parts),
+            history: cleanHistory(data.history)
+        };
+    }
+
+    function readLocal() {
+        try {
+            var raw = localStorage.getItem(LS_KEY);
+            if (!raw) return null;
+            var v = JSON.parse(raw);
+            var d = normalize(v && v.data ? v.data : v);
+            if (!d) return null;
+            d.synced = !(v && v.synced === false);
+            d.savedAt = Number(v && v.savedAt) || 0;
+            return d;
+        } catch (e) { return null; }
+    }
+
+    function writeLocal(synced) {
+        try {
+            localStorage.setItem(LS_KEY, JSON.stringify({
+                data: { parts: state.parts, history: state.history },
+                savedAt: Date.now(),
+                synced: !!synced
+            }));
+        } catch (e) {}
+    }
+
+    function setStatus(msg, type) {
+        var el = $('syncStatus');
+        el.textContent = msg || '';
+        el.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    /* ── Render ── */
+    function visibleParts() {
+        var q = query.trim().toLowerCase();
+        var list = state.parts.slice();
+        if (q) {
+            list = list.filter(function (p) {
+                return (p.name + ' ' + p.code + ' ' + p.station).toLowerCase().indexOf(q) !== -1;
+            });
+        }
+        return list.sort(function (a, b) {
+            var ia = info(a), ib = info(b);
+            if (RANK[ia.status] !== RANK[ib.status]) return RANK[ia.status] - RANK[ib.status];
+            if (ia.remain !== ib.remain) return ia.remain - ib.remain;
+            return a.name.localeCompare(b.name);
+        });
+    }
+
+    function renderStats() {
+        var total = state.parts.length, warn = 0, crit = 0;
+        state.parts.forEach(function (p) {
+            var i = info(p);
+            if (i.status === 'warn') warn++;
+            else if (i.status === 'crit' || i.status === 'over') crit++;
+        });
+        $('statTotal').textContent = num(total);
+        $('statWarn').textContent = num(warn);
+        $('statCrit').textContent = num(crit);
+
+        var banner = $('alertBanner');
+        if (crit > 0) {
+            var names = state.parts.filter(function (p) {
+                var s = info(p).status;
+                return s === 'crit' || s === 'over';
+            }).slice(0, 3).map(function (p) { return p.name; });
+            $('alertText').innerHTML = 'Perlu pergantian part: <b>' + esc(names.join(', ')) +
+                (crit > 3 ? ' dan ' + (crit - 3) + ' lainnya' : '') + '</b>.';
+            banner.hidden = false;
+        } else if (warn > 0) {
+            $('alertText').innerHTML = '<b>' + warn + ' part</b> mendekati batas lifetime. Siapkan part pengganti.';
+            banner.hidden = false;
+        } else {
+            banner.hidden = true;
+        }
+    }
+
+    function cardHtml(p) {
+        var i = info(p);
+        var status = i.status;
+        var actions = '';
+        if (isAdmin) {
+            actions =
+                '<div class="actions">' +
+                    '<button class="icon-btn" type="button" data-use="' + esc(p.id) + '" title="Input pemakaian"><span class="material-symbols-outlined">add_circle</span></button>' +
+                    '<button class="icon-btn" type="button" data-replace="' + esc(p.id) + '" title="Ganti part"><span class="material-symbols-outlined">published_with_changes</span></button>' +
+                    '<button class="icon-btn" type="button" data-edit="' + esc(p.id) + '" title="Edit part"><span class="material-symbols-outlined">edit</span></button>' +
+                    '<button class="icon-btn danger" type="button" data-del="' + esc(p.id) + '" title="Hapus part"><span class="material-symbols-outlined">delete</span></button>' +
+                '</div>';
+        }
+        var meta = '';
+        if (p.code) meta += '<span class="chip">' + esc(p.code) + '</span>';
+        if (p.station) meta += '<span class="chip">' + esc(p.station) + '</span>';
+        if (p.note) meta += '<span class="chip">' + esc(p.note) + '</span>';
+
+        var barWidth = Math.max(0, Math.min(100, status === 'over' ? 100 : i.pct));
+        var periodText = p.installedAt ? 'Pasang ' + fmtDate(p.installedAt) : 'Tanpa tanggal pasang';
+
+        return '<article class="card ' + status + '">' +
+            '<div class="card-head">' +
+                '<div>' +
+                    '<h3>' + esc(p.name) + '</h3>' +
+                    (meta ? '<div class="meta">' + meta + '</div>' : '') +
+                '</div>' +
+                '<span class="badge ' + status + '"><span class="material-symbols-outlined">' + ICON[status] + '</span>' + LABEL[status] + '</span>' +
+            '</div>' +
+            '<div class="numbers">' +
+                '<div><span>Lifetime</span><b>' + num(i.lifetime) + '</b></div>' +
+                '<div><span>Terpakai</span><b>' + num(i.used) + '</b></div>' +
+                '<div class="remain"><span>Sisa</span><b>' + num(i.remain) + '</b></div>' +
+            '</div>' +
+            '<div class="bar"><i style="width:' + barWidth + '%"></i></div>' +
+            '<div class="bar-note"><span>' + periodText + '</span><span>' + i.pct + '% terpakai</span></div>' +
+            '<div class="foot">' +
+                '<span class="period">Warning &le; ' + num(i.warnAt) + ' &middot; Kritis &le; ' + num(i.critAt) + '</span>' +
+                actions +
+            '</div>' +
+        '</article>';
+    }
+
+    function render() {
+        renderStats();
+        var list = visibleParts();
+        var grid = $('partGrid');
+        var empty = $('emptyState');
+
+        if (!state.parts.length) {
+            grid.innerHTML = '';
+            empty.hidden = false;
+            $('emptyHint').textContent = isAdmin
+                ? 'Tekan "Tambah Part" untuk mulai memonitor lifetime part di line Anda.'
+                : 'Part yang diinput admin akan tampil di sini beserta sisa lifetime-nya.';
+            return;
+        }
+        empty.hidden = true;
+
+        if (!list.length) {
+            grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="material-symbols-outlined">search_off</span>' +
+                '<strong>Part tidak ditemukan</strong><span>Tidak ada part yang cocok dengan pencarian "' + esc(query) + '".</span></div>';
+            return;
+        }
+        grid.innerHTML = list.map(cardHtml).join('');
+    }
+
+    function renderHistory() {
+        var box = $('historyList');
+        if (!state.history.length) {
+            box.innerHTML = '<div class="hist-empty">Belum ada riwayat pemakaian atau pergantian.</div>';
+            return;
+        }
+        var rows = state.history.slice(0, HIST_LIMIT).map(function (h) {
+            var type = h.type === 'replace'
+                ? '<span class="type replace"><span class="material-symbols-outlined">published_with_changes</span>Ganti part</span>'
+                : '<span class="type usage"><span class="material-symbols-outlined">speed</span>Pemakaian</span>';
+            var sub = [h.date ? fmtDate(h.date) : '', h.shift, h.by, h.note].filter(Boolean).join(' · ');
+            var qty = h.type === 'replace'
+                ? (h.qty ? num(h.qty) : '—')
+                : '+' + num(h.qty);
+            var qtyTitle = h.type === 'replace' ? 'Pemakaian sebelum diganti' : 'Penambahan pemakaian';
+            return '<div class="hist-row">' + type +
+                '<div class="body"><b>' + esc(h.partName) + '</b><div class="sub">' + esc(sub || '-') + '</div></div>' +
+                '<span class="qty" title="' + qtyTitle + '">' + qty + '</span></div>';
+        }).join('');
+        box.innerHTML = rows;
+    }
+
+    function applyData(d, opts) {
+        var next = { parts: cleanParts(d.parts), history: cleanHistory(d.history) };
+        var sig = JSON.stringify(next);
+        if (sig === lastSig) { state = next; return; }
+        state = next;
+        lastSig = sig;
+        render();
+        if (historyOpen) renderHistory();
+    }
+
+    /* ── Simpan ke server ── */
+    function persist() {
+        writeLocal(false);
+        if (!(window.Sync && Sync.hasUrl())) {
+            setStatus('Tersimpan di perangkat ini. Atur sinkronisasi agar tampil di device lain.', 'warn');
+            return Promise.resolve(false);
+        }
+        setStatus('Menyimpan ke server...', '');
+        return Sync.save(APP, {
+            action: 'save',
+            data: { parts: state.parts, history: state.history }
+        }).then(function (r) {
+            if (!r || !r.ok) throw new Error((r && r.error) || 'respon server tidak valid');
+            writeLocal(true);
+            setStatus('Tersinkron ke server.', 'ok');
+            return true;
+        }).catch(function (err) {
+            setStatus('Tersimpan lokal, gagal sinkron: ' + (err && err.message ? err.message : 'server tidak merespons'), 'err');
+            return false;
+        });
+    }
+
+    function loadFromServer(silent) {
+        if (!(window.Sync && Sync.hasUrl())) return Promise.resolve(false);
+        return Sync.get(APP, { action: 'get' }).then(function (r) {
+            if (!r || !r.ok) throw new Error((r && r.error) || 'server menolak permintaan');
+            var d = normalize(r.data);
+            if (!d) return false;
+            var local = readLocal();
+            if (local && local.synced === false) {
+                if (!silent) setStatus('Data lokal belum tersinkron. Data server tidak ditimpa.', 'warn');
+                return false;
+            }
+            if (!state.parts.length && !state.history.length) {
+                applyData(d);
+                writeLocal(true);
+                return true;
+            }
+            if (isModalOpen()) return false;
+            applyData(d);
+            writeLocal(true);
+            return true;
+        }).catch(function (err) {
+            if (!silent) setStatus('Gagal memuat dari server: ' + (err && err.message ? err.message : 'tidak merespons'), 'warn');
+            return false;
+        });
+    }
+
+    /* ── Modal helpers ── */
+    function openModal(id) {
+        $(id).classList.add('on');
+    }
+
+    function closeModal(id) {
+        $(id).classList.remove('on');
+    }
+
+    function isModalOpen() {
+        var modals = document.querySelectorAll('.modal.on');
+        return modals.length > 0;
+    }
+
+    function findPart(id) {
+        for (var i = 0; i < state.parts.length; i++) {
+            if (state.parts[i].id === id) return state.parts[i];
+        }
+        return null;
+    }
+
+    function addHistory(entry) {
+        entry.id = uid();
+        entry.ts = new Date().toISOString();
+        state.history.unshift(entry);
+        if (state.history.length > 500) state.history = state.history.slice(0, 500);
+    }
+
+    /* ── Form part ── */
+    function openPartForm(part) {
+        editingId = part ? part.id : null;
+        $('partModalTitle').textContent = part ? 'Edit Part' : 'Tambah Part';
+        $('pName').value = part ? part.name : '';
+        $('pCode').value = part ? part.code : '';
+        $('pStation').value = part ? part.station : '';
+        $('pLifetime').value = part ? part.lifetime : '';
+        $('pUsed').value = part ? part.used : 0;
+        $('pWarn').value = part ? part.warnAt : 500;
+        $('pCrit').value = part ? part.critAt : 100;
+        $('pInstalled').value = part && part.installedAt ? part.installedAt : todayStr();
+        $('pNote').value = part ? part.note : '';
+        $('partMsg').textContent = '';
+        openModal('partModal');
+        setTimeout(function () { $('pName').focus(); }, 30);
+    }
+
+    $('partForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!isAdmin) return;
+        var name = $('pName').value.trim();
+        var lifetime = Math.round(Number($('pLifetime').value));
+        if (!name) { $('partMsg').textContent = 'Nama part wajib diisi.'; $('partMsg').className = 'modal-msg err'; return; }
+        if (!isFinite(lifetime) || lifetime <= 0) { $('partMsg').textContent = 'Lifetime harus lebih dari 0.'; $('partMsg').className = 'modal-msg err'; return; }
+
+        var warnAt = Math.max(0, Math.round(Number($('pWarn').value) || 0));
+        var critAt = Math.max(0, Math.round(Number($('pCrit').value) || 0));
+        if (critAt > warnAt) { $('partMsg').textContent = 'Batas kritis tidak boleh lebih besar dari batas warning.'; $('partMsg').className = 'modal-msg err'; return; }
+
+        var data = {
+            name: name,
+            code: $('pCode').value.trim(),
+            station: $('pStation').value.trim(),
+            lifetime: lifetime,
+            used: Math.max(0, Math.round(Number($('pUsed').value) || 0)),
+            warnAt: warnAt,
+            critAt: critAt,
+            installedAt: $('pInstalled').value || '',
+            note: $('pNote').value.trim()
+        };
+
+        if (editingId) {
+            var p = findPart(editingId);
+            if (p) {
+                var before = p.used;
+                Object.keys(data).forEach(function (k) { p[k] = data[k]; });
+                if (data.used !== before) {
+                    var diff = data.used - before;
+                    addHistory({
+                        partId: p.id, partName: p.name, type: 'usage',
+                        date: todayStr(), shift: '', qty: Math.abs(diff),
+                        by: '', note: (diff > 0 ? 'Penyesuaian +' : 'Penyesuaian -') + num(Math.abs(diff)) + ' shot'
+                    });
+                }
+            }
+            editingId = null;
+        } else {
+            var created = cleanParts([data])[0];
+            if (!created.id) created.id = uid();
+            state.parts.push(created);
+        }
+
+        lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+        closeModal('partModal');
+        render();
+        if (historyOpen) renderHistory();
+        persist();
+    });
+
+    /* ── Form pemakaian ── */
+    function openUsage(part) {
+        usageId = part.id;
+        var i = info(part);
+        $('usagePartName').textContent = part.name + (part.code ? ' · ' + part.code : '') +
+            ' — sisa ' + num(i.remain) + ' dari ' + num(i.lifetime) + ' shot';
+        $('uDate').value = todayStr();
+        $('uShift').value = 'White';
+        $('uQty').value = '';
+        $('uBy').value = '';
+        $('uNote').value = '';
+        $('usageMsg').textContent = '';
+        openModal('usageModal');
+        setTimeout(function () { $('uQty').focus(); }, 30);
+    }
+
+    document.querySelectorAll('#usageModal .quick button').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var add = Number(b.getAttribute('data-add')) || 0;
+            var cur = Math.round(Number($('uQty').value) || 0);
+            $('uQty').value = cur + add;
+        });
+    });
+
+    $('usageForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!isAdmin) return;
+        var part = findPart(usageId);
+        if (!part) { closeModal('usageModal'); return; }
+        var qty = Math.round(Number($('uQty').value));
+        if (!isFinite(qty) || qty <= 0) { $('usageMsg').textContent = 'Jumlah pemakaian harus lebih dari 0.'; $('usageMsg').className = 'modal-msg err'; return; }
+
+        part.used = Math.max(0, Number(part.used) || 0) + qty;
+        addHistory({
+            partId: part.id,
+            partName: part.name,
+            type: 'usage',
+            date: $('uDate').value || todayStr(),
+            shift: $('uShift').value,
+            qty: qty,
+            by: $('uBy').value.trim(),
+            note: $('uNote').value.trim()
+        });
+
+        lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+        usageId = null;
+        closeModal('usageModal');
+        render();
+        if (historyOpen) renderHistory();
+        persist();
+    });
+
+    /* ── Form ganti part ── */
+    function openReplace(part) {
+        replaceId = part.id;
+        var i = info(part);
+        $('replacePartName').textContent = part.name + (part.code ? ' · ' + part.code : '') +
+            ' — terpakai ' + num(i.used) + ' / ' + num(i.lifetime) + ' shot';
+        $('rDate').value = todayStr();
+        $('rShift').value = 'White';
+        $('rBy').value = '';
+        $('rNote').value = '';
+        $('replaceMsg').textContent = '';
+        openModal('replaceModal');
+        setTimeout(function () { $('rBy').focus(); }, 30);
+    }
+
+    $('replaceForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!isAdmin) return;
+        var part = findPart(replaceId);
+        if (!part) { closeModal('replaceModal'); return; }
+        var usedBefore = Number(part.used) || 0;
+        part.used = 0;
+        part.installedAt = $('rDate').value || todayStr();
+
+        addHistory({
+            partId: part.id,
+            partName: part.name,
+            type: 'replace',
+            date: part.installedAt,
+            shift: $('rShift').value,
+            qty: usedBefore,
+            by: $('rBy').value.trim(),
+            note: $('rNote').value.trim()
+        });
+
+        lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+        replaceId = null;
+        closeModal('replaceModal');
+        render();
+        if (historyOpen) renderHistory();
+        persist();
+    });
+
+    /* ── Interaksi kartu ── */
+    $('partGrid').addEventListener('click', function (e) {
+        if (!isAdmin) return;
+        var btn = e.target.closest ? e.target.closest('button[data-use],button[data-replace],button[data-edit],button[data-del]') : null;
+        if (!btn) return;
+
+        if (btn.hasAttribute('data-use')) {
+            var pu = findPart(btn.getAttribute('data-use'));
+            if (pu) openUsage(pu);
+        } else if (btn.hasAttribute('data-replace')) {
+            var pr = findPart(btn.getAttribute('data-replace'));
+            if (pr) openReplace(pr);
+        } else if (btn.hasAttribute('data-edit')) {
+            var pe = findPart(btn.getAttribute('data-edit'));
+            if (pe) openPartForm(pe);
+        } else if (btn.hasAttribute('data-del')) {
+            var id = btn.getAttribute('data-del');
+            var pd = findPart(id);
+            if (!pd) return;
+            if (!window.confirm('Hapus part "' + pd.name + '" dari monitoring?\nRiwayat pemakaiannya tetap tersimpan.')) return;
+            state.parts = state.parts.filter(function (x) { return x.id !== id; });
+            lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+            render();
+            persist();
+        }
+    });
+
+    /* ── Toolbar ── */
+    $('addBtn').addEventListener('click', function () { openPartForm(null); });
+
+    $('searchInput').addEventListener('input', function () {
+        query = $('searchInput').value;
+        render();
+    });
+
+    $('historyBtn').addEventListener('click', function () {
+        historyOpen = !historyOpen;
+        $('historyPanel').hidden = !historyOpen;
+        if (historyOpen) {
+            renderHistory();
+            $('historyPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+
+    $('historyClose').addEventListener('click', function () {
+        historyOpen = false;
+        $('historyPanel').hidden = true;
+    });
+
+    /* Tutup modal */
+    document.querySelectorAll('[data-close]').forEach(function (b) {
+        b.addEventListener('click', function () { closeModal(b.getAttribute('data-close')); });
+    });
+    document.querySelectorAll('.modal').forEach(function (m) {
+        m.addEventListener('click', function (e) {
+            if (e.target === m) m.classList.remove('on');
+        });
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        document.querySelectorAll('.modal.on').forEach(function (m) { m.classList.remove('on'); });
+    });
+
+    /* ── Sinkron realtime antar device ── */
+    window.addEventListener('storage', function (e) {
+        if (e.key !== LS_KEY || isModalOpen()) return;
+        var local = readLocal();
+        if (local) applyData(local);
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) loadFromServer(true);
+    });
+
+    /* ── Start ── */
+    $('addBtn').hidden = !isAdmin;
+    if (!isAdmin) {
+        var hint = document.querySelector('.toolbar .search');
+        if (hint) hint.setAttribute('title', 'Mode tamu: hanya melihat data');
+    }
+
+    var initial = readLocal();
+    if (initial) applyData(initial);
+    render();
+
+    if (window.Sync && Sync.hasUrl()) {
+        loadFromServer(false);
+        setInterval(function () {
+            if (!isModalOpen()) loadFromServer(true);
+        }, POLL_MS);
+    } else {
+        setStatus('Sinkron belum diatur — data hanya tersimpan di device ini.', 'warn');
+    }
 })();
 </script>
 </body>

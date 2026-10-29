@@ -59,6 +59,7 @@ var DOC_NAMES = {
   planning_red: 'planning-cuti-red.json',
   planning_white: 'planning-cuti-white.json',
   news: 'news.json',
+  parts: 'pergantian-part.json',
   machines: 'machines.json',
   capability_red: 'capability-red.json',
   capability_white: 'capability-white.json',
@@ -119,6 +120,8 @@ function doGet(e) {
     result = (action === 'get') ? appGet_('capability', p.core) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'news') {
     result = (action === 'get') ? appGet_('news') : { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'part') {
+    result = (action === 'get') ? appGet_('part') : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'bnf') {
     if (action === 'list') result = listBnfPdfs_();
     else if (action === 'getpdf') result = getWipPdf_(p.id);
@@ -176,6 +179,8 @@ function doPost(e) {
     result = appSave_('capability', body.core, body.data);
   } else if (app === 'news') {
     result = appSave_('news', null, body.data);
+  } else if (app === 'part') {
+    result = appSave_('part', null, body.data);
   } else {
     result = { ok: false, error: 'App tidak dikenal: ' + app };
   }
@@ -199,6 +204,7 @@ function appKey_(app, variant) {
   if (app === 'machines') return DOC_NAMES.machines;
   if (app === 'capability') return (variant === 'white') ? DOC_NAMES.capability_white : DOC_NAMES.capability_red;
   if (app === 'news') return DOC_NAMES.news;
+  if (app === 'part') return DOC_NAMES.parts;
   return null;
 }
 
