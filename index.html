@@ -1104,7 +1104,7 @@ html.dark ::-webkit-scrollbar-thumb {
             function startTicker() {
                 stopTicker();
                 if (tickerPaused || !tickerCycle) return;
-                var FRAME_MS = 1000 / 60; // batasi gerakan running text maksimal 60 fps
+                var FRAME_MS = 1000 / 120; // batasi gerakan running text maksimal 120 fps
                 var pending = 0;
                 function frame(ts) {
                     if (tickerPaused || !tickerCycle) {
