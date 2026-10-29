@@ -294,8 +294,9 @@
         background: var(--ok);
     }
     .card.warn::before { background: var(--warn); }
-    .card.crit::before, .card.over::before { background: var(--crit); }
-    .card.over { border-color: var(--crit); }
+    .card.crit::before { background: var(--crit); }
+    .card.over::before { background: #7f1d1d; }
+    .card.over { border-color: #7f1d1d; }
     .card.unset::before { background: var(--outline); }
 
     .card-head {
@@ -339,8 +340,10 @@
     }
     .badge .material-symbols-outlined { font-size: 14px; }
     .badge.ok { color: var(--ok); background: var(--ok-soft); }
-    .badge.warn { color: var(--warn); background: var(--warn-soft); }
-    .badge.crit, .badge.over { color: var(--crit); background: var(--crit-soft); }
+    .badge.warn { color: #3d2600; background: #fbbf24; }
+    .badge.crit { color: #ffffff; background: #dc2626; }
+    .badge.over { color: #ffffff; background: #7f1d1d; }
+    html.dark .badge.over { color: #ffe4e4; background: #8b1a1a; }
     .badge.unset { color: var(--secondary); background: var(--surface-container); }
 
     .numbers {
@@ -371,8 +374,9 @@
     }
     .numbers .remain b { color: var(--ok); }
     .card.warn .numbers .remain b { color: var(--warn); }
-    .card.crit .numbers .remain b,
-    .card.over .numbers .remain b { color: var(--crit); }
+    .card.crit .numbers .remain b { color: var(--crit); }
+    .card.over .numbers .remain b { color: #7f1d1d; }
+    html.dark .card.over .numbers .remain b { color: #f87171; }
     .card.unset .numbers .remain b { color: var(--secondary); }
 
     .bar {
@@ -661,7 +665,7 @@
 <div class="modal" id="partModal">
     <form class="modal-card" id="partForm" autocomplete="off">
         <h3 id="partModalTitle">Tambah Part</h3>
-        <p class="hint">Isi lifetime part dalam satuan shot/cycle dan batas sisa untuk peringatan.</p>
+        <p class="hint">Isi lifetime part dalam satuan shot/cycle. Peringatan otomatis: <b>Warning</b> saat sisa &le;10%, <b>Kritis</b> saat sisa &le;5%, dan <b>NG</b> bila lifetime terlampaui.</p>
         <div class="fields">
             <div class="field full">
                 <label for="pName">Nama part</label>
@@ -687,14 +691,6 @@
             <div class="field">
                 <label for="pUsed">Terpakai saat ini (shot)</label>
                 <input id="pUsed" type="number" min="0" step="1" placeholder="0" value="0">
-            </div>
-            <div class="field">
-                <label for="pWarn">Warning saat sisa &le;</label>
-                <input id="pWarn" type="number" min="0" step="1" placeholder="500" value="500">
-            </div>
-            <div class="field">
-                <label for="pCrit">Kritis saat sisa &le;</label>
-                <input id="pCrit" type="number" min="0" step="1" placeholder="100" value="100">
             </div>
             <div class="field">
                 <label for="pInstalled">Tanggal pasang</label>
@@ -903,42 +899,85 @@
     function info(part) {
         var lifetime = Math.max(0, Number(part.lifetime) || 0);
         var used = Math.max(0, Number(part.used) || 0);
-        var warnAt = Math.max(0, Number(part.warnAt) || 0);
-        var critAt = Math.max(0, Number(part.critAt) || 0);
         if (!lifetime) {
-            return { lifetime: 0, used: used, warnAt: warnAt, critAt: critAt, remain: 0, pct: 0, status: 'unset' };
+            return { lifetime: 0, used: used, remain: 0, pct: 0, status: 'unset' };
         }
         var remain = lifetime - used;
         var pct = Math.min(100, Math.round((used / lifetime) * 100));
         var status = 'ok';
-        if (remain <= 0) status = 'over';
-        else if (remain <= critAt) status = 'crit';
-        else if (remain <= warnAt) status = 'warn';
+        if (used >= lifetime) status = 'over';
+        else if (remain <= lifetime * (CRIT_PCT / 100)) status = 'crit';
+        else if (remain <= lifetime * (WARN_PCT / 100)) status = 'warn';
         return {
             lifetime: lifetime,
             used: used,
-            warnAt: warnAt,
-            critAt: critAt,
             remain: remain,
             pct: pct,
             status: status
         };
     }
 
-    var LABEL = { ok: 'Aman', warn: 'Warning', crit: 'Kritis', over: 'Minta ganti', unset: 'Belum diset' };
-    var ICON = { ok: 'check_circle', warn: 'warning', crit: 'error', over: 'error', unset: 'help' };
+    var LABEL = { ok: 'Aman', warn: 'Warning', crit: 'Kritis', over: 'NG', unset: 'Belum diset' };
+    var ICON = { ok: 'check_circle', warn: 'warning', crit: 'error', over: 'block', unset: 'help' };
     var RANK = { over: 0, crit: 1, warn: 2, ok: 3, unset: 4 };
 
-    /* ── Data awal: daftar part per mesin (lifetime diisi admin) ── */
+    /* Peringatan berbasis persentase lifetime */
+    var WARN_PCT = 10;   // sisa <= 10% lifetime → Warning (kuning)
+    var CRIT_PCT = 5;    // sisa <= 5% lifetime  → Kritis (merah cerah)
+                         // terpakai >= lifetime → NG (merah pekat)
+
+    /* ── Data awal: daftar part per mesin + lifetime (shot) ── */
     var SEED_MACHINES = [
-        { machine: 'ICM 002', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
-        { machine: 'ICM 003', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
-        { machine: 'ICM 006', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
-        { machine: 'ICM 007', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
-        { machine: 'ICM 008', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Blow Filter', 'Sand Gate'] },
-        { machine: 'ICM 009', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Blow Filter', 'Sand Gate'] },
-        { machine: 'ICD 01', parts: ['Drill Cope / Drag', 'Drill Front / Rear'] },
-        { machine: 'ICD 02', parts: ['Drill Cope / Drag', 'Drill Front / Rear'] }
+        { machine: 'ICM 002', parts: [
+            { n: 'Blow Nozzle Packing', lt: 60000 },
+            { n: 'Press Packing', lt: 40000 },
+            { n: 'Blow Nozzle', lt: 80000 },
+            { n: 'Wire Net', lt: 80000 },
+            { n: 'Sand Gate', lt: 80000 }
+        ] },
+        { machine: 'ICM 003', parts: [
+            { n: 'Blow Nozzle Packing', lt: 60000 },
+            { n: 'Press Packing', lt: 40000 },
+            { n: 'Blow Nozzle', lt: 80000 },
+            { n: 'Wire Net', lt: 80000 },
+            { n: 'Sand Gate', lt: 80000 }
+        ] },
+        { machine: 'ICM 006', parts: [
+            { n: 'Blow Nozzle Packing', lt: 60000 },
+            { n: 'Press Packing', lt: 40000 },
+            { n: 'Blow Nozzle', lt: 80000 },
+            { n: 'Wire Net', lt: 80000 },
+            { n: 'Sand Gate', lt: 80000 }
+        ] },
+        { machine: 'ICM 007', parts: [
+            { n: 'Blow Nozzle Packing', lt: 60000 },
+            { n: 'Press Packing', lt: 40000 },
+            { n: 'Blow Nozzle', lt: 80000 },
+            { n: 'Wire Net', lt: 80000 },
+            { n: 'Sand Gate', lt: 80000 }
+        ] },
+        { machine: 'ICM 008', parts: [
+            { n: 'Blow Nozzle Packing', lt: 60000 },
+            { n: 'Press Packing', lt: 60000 },
+            { n: 'Blow Nozzle', lt: 80000 },
+            { n: 'Blow Filter', lt: 60000 },
+            { n: 'Sand Gate', lt: 80000 }
+        ] },
+        { machine: 'ICM 009', parts: [
+            { n: 'Blow Nozzle Packing', lt: 60000 },
+            { n: 'Press Packing', lt: 60000 },
+            { n: 'Blow Nozzle', lt: 80000 },
+            { n: 'Blow Filter', lt: 60000 },
+            { n: 'Sand Gate', lt: 80000 }
+        ] },
+        { machine: 'ICD 01', parts: [
+            { n: 'Drill Cope / Drag', lt: 0 },
+            { n: 'Drill Front / Rear', lt: 0 }
+        ] },
+        { machine: 'ICD 02', parts: [
+            { n: 'Drill Cope / Drag', lt: 0 },
+            { n: 'Drill Front / Rear', lt: 0 }
+        ] }
     ];
 
     /* ── Penyimpanan ── */
@@ -954,8 +993,6 @@
                 station: String(p.station || ''),
                 lifetime: Math.max(0, Number(p.lifetime) || 0),
                 used: Math.max(0, Number(p.used) || 0),
-                warnAt: Math.max(0, Number(p.warnAt != null ? p.warnAt : 500) || 0),
-                critAt: Math.max(0, Number(p.critAt != null ? p.critAt : 100) || 0),
                 installedAt: String(p.installedAt || ''),
                 note: String(p.note || '')
             };
@@ -1107,7 +1144,7 @@
             '<div class="bar"><i style="width:' + barWidth + '%"></i></div>' +
             '<div class="bar-note"><span>' + periodText + '</span><span>' + pctText + '</span></div>' +
             '<div class="foot">' +
-                '<span class="period">Warning &le; ' + num(i.warnAt) + ' &middot; Kritis &le; ' + num(i.critAt) + '</span>' +
+                '<span class="period">Warning &le;' + WARN_PCT + '% &middot; Kritis &le;' + CRIT_PCT + '% sisa</span>' +
                 actions +
             '</div>' +
         '</article>';
@@ -1233,17 +1270,15 @@
         var list = [];
         SEED_MACHINES.forEach(function (g) {
             var slug = g.machine.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-            g.parts.forEach(function (name, idx) {
+            g.parts.forEach(function (spec, idx) {
                 list.push({
                     id: 'seed-' + slug + '-' + (idx + 1),
-                    name: name,
+                    name: spec.n,
                     code: '',
                     machine: g.machine,
                     station: '',
-                    lifetime: 0,
+                    lifetime: spec.lt || 0,
                     used: 0,
-                    warnAt: 500,
-                    critAt: 100,
                     installedAt: '',
                     note: ''
                 });
@@ -1254,6 +1289,27 @@
         try { localStorage.setItem('tvcm-part-seeded-v1', '1'); } catch (e) {}
         render();
         persist();
+    }
+
+    /* Isi lifetime untuk part lama yang belum punya lifetime (data seed sebelumnya) */
+    function applyLifetimes() {
+        var map = {};
+        SEED_MACHINES.forEach(function (g) {
+            g.parts.forEach(function (spec) {
+                if (spec.lt) map[g.machine + '|' + spec.n] = spec.lt;
+            });
+        });
+        var changed = false;
+        state.parts.forEach(function (p) {
+            if (p.lifetime) return;
+            var lt = map[p.machine + '|' + p.name];
+            if (lt) { p.lifetime = lt; changed = true; }
+        });
+        if (!changed) return false;
+        lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+        render();
+        if (isAdmin) persist();
+        return true;
     }
 
     /* ── Simpan ke server ── */
@@ -1343,8 +1399,6 @@
         $('pStation').value = part ? part.station : '';
         $('pLifetime').value = part && part.lifetime ? part.lifetime : '';
         $('pUsed').value = part ? part.used : 0;
-        $('pWarn').value = part ? part.warnAt : 500;
-        $('pCrit').value = part ? part.critAt : 100;
         $('pInstalled').value = part && part.installedAt ? part.installedAt : todayStr();
         $('pNote').value = part ? part.note : '';
         $('partMsg').textContent = '';
@@ -1360,10 +1414,6 @@
         if (!name) { $('partMsg').textContent = 'Nama part wajib diisi.'; $('partMsg').className = 'modal-msg err'; return; }
         if (!isFinite(lifetime)) { $('partMsg').textContent = 'Lifetime tidak valid.'; $('partMsg').className = 'modal-msg err'; return; }
 
-        var warnAt = Math.max(0, Math.round(Number($('pWarn').value) || 0));
-        var critAt = Math.max(0, Math.round(Number($('pCrit').value) || 0));
-        if (critAt > warnAt) { $('partMsg').textContent = 'Batas kritis tidak boleh lebih besar dari batas warning.'; $('partMsg').className = 'modal-msg err'; return; }
-
         var data = {
             name: name,
             code: $('pCode').value.trim(),
@@ -1371,8 +1421,6 @@
             station: $('pStation').value.trim(),
             lifetime: lifetime,
             used: Math.max(0, Math.round(Number($('pUsed').value) || 0)),
-            warnAt: warnAt,
-            critAt: critAt,
             installedAt: $('pInstalled').value || '',
             note: $('pNote').value.trim()
         };
@@ -1588,6 +1636,7 @@
     if (window.Sync && Sync.hasUrl()) {
         loadFromServer(false).then(function () {
             if (serverOk) seedMaster();
+            applyLifetimes();
         });
         setInterval(function () {
             if (!isModalOpen()) loadFromServer(true);
@@ -1595,6 +1644,7 @@
     } else {
         setStatus('Sinkron belum diatur — data hanya tersimpan di device ini.', 'warn');
         seedMaster();
+        applyLifetimes();
     }
 })();
 </script>
