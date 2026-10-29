@@ -186,6 +186,9 @@
     }
     .banner .material-symbols-outlined { font-size: 22px; color: var(--crit); flex: 0 0 auto; }
     .banner b { font-weight: 800; }
+    .banner.stacked { align-items: flex-start; }
+    .banner.stacked .material-symbols-outlined { margin-top: 1px; }
+    .banner .alert-line + .alert-line { margin-top: 4px; }
 
     .toolbar {
         display: flex;
@@ -1123,28 +1126,35 @@
         $('statCrit').textContent = num(crit);
 
         var banner = $('alertBanner');
-        function label(p) { return p.machine ? p.name + ' (' + p.machine + ')' : p.name; }
-        if (crit > 0) {
-            var names = state.parts.filter(function (p) {
-                var s = info(p).status;
-                return s === 'crit' || s === 'over';
-            }).slice(0, 3).map(label);
-            $('alertText').innerHTML = 'Perlu pergantian part: <b>' + esc(names.join(', ')) +
-                (crit > 3 ? ' dan ' + (crit - 3) + ' lainnya' : '') + '</b>.';
-            banner.hidden = false;
-        } else if (warn > 0) {
-            var warnNames = state.parts.filter(function (p) {
-                return info(p).status === 'warn';
-            }).slice(0, 3).map(function (p) {
-                return p.machine ? p.name + ' & ' + p.machine : p.name;
-            });
-            var warnText = '(' + warnNames.join('), (') + ')' +
-                (warn > 3 ? ' dan ' + (warn - 3) + ' part lainnya' : '');
-            $('alertText').innerHTML = '<b>' + esc(warnText) +
-                '</b> mendekati batas Lifetime, segera buat planning pergantian part.';
-            banner.hidden = false;
-        } else {
+        var alerts = [];
+        state.parts.slice().sort(function (a, b) {
+            return RANK[info(a).status] - RANK[info(b).status];
+        }).forEach(function (p) {
+            var s = info(p).status;
+            if (s !== 'warn' && s !== 'crit' && s !== 'over') return;
+            var who = p.machine ? p.name + ' & ' + p.machine : p.name;
+            var text;
+            if (s === 'warn') {
+                text = '<b>' + esc(who) + '</b> mendekati batas Lifetime, segera buat planning pergantian part.';
+            } else if (s === 'crit') {
+                text = '<b>' + esc(who) + '</b> kritis, segera ganti part.';
+            } else {
+                text = '<b>' + esc(who) + '</b> sudah NG, segera ganti part.';
+            }
+            alerts.push(text);
+        });
+
+        if (!alerts.length) {
             banner.hidden = true;
+            banner.classList.remove('stacked');
+        } else {
+            $('alertText').innerHTML = alerts.length === 1
+                ? alerts[0]
+                : alerts.map(function (t) {
+                    return '<div class="alert-line">' + t + '</div>';
+                }).join('');
+            banner.classList.toggle('stacked', alerts.length > 1);
+            banner.hidden = false;
         }
     }
 
