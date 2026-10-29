@@ -423,6 +423,26 @@ html.dark ::-webkit-scrollbar-thumb {
         }
         #newsTicker .nt-tag.warn { color: #3d2600; background: #fbbf24; }
         #newsTicker .nt-tag.ng { color: #ffffff; background: #dc2626; }
+        #newsTicker .nt-empty { padding: 0 26px; color: var(--secondary); font-size: 12.5px; }
+        #newsTicker .nt-refresh {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 100%;
+            padding: 0;
+            border: 0;
+            border-left: 1px solid var(--outline-variant);
+            background: var(--surface-container-lowest);
+            color: var(--secondary);
+            cursor: pointer;
+        }
+        #newsTicker .nt-refresh:hover { color: var(--primary); background: var(--surface-container-low); }
+        #newsTicker .nt-refresh:disabled { cursor: default; opacity: .7; }
+        #newsTicker .nt-refresh .material-symbols-outlined { font-size: 18px; }
+        #newsTicker .nt-refresh.spin .material-symbols-outlined { animation: nt-spin .8s linear infinite; }
+        @keyframes nt-spin { to { transform: rotate(360deg); } }
         @media (max-width: 767px) {
             #newsTicker { left: 0; }
             #newsTicker .nt-label { padding: 0 10px; font-size: 0; gap: 0; }
@@ -533,6 +553,9 @@ html.dark ::-webkit-scrollbar-thumb {
 <div id="newsTicker" aria-label="Running text news">
 <div class="nt-label"><span class="material-symbols-outlined">campaign</span> News</div>
 <div class="nt-viewport"><div class="nt-track" id="newsTickerTrack"></div></div>
+<button type="button" id="newsTickerRefresh" class="nt-refresh" title="Muat ulang berita &amp; data part" aria-label="Muat ulang berita dan data part">
+<span class="material-symbols-outlined">refresh</span>
+</button>
 </div>
 <div class="app-shell flex min-h-screen">
 <!-- SideNavBar -->
@@ -1087,12 +1110,13 @@ html.dark ::-webkit-scrollbar-thumb {
             function loadAlerts() {
                 var local = readPartLocal();
                 if (local) setAlerts(buildAlerts(local));
-                if (!(window.Sync && Sync.hasUrl())) return;
-                Sync.get('part', { action: 'get' }).then(function (r) {
-                    if (!r || !r.ok) return;
+                if (!(window.Sync && Sync.hasUrl())) return Promise.resolve(false);
+                return Sync.get('part', { action: 'get' }).then(function (r) {
+                    if (!r || !r.ok) return false;
                     var parts = r.data && r.data.parts;
                     if (Array.isArray(parts)) setAlerts(buildAlerts(parts));
-                }).catch(function () {});
+                    return true;
+                }).catch(function () { return false; });
             }
 
             function stopTicker() {
@@ -1161,10 +1185,10 @@ html.dark ::-webkit-scrollbar-thumb {
             function render() {
                 var all = alerts.concat(items);
                 if (!all.length) {
-                    document.body.classList.remove('ticker-on');
+                    document.body.classList.add('ticker-on');
                     stopTicker();
                     tickerCycle = 0;
-                    track.innerHTML = '';
+                    track.innerHTML = '<span class="nt-empty">Belum ada berita. Tekan tombol muat ulang.</span>';
                     track.style.transform = 'translate3d(0, 0, 0)';
                     return;
                 }
@@ -1179,10 +1203,10 @@ html.dark ::-webkit-scrollbar-thumb {
                         '<span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
                 }).join('');
                 if (!one) {
-                    document.body.classList.remove('ticker-on');
+                    document.body.classList.add('ticker-on');
                     stopTicker();
                     tickerCycle = 0;
-                    track.innerHTML = '';
+                    track.innerHTML = '<span class="nt-empty">Belum ada berita. Tekan tombol muat ulang.</span>';
                     track.style.transform = 'translate3d(0, 0, 0)';
                     return;
                 }
@@ -1203,14 +1227,14 @@ html.dark ::-webkit-scrollbar-thumb {
                 if (local) setItems(local.items);
                 else setItems(Array.isArray(window.TVC_NEWS) ? window.TVC_NEWS : []);
 
-                if (!(window.Sync && Sync.hasUrl())) return;
-                Sync.get('news', { action: 'get' }).then(function (r) {
-                    if (!r || !r.ok) return;
+                if (!(window.Sync && Sync.hasUrl())) return Promise.resolve(false);
+                return Sync.get('news', { action: 'get' }).then(function (r) {
+                    if (!r || !r.ok) return false;
                     var data = r.data;
                     var list = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
-                    if (!list) return;
+                    if (!list) return false;
                     var nowLocal = readLocal();
-                    if (nowLocal && nowLocal.synced === false) return;
+                    if (nowLocal && nowLocal.synced === false) return false;
                     setItems(list);
                     try {
                         localStorage.setItem(LS_KEY, JSON.stringify({
@@ -1219,7 +1243,8 @@ html.dark ::-webkit-scrollbar-thumb {
                             synced: true
                         }));
                     } catch (e) {}
-                }).catch(function () {});
+                    return true;
+                }).catch(function () { return false; });
             }
 
             window.addEventListener('storage', function (e) {
@@ -1257,11 +1282,28 @@ html.dark ::-webkit-scrollbar-thumb {
                 else if (!tickerPaused) startTicker();
             });
 
+            var refreshBtn = document.getElementById('newsTickerRefresh');
+            function refreshAll() {
+                if (!refreshBtn || refreshBtn.disabled) return;
+                refreshBtn.disabled = true;
+                refreshBtn.classList.add('spin');
+                var done = function () {
+                    refreshBtn.disabled = false;
+                    refreshBtn.classList.remove('spin');
+                };
+                var timer = setTimeout(done, 5000);
+                Promise.all([load(), loadAlerts()]).then(function () {
+                    clearTimeout(timer);
+                    done();
+                }, function () {
+                    clearTimeout(timer);
+                    done();
+                });
+            }
+            if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
+
             load();
             loadAlerts();
-            if (window.Sync && Sync.hasUrl()) {
-                setInterval(function () { load(); loadAlerts(); }, 30000);
-            }
         })();
     </script>
 
