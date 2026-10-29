@@ -171,12 +171,17 @@
     .stat.crit b { color: var(--crit); }
     .stat.ok b { color: var(--ok); }
 
+    .alerts {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
     .banner {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 12px;
         padding: 13px 16px;
-        margin-bottom: 16px;
         border-radius: 12px;
         border: 1px solid var(--crit);
         background: var(--crit-soft);
@@ -184,11 +189,14 @@
         font-size: 13.5px;
         line-height: 1.5;
     }
-    .banner .material-symbols-outlined { font-size: 22px; color: var(--crit); flex: 0 0 auto; }
+    .banner.warn {
+        border-color: #fbbf24;
+        background: rgba(251, 191, 36, 0.16);
+    }
+    .banner.warn .material-symbols-outlined { color: #b45309; }
+    html.dark .banner.warn .material-symbols-outlined { color: #fbbf24; }
+    .banner .material-symbols-outlined { font-size: 22px; color: var(--crit); flex: 0 0 auto; margin-top: 1px; }
     .banner b { font-weight: 800; }
-    .banner.stacked { align-items: flex-start; }
-    .banner.stacked .material-symbols-outlined { margin-top: 1px; }
-    .banner .alert-line + .alert-line { margin-top: 4px; }
 
     .toolbar {
         display: flex;
@@ -645,10 +653,7 @@
         </div>
     </div>
 
-    <div class="banner" id="alertBanner" hidden>
-        <span class="material-symbols-outlined">notification_important</span>
-        <div id="alertText"></div>
-    </div>
+    <div class="alerts" id="alertBanner" hidden></div>
 
     <section class="toolbar">
         <div class="search">
@@ -1133,27 +1138,30 @@
             var s = info(p).status;
             if (s !== 'warn' && s !== 'crit' && s !== 'over') return;
             var who = p.machine ? p.name + ' ' + p.machine : p.name;
-            var text;
+            var text, type;
             if (s === 'warn') {
                 text = '<b>' + esc(who) + '</b> mendekati batas Lifetime, segera buat planning pergantian part.';
+                type = 'warn';
             } else if (s === 'crit') {
                 text = '<b>' + esc(who) + '</b> kritis, segera ganti part.';
+                type = 'crit';
             } else {
                 text = '<b>' + esc(who) + '</b> sudah NG melebihi Lifetime, Stop produksi dan ganti part.';
+                type = 'ng';
             }
-            alerts.push(text);
+            alerts.push({ text: text, type: type, icon: ICON[s] });
         });
 
         if (!alerts.length) {
+            banner.innerHTML = '';
             banner.hidden = true;
-            banner.classList.remove('stacked');
         } else {
-            $('alertText').innerHTML = alerts.length === 1
-                ? alerts[0]
-                : alerts.map(function (t) {
-                    return '<div class="alert-line">' + t + '</div>';
-                }).join('');
-            banner.classList.toggle('stacked', alerts.length > 1);
+            banner.innerHTML = alerts.map(function (a) {
+                return '<div class="banner ' + a.type + '">' +
+                    '<span class="material-symbols-outlined">' + a.icon + '</span>' +
+                    '<div>' + a.text + '</div>' +
+                '</div>';
+            }).join('');
             banner.hidden = false;
         }
     }
