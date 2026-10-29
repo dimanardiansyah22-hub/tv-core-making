@@ -407,6 +407,20 @@ html.dark ::-webkit-scrollbar-thumb {
             background: var(--primary);
             flex: 0 0 auto;
         }
+        #newsTicker .nt-item.warn .nt-dot { background: #fbbf24; }
+        #newsTicker .nt-item.crit .nt-dot,
+        #newsTicker .nt-item.over .nt-dot { background: #dc2626; }
+        #newsTicker .nt-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .06em;
+        }
+        #newsTicker .nt-tag.warn { color: #3d2600; background: #fbbf24; }
+        #newsTicker .nt-tag.ng { color: #ffffff; background: #dc2626; }
         @media (max-width: 767px) {
             #newsTicker { left: 0; }
             #newsTicker .nt-label { padding: 0 10px; font-size: 0; gap: 0; }
@@ -975,7 +989,9 @@ html.dark ::-webkit-scrollbar-thumb {
             if (!track || !preview) return;
 
             var items = [];
+            var alerts = [];
             var lastSig = '';
+            var alertSig = '';
             var tickerToken = 0;
             var tickerRaf = 0;
             var tickerLast = 0;
@@ -1015,6 +1031,66 @@ html.dark ::-webkit-scrollbar-thumb {
                         synced: Array.isArray(v) || v.synced !== false
                     };
                 } catch (e) { return null; }
+            }
+
+            /* ── Notice Warning/NG dari menu Pergantian Part ── */
+            var ALERT_RANK = { over: 0, crit: 1, warn: 2 };
+
+            function readPartLocal() {
+                try {
+                    var raw = localStorage.getItem('tvcm-pergantian-part');
+                    if (!raw) return null;
+                    var v = JSON.parse(raw);
+                    var data = v && v.data ? v.data : v;
+                    return data && Array.isArray(data.parts) ? data.parts : null;
+                } catch (e) { return null; }
+            }
+
+            function buildAlerts(parts) {
+                var out = [];
+                (Array.isArray(parts) ? parts : []).forEach(function (p) {
+                    var lifetime = Math.max(0, Number(p && p.lifetime) || 0);
+                    var used = Math.max(0, Number(p && p.used) || 0);
+                    if (!lifetime) return;
+                    var remain = lifetime - used;
+                    var kind = used >= lifetime ? 'over'
+                        : remain <= lifetime * 0.05 ? 'crit'
+                        : remain <= lifetime * 0.10 ? 'warn' : '';
+                    if (!kind) return;
+                    var name = String(p.name || 'Part');
+                    var who = p.machine ? name + ' ' + p.machine : name;
+                    var text;
+                    if (kind === 'warn') {
+                        text = who + ' mendekati batas Lifetime, segera buat planning pergantian part.';
+                    } else if (kind === 'crit') {
+                        text = who + ' kritis, segera ganti part.';
+                    } else {
+                        text = who + ' sudah NG melebihi Lifetime, Stop produksi dan ganti part.';
+                    }
+                    out.push({ date: '', text: text, active: true, kind: kind });
+                });
+                out.sort(function (a, b) { return ALERT_RANK[a.kind] - ALERT_RANK[b.kind]; });
+                return out;
+            }
+
+            function setAlerts(list) {
+                var next = Array.isArray(list) ? list : [];
+                var sig = JSON.stringify(next);
+                if (sig === alertSig) return;
+                alertSig = sig;
+                alerts = next;
+                render();
+            }
+
+            function loadAlerts() {
+                var local = readPartLocal();
+                if (local) setAlerts(buildAlerts(local));
+                if (!(window.Sync && Sync.hasUrl())) return;
+                Sync.get('part', { action: 'get' }).then(function (r) {
+                    if (!r || !r.ok) return;
+                    var parts = r.data && r.data.parts;
+                    if (Array.isArray(parts)) setAlerts(buildAlerts(parts));
+                }).catch(function () {});
             }
 
             function stopTicker() {
@@ -1081,7 +1157,8 @@ html.dark ::-webkit-scrollbar-thumb {
             }
 
             function render() {
-                if (!items.length) {
+                var all = alerts.concat(items);
+                if (!all.length) {
                     document.body.classList.remove('ticker-on');
                     stopTicker();
                     tickerCycle = 0;
@@ -1090,8 +1167,14 @@ html.dark ::-webkit-scrollbar-thumb {
                     return;
                 }
                 document.body.classList.add('ticker-on');
-                var one = items.filter(function (n) { return n.active !== false; }).map(function (n) {
-                    return '<span class="nt-item"><span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
+                var one = all.filter(function (n) { return n.active !== false; }).map(function (n) {
+                    var kind = n.kind || '';
+                    var tag = '';
+                    if (kind === 'over') tag = '<span class="nt-tag ng">NG</span>';
+                    else if (kind === 'crit') tag = '<span class="nt-tag ng">KRITIS</span>';
+                    else if (kind === 'warn') tag = '<span class="nt-tag warn">WARNING</span>';
+                    return '<span class="nt-item ' + kind + '">' + tag +
+                        '<span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
                 }).join('');
                 if (!one) {
                     document.body.classList.remove('ticker-on');
@@ -1138,13 +1221,19 @@ html.dark ::-webkit-scrollbar-thumb {
             }
 
             window.addEventListener('storage', function (e) {
-                if (e.key !== LS_KEY) return;
-                var local = readLocal();
-                if (local) setItems(local.items);
+                if (e.key === LS_KEY) {
+                    var local = readLocal();
+                    if (local) setItems(local.items);
+                } else if (e.key === 'tvcm-pergantian-part') {
+                    var parts = readPartLocal();
+                    if (parts) setAlerts(buildAlerts(parts));
+                }
             });
 
             window.addEventListener('message', function (e) {
-                if (e && e.data && e.data.type === 'tvc-news-updated') load();
+                if (!e || !e.data) return;
+                if (e.data.type === 'tvc-news-updated') load();
+                else if (e.data.type === 'tvc-part-updated') loadAlerts();
             });
 
             var resizeTimer;
@@ -1167,8 +1256,9 @@ html.dark ::-webkit-scrollbar-thumb {
             });
 
             load();
+            loadAlerts();
             if (window.Sync && Sync.hasUrl()) {
-                setInterval(load, 30000);
+                setInterval(function () { load(); loadAlerts(); }, 30000);
             }
         })();
     </script>
