@@ -1133,7 +1133,15 @@
                 (crit > 3 ? ' dan ' + (crit - 3) + ' lainnya' : '') + '</b>.';
             banner.hidden = false;
         } else if (warn > 0) {
-            $('alertText').innerHTML = '<b>' + warn + ' part</b> mendekati batas lifetime. Siapkan part pengganti.';
+            var warnNames = state.parts.filter(function (p) {
+                return info(p).status === 'warn';
+            }).slice(0, 3).map(function (p) {
+                return p.machine ? p.name + ' & ' + p.machine : p.name;
+            });
+            var warnText = '(' + warnNames.join('), (') + ')' +
+                (warn > 3 ? ' dan ' + (warn - 3) + ' part lainnya' : '');
+            $('alertText').innerHTML = '<b>' + esc(warnText) +
+                '</b> mendekati batas Lifetime, segera buat planning pergantian part.';
             banner.hidden = false;
         } else {
             banner.hidden = true;
