@@ -613,7 +613,7 @@ html.dark ::-webkit-scrollbar-thumb {
 </div>
 </aside>
 <!-- Main Content -->
-<main class="flex-1 md:ml-64 bg-background p-gutter" id="main-content"></main>
+<main class="flex-1 md:ml-64 bg-background p-2" id="main-content"></main>
 </div>
 
 <!-- Support Modal -->
@@ -723,7 +723,7 @@ html.dark ::-webkit-scrollbar-thumb {
             main.style.padding = flush ? '0' : '';
             const minH = flush
                 ? 'calc(100vh - 64px - var(--ticker-h))'
-                : 'calc(100vh - 112px - var(--ticker-h))';
+                : 'calc(100vh - 80px - var(--ticker-h))';
             main.innerHTML = `<iframe data-internal="${url.indexOf('http') === 0 ? '0' : '1'}" src="${u.href}" class="w-full h-full border-none" style="min-height:${minH};"></iframe>`;
             if (url.indexOf('planning-cuti-') === 0) {
                 localStorage.setItem('planning-cuti-last', url);
