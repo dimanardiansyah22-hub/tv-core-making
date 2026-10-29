@@ -981,7 +981,8 @@ html.dark ::-webkit-scrollbar-thumb {
             var tickerLast = 0;
             var tickerOffset = 0;
             var tickerCycle = 0;
-            var tickerSpeed = 80;
+            var tickerSpeed = 50;
+            var TICKER_PX_PER_SEC = 50; // kecepatan geser running text (px/detik)
             var tickerPaused = false;
 
             function esc(s) {
@@ -1072,7 +1073,7 @@ html.dark ::-webkit-scrollbar-thumb {
                     track.innerHTML = full + full;
                     tickerCycle = oneWidth * copies;
                     tickerOffset = 0;
-                    var durationSec = Math.max(18, Math.round(tickerCycle / 70));
+                    var durationSec = Math.max(18, Math.round(tickerCycle / TICKER_PX_PER_SEC));
                     tickerSpeed = tickerCycle / durationSec;
                     startTicker();
                 }
