@@ -248,6 +248,32 @@
         grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
         gap: 16px;
     }
+    .machine { margin-bottom: 26px; }
+    .machine:last-child { margin-bottom: 0; }
+    .machine-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 0 0 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--outline-variant);
+    }
+    .machine-head h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: -.01em;
+    }
+    .machine-head h2 .material-symbols-outlined { font-size: 19px; color: var(--primary); }
+    .machine-meta { color: var(--secondary); font-size: 11.5px; font-weight: 600; }
+    .machine-meta b { color: var(--on-surface); }
+    .machine-meta .alert { color: var(--crit); }
     .card {
         position: relative;
         display: flex;
@@ -270,6 +296,7 @@
     .card.warn::before { background: var(--warn); }
     .card.crit::before, .card.over::before { background: var(--crit); }
     .card.over { border-color: var(--crit); }
+    .card.unset::before { background: var(--outline); }
 
     .card-head {
         display: flex;
@@ -314,6 +341,7 @@
     .badge.ok { color: var(--ok); background: var(--ok-soft); }
     .badge.warn { color: var(--warn); background: var(--warn-soft); }
     .badge.crit, .badge.over { color: var(--crit); background: var(--crit-soft); }
+    .badge.unset { color: var(--secondary); background: var(--surface-container); }
 
     .numbers {
         display: grid;
@@ -345,6 +373,7 @@
     .card.warn .numbers .remain b { color: var(--warn); }
     .card.crit .numbers .remain b,
     .card.over .numbers .remain b { color: var(--crit); }
+    .card.unset .numbers .remain b { color: var(--secondary); }
 
     .bar {
         position: relative;
@@ -582,6 +611,7 @@
         </div>
         <div class="stats">
             <div class="stat"><span>Total part</span><b id="statTotal">0</b></div>
+            <div class="stat"><span>Belum diset</span><b id="statUnset">0</b></div>
             <div class="stat warn"><span>Warning</span><b id="statWarn">0</b></div>
             <div class="stat crit"><span>Perlu ganti</span><b id="statCrit">0</b></div>
         </div>
@@ -608,7 +638,7 @@
         </div>
     </section>
 
-    <div class="grid" id="partGrid"></div>
+    <div id="partGrid"></div>
 
     <div class="empty" id="emptyState" hidden>
         <span class="material-symbols-outlined">precision_manufacturing</span>
@@ -642,12 +672,17 @@
                 <input id="pCode" type="text" placeholder="Contoh: UDC-A01">
             </div>
             <div class="field">
+                <label for="pMachine">Mesin</label>
+                <input id="pMachine" type="text" list="machineList" placeholder="Contoh: ICM 002">
+                <datalist id="machineList"></datalist>
+            </div>
+            <div class="field">
                 <label for="pStation">Line / Station</label>
-                <input id="pStation" type="text" placeholder="Contoh: Line 1 - St.3">
+                <input id="pStation" type="text" placeholder="Opsional">
             </div>
             <div class="field">
                 <label for="pLifetime">Lifetime (shot)</label>
-                <input id="pLifetime" type="number" min="1" step="1" placeholder="10000" required>
+                <input id="pLifetime" type="number" min="1" step="1" placeholder="Kosongkan bila belum tahu">
             </div>
             <div class="field">
                 <label for="pUsed">Terpakai saat ini (shot)</label>
@@ -808,6 +843,7 @@
     var query = '';
     var historyOpen = false;
     var lastSig = '';
+    var serverOk = false;
     var isAdmin = getRole() === 'admin';
 
     function $(id) { return document.getElementById(id); }
@@ -865,10 +901,13 @@
 
     /* ── Perhitungan status ── */
     function info(part) {
-        var lifetime = Math.max(1, Number(part.lifetime) || 1);
+        var lifetime = Math.max(0, Number(part.lifetime) || 0);
         var used = Math.max(0, Number(part.used) || 0);
         var warnAt = Math.max(0, Number(part.warnAt) || 0);
         var critAt = Math.max(0, Number(part.critAt) || 0);
+        if (!lifetime) {
+            return { lifetime: 0, used: used, warnAt: warnAt, critAt: critAt, remain: 0, pct: 0, status: 'unset' };
+        }
         var remain = lifetime - used;
         var pct = Math.min(100, Math.round((used / lifetime) * 100));
         var status = 'ok';
@@ -886,9 +925,21 @@
         };
     }
 
-    var LABEL = { ok: 'Aman', warn: 'Warning', crit: 'Kritis', over: 'Minta ganti' };
-    var ICON = { ok: 'check_circle', warn: 'warning', crit: 'error', over: 'error' };
-    var RANK = { over: 0, crit: 1, warn: 2, ok: 3 };
+    var LABEL = { ok: 'Aman', warn: 'Warning', crit: 'Kritis', over: 'Minta ganti', unset: 'Belum diset' };
+    var ICON = { ok: 'check_circle', warn: 'warning', crit: 'error', over: 'error', unset: 'help' };
+    var RANK = { over: 0, crit: 1, warn: 2, ok: 3, unset: 4 };
+
+    /* ── Data awal: daftar part per mesin (lifetime diisi admin) ── */
+    var SEED_MACHINES = [
+        { machine: 'ICM 002', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
+        { machine: 'ICM 003', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
+        { machine: 'ICM 006', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
+        { machine: 'ICM 007', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Wire Net', 'Sand Gate'] },
+        { machine: 'ICM 008', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Blow Filter', 'Sand Gate'] },
+        { machine: 'ICM 009', parts: ['Blow Nozzle Packing', 'Press Packing', 'Blow Nozzle', 'Blow Filter', 'Sand Gate'] },
+        { machine: 'ICD 01', parts: ['Drill Cope / Drag', 'Drill Front / Rear'] },
+        { machine: 'ICD 02', parts: ['Drill Cope / Drag', 'Drill Front / Rear'] }
+    ];
 
     /* ── Penyimpanan ── */
     function cleanParts(list) {
@@ -899,8 +950,9 @@
                 id: String(p.id || uid()),
                 name: String(p.name || p.code || 'Part'),
                 code: String(p.code || ''),
+                machine: String(p.machine || ''),
                 station: String(p.station || ''),
-                lifetime: Math.max(1, Number(p.lifetime) || 1),
+                lifetime: Math.max(0, Number(p.lifetime) || 0),
                 used: Math.max(0, Number(p.used) || 0),
                 warnAt: Math.max(0, Number(p.warnAt != null ? p.warnAt : 500) || 0),
                 critAt: Math.max(0, Number(p.critAt != null ? p.critAt : 100) || 0),
@@ -973,7 +1025,7 @@
         var list = state.parts.slice();
         if (q) {
             list = list.filter(function (p) {
-                return (p.name + ' ' + p.code + ' ' + p.station).toLowerCase().indexOf(q) !== -1;
+                return (p.name + ' ' + p.code + ' ' + p.machine + ' ' + p.station).toLowerCase().indexOf(q) !== -1;
             });
         }
         return list.sort(function (a, b) {
@@ -985,22 +1037,25 @@
     }
 
     function renderStats() {
-        var total = state.parts.length, warn = 0, crit = 0;
+        var total = state.parts.length, warn = 0, crit = 0, unset = 0;
         state.parts.forEach(function (p) {
             var i = info(p);
             if (i.status === 'warn') warn++;
             else if (i.status === 'crit' || i.status === 'over') crit++;
+            else if (i.status === 'unset') unset++;
         });
         $('statTotal').textContent = num(total);
+        $('statUnset').textContent = num(unset);
         $('statWarn').textContent = num(warn);
         $('statCrit').textContent = num(crit);
 
         var banner = $('alertBanner');
+        function label(p) { return p.machine ? p.name + ' (' + p.machine + ')' : p.name; }
         if (crit > 0) {
             var names = state.parts.filter(function (p) {
                 var s = info(p).status;
                 return s === 'crit' || s === 'over';
-            }).slice(0, 3).map(function (p) { return p.name; });
+            }).slice(0, 3).map(label);
             $('alertText').innerHTML = 'Perlu pergantian part: <b>' + esc(names.join(', ')) +
                 (crit > 3 ? ' dan ' + (crit - 3) + ' lainnya' : '') + '</b>.';
             banner.hidden = false;
@@ -1026,12 +1081,15 @@
                 '</div>';
         }
         var meta = '';
+        if (p.machine) meta += '<span class="chip">' + esc(p.machine) + '</span>';
         if (p.code) meta += '<span class="chip">' + esc(p.code) + '</span>';
         if (p.station) meta += '<span class="chip">' + esc(p.station) + '</span>';
         if (p.note) meta += '<span class="chip">' + esc(p.note) + '</span>';
 
-        var barWidth = Math.max(0, Math.min(100, status === 'over' ? 100 : i.pct));
+        var configured = !!i.lifetime;
+        var barWidth = configured ? Math.max(0, Math.min(100, status === 'over' ? 100 : i.pct)) : 0;
         var periodText = p.installedAt ? 'Pasang ' + fmtDate(p.installedAt) : 'Tanpa tanggal pasang';
+        var pctText = configured ? i.pct + '% terpakai' : 'Lifetime belum diatur';
 
         return '<article class="card ' + status + '">' +
             '<div class="card-head">' +
@@ -1042,12 +1100,12 @@
                 '<span class="badge ' + status + '"><span class="material-symbols-outlined">' + ICON[status] + '</span>' + LABEL[status] + '</span>' +
             '</div>' +
             '<div class="numbers">' +
-                '<div><span>Lifetime</span><b>' + num(i.lifetime) + '</b></div>' +
+                '<div><span>Lifetime</span><b>' + (configured ? num(i.lifetime) : '—') + '</b></div>' +
                 '<div><span>Terpakai</span><b>' + num(i.used) + '</b></div>' +
-                '<div class="remain"><span>Sisa</span><b>' + num(i.remain) + '</b></div>' +
+                '<div class="remain"><span>Sisa</span><b>' + (configured ? num(i.remain) : '—') + '</b></div>' +
             '</div>' +
             '<div class="bar"><i style="width:' + barWidth + '%"></i></div>' +
-            '<div class="bar-note"><span>' + periodText + '</span><span>' + i.pct + '% terpakai</span></div>' +
+            '<div class="bar-note"><span>' + periodText + '</span><span>' + pctText + '</span></div>' +
             '<div class="foot">' +
                 '<span class="period">Warning &le; ' + num(i.warnAt) + ' &middot; Kritis &le; ' + num(i.critAt) + '</span>' +
                 actions +
@@ -1055,8 +1113,44 @@
         '</article>';
     }
 
+    function renderMachineList() {
+        var dl = $('machineList');
+        if (!dl) return;
+        var seen = {}, arr = [];
+        state.parts.forEach(function (p) {
+            if (p.machine && !seen[p.machine]) { seen[p.machine] = 1; arr.push(p.machine); }
+        });
+        arr.sort(function (a, b) { return a.localeCompare(b, 'id', { numeric: true }); });
+        dl.innerHTML = arr.map(function (m) {
+            return '<option value="' + esc(m) + '"></option>';
+        }).join('');
+    }
+
+    var MACHINE_ORDER = {};
+    SEED_MACHINES.forEach(function (g, i) { MACHINE_ORDER[g.machine] = i; });
+
+    function groupByMachine(list) {
+        var map = {}, order = [];
+        list.forEach(function (p) {
+            var key = p.machine || '';
+            if (!map[key]) { map[key] = []; order.push(key); }
+            map[key].push(p);
+        });
+        order.sort(function (a, b) {
+            var ia = MACHINE_ORDER[a], ib = MACHINE_ORDER[b];
+            var ka = ia != null, kb = ib != null;
+            if (!a) return 1;
+            if (!b) return -1;
+            if (ka && kb) return ia - ib;
+            if (ka !== kb) return ka ? -1 : 1;
+            return a.localeCompare(b, 'id', { numeric: true });
+        });
+        return order.map(function (key) { return { machine: key, parts: map[key] }; });
+    }
+
     function render() {
         renderStats();
+        renderMachineList();
         var list = visibleParts();
         var grid = $('partGrid');
         var empty = $('emptyState');
@@ -1072,11 +1166,30 @@
         empty.hidden = true;
 
         if (!list.length) {
-            grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><span class="material-symbols-outlined">search_off</span>' +
+            grid.innerHTML = '<div class="empty"><span class="material-symbols-outlined">search_off</span>' +
                 '<strong>Part tidak ditemukan</strong><span>Tidak ada part yang cocok dengan pencarian "' + esc(query) + '".</span></div>';
             return;
         }
-        grid.innerHTML = list.map(cardHtml).join('');
+
+        grid.innerHTML = groupByMachine(list).map(function (group) {
+            var crit = 0, warn = 0;
+            group.parts.forEach(function (p) {
+                var s = info(p).status;
+                if (s === 'crit' || s === 'over') crit++;
+                else if (s === 'warn') warn++;
+            });
+            var meta = '<b>' + group.parts.length + '</b> part';
+            if (crit) meta += ' &middot; <span class="alert">' + crit + ' perlu ganti</span>';
+            else if (warn) meta += ' &middot; ' + warn + ' warning';
+            return '<section class="machine">' +
+                '<div class="machine-head">' +
+                    '<h2><span class="material-symbols-outlined">precision_manufacturing</span>' +
+                        esc(group.machine || 'Tanpa mesin') + '</h2>' +
+                    '<span class="machine-meta">' + meta + '</span>' +
+                '</div>' +
+                '<div class="grid">' + group.parts.map(cardHtml).join('') + '</div>' +
+            '</section>';
+        }).join('');
     }
 
     function renderHistory() {
@@ -1111,6 +1224,38 @@
         if (historyOpen) renderHistory();
     }
 
+    /* ── Data awal: satu kali isi daftar part per mesin ── */
+    function seedMaster() {
+        if (state.parts.length) return;
+        try {
+            if (localStorage.getItem('tvcm-part-seeded-v1')) return;
+        } catch (e) {}
+        var list = [];
+        SEED_MACHINES.forEach(function (g) {
+            var slug = g.machine.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            g.parts.forEach(function (name, idx) {
+                list.push({
+                    id: 'seed-' + slug + '-' + (idx + 1),
+                    name: name,
+                    code: '',
+                    machine: g.machine,
+                    station: '',
+                    lifetime: 0,
+                    used: 0,
+                    warnAt: 500,
+                    critAt: 100,
+                    installedAt: '',
+                    note: ''
+                });
+            });
+        });
+        state.parts = cleanParts(list);
+        lastSig = JSON.stringify({ parts: state.parts, history: state.history });
+        try { localStorage.setItem('tvcm-part-seeded-v1', '1'); } catch (e) {}
+        render();
+        persist();
+    }
+
     /* ── Simpan ke server ── */
     function persist() {
         writeLocal(false);
@@ -1138,6 +1283,7 @@
         return Sync.get(APP, { action: 'get' }).then(function (r) {
             if (!r || !r.ok) throw new Error((r && r.error) || 'server menolak permintaan');
             var d = normalize(r.data);
+            serverOk = true;
             if (!d) return false;
             var local = readLocal();
             if (local && local.synced === false) {
@@ -1193,8 +1339,9 @@
         $('partModalTitle').textContent = part ? 'Edit Part' : 'Tambah Part';
         $('pName').value = part ? part.name : '';
         $('pCode').value = part ? part.code : '';
+        $('pMachine').value = part ? part.machine : '';
         $('pStation').value = part ? part.station : '';
-        $('pLifetime').value = part ? part.lifetime : '';
+        $('pLifetime').value = part && part.lifetime ? part.lifetime : '';
         $('pUsed').value = part ? part.used : 0;
         $('pWarn').value = part ? part.warnAt : 500;
         $('pCrit').value = part ? part.critAt : 100;
@@ -1209,9 +1356,9 @@
         e.preventDefault();
         if (!isAdmin) return;
         var name = $('pName').value.trim();
-        var lifetime = Math.round(Number($('pLifetime').value));
+        var lifetime = Math.max(0, Math.round(Number($('pLifetime').value) || 0));
         if (!name) { $('partMsg').textContent = 'Nama part wajib diisi.'; $('partMsg').className = 'modal-msg err'; return; }
-        if (!isFinite(lifetime) || lifetime <= 0) { $('partMsg').textContent = 'Lifetime harus lebih dari 0.'; $('partMsg').className = 'modal-msg err'; return; }
+        if (!isFinite(lifetime)) { $('partMsg').textContent = 'Lifetime tidak valid.'; $('partMsg').className = 'modal-msg err'; return; }
 
         var warnAt = Math.max(0, Math.round(Number($('pWarn').value) || 0));
         var critAt = Math.max(0, Math.round(Number($('pCrit').value) || 0));
@@ -1220,6 +1367,7 @@
         var data = {
             name: name,
             code: $('pCode').value.trim(),
+            machine: $('pMachine').value.trim(),
             station: $('pStation').value.trim(),
             lifetime: lifetime,
             used: Math.max(0, Math.round(Number($('pUsed').value) || 0)),
@@ -1438,12 +1586,15 @@
     render();
 
     if (window.Sync && Sync.hasUrl()) {
-        loadFromServer(false);
+        loadFromServer(false).then(function () {
+            if (serverOk) seedMaster();
+        });
         setInterval(function () {
             if (!isModalOpen()) loadFromServer(true);
         }, POLL_MS);
     } else {
         setStatus('Sinkron belum diatur — data hanya tersimpan di device ini.', 'warn');
+        seedMaster();
     }
 })();
 </script>
