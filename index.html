@@ -423,15 +423,17 @@ html.dark ::-webkit-scrollbar-thumb {
         }
         #newsTicker .nt-tag.warn { color: #3d2600; background: #fbbf24; }
         #newsTicker .nt-tag.ng { color: #ffffff; background: #dc2626; }
-        #newsTicker .nt-item.stock-up { color: #dc2626; }
-        #newsTicker .nt-item.stock-down { color: #16a34a; }
-        #newsTicker .nt-item.stock-flat { color: #ca8a04; }
+        #newsTicker .nt-item.stock-up .nt-stock-move { color: #dc2626; }
+        #newsTicker .nt-item.stock-down .nt-stock-move { color: #16a34a; }
+        #newsTicker .nt-item.stock-flat .nt-stock-move { color: #ca8a04; }
+        #newsTicker .nt-stock-name { color: var(--on-surface); }
+        html.dark #newsTicker .nt-stock-name { color: #ffffff; }
         #newsTicker .nt-item.stock-up .nt-dot { background: #dc2626; }
         #newsTicker .nt-item.stock-down .nt-dot { background: #16a34a; }
         #newsTicker .nt-item.stock-flat .nt-dot { background: #ca8a04; }
-        html.dark #newsTicker .nt-item.stock-up { color: #f87171; }
-        html.dark #newsTicker .nt-item.stock-down { color: #4ade80; }
-        html.dark #newsTicker .nt-item.stock-flat { color: #fbbf24; }
+        html.dark #newsTicker .nt-item.stock-up .nt-stock-move { color: #f87171; }
+        html.dark #newsTicker .nt-item.stock-down .nt-stock-move { color: #4ade80; }
+        html.dark #newsTicker .nt-item.stock-flat .nt-stock-move { color: #fbbf24; }
         html.dark #newsTicker .nt-item.stock-up .nt-dot { background: #f87171; }
         html.dark #newsTicker .nt-item.stock-down .nt-dot { background: #4ade80; }
         html.dark #newsTicker .nt-item.stock-flat .nt-dot { background: #fbbf24; }
@@ -1215,8 +1217,11 @@ html.dark ::-webkit-scrollbar-thumb {
                     var dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
                     var arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '–';
                     var name = (today[key] && today[key].name) || (prev[key] && prev[key].name) || key;
+                    var upper = String(name).toUpperCase();
                     out.push({
-                        text: String(name).toUpperCase() + ' ' + arrow + ' ' + current,
+                        text: upper + ' ' + arrow + ' ' + current,
+                        name: upper,
+                        move: arrow + ' ' + current,
                         active: true,
                         kind: 'stock-' + dir,
                         title: 'Hari ini ' + current + ', kemarin ' + yesterday,
@@ -1325,11 +1330,18 @@ html.dark ::-webkit-scrollbar-thumb {
                 document.body.classList.add('ticker-on');
                 var one = all.filter(function (n) { return n.active !== false; }).map(function (n) {
                     var kind = n.kind || '';
+                    var title = n.title ? ' title="' + esc(n.title) + '"' : '';
+                    if (kind.indexOf('stock-') === 0) {
+                        return '<span class="nt-item ' + kind + '"' + title + '>' +
+                            '<span class="nt-dot"></span>' +
+                            '<span class="nt-stock-name">' + esc(n.name || '') + '</span>' +
+                            '<span class="nt-stock-move">' + esc(n.move || '') + '</span>' +
+                        '</span>';
+                    }
                     var tag = '';
                     if (kind === 'over') tag = '<span class="nt-tag ng">NG</span>';
                     else if (kind === 'crit') tag = '<span class="nt-tag ng">KRITIS</span>';
                     else if (kind === 'warn') tag = '<span class="nt-tag warn">WARNING</span>';
-                    var title = n.title ? ' title="' + esc(n.title) + '"' : '';
                     return '<span class="nt-item ' + kind + '"' + title + '>' + tag +
                         '<span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
                 }).join('');
