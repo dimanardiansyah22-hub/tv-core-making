@@ -383,18 +383,17 @@ html.dark ::-webkit-scrollbar-thumb {
         #newsTicker .nt-label .material-symbols-outlined { font-size: 17px; }
         #newsTicker .nt-viewport { flex: 1; position: relative; overflow: hidden; }
         #newsTicker .nt-track {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             height: 100%;
-            white-space: nowrap;
-            will-change: transform;
-            transform: translate3d(0, 0, 0);
-            backface-visibility: hidden;
+            min-width: 0;
         }
         #newsTicker .nt-item {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             gap: 9px;
+            width: 100%;
+            min-width: 0;
             padding: 0 26px;
             font-family: "Hanken Grotesk", "Inter", system-ui, sans-serif;
             font-size: 13px;
@@ -402,6 +401,19 @@ html.dark ::-webkit-scrollbar-thumb {
             letter-spacing: .01em;
             color: var(--on-surface);
         }
+        #newsTicker .nt-text {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            white-space: normal;
+            line-height: 1.2;
+            max-height: 32px;
+        }
+        #newsTicker .nt-stock-name,
+        #newsTicker .nt-stock-move { white-space: nowrap; }
         #newsTicker .nt-dot {
             width: 6px;
             height: 6px;
@@ -438,25 +450,6 @@ html.dark ::-webkit-scrollbar-thumb {
         html.dark #newsTicker .nt-item.stock-down .nt-dot { background: #4ade80; }
         html.dark #newsTicker .nt-item.stock-flat .nt-dot { background: #fbbf24; }
         #newsTicker .nt-empty { padding: 0 26px; color: var(--secondary); font-size: 12.5px; }
-        #newsTicker .nt-refresh {
-            flex: 0 0 auto;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 100%;
-            padding: 0;
-            border: 0;
-            border-left: 1px solid var(--outline-variant);
-            background: var(--surface-container-lowest);
-            color: var(--secondary);
-            cursor: pointer;
-        }
-        #newsTicker .nt-refresh:hover { color: var(--primary); background: var(--surface-container-low); }
-        #newsTicker .nt-refresh:disabled { cursor: default; opacity: .7; }
-        #newsTicker .nt-refresh .material-symbols-outlined { font-size: 18px; }
-        #newsTicker .nt-refresh.spin .material-symbols-outlined { animation: nt-spin .8s linear infinite; }
-        @keyframes nt-spin { to { transform: rotate(360deg); } }
         @media (max-width: 767px) {
             #newsTicker { left: 0; }
             #newsTicker .nt-label { padding: 0 10px; font-size: 0; gap: 0; }
@@ -567,9 +560,6 @@ html.dark ::-webkit-scrollbar-thumb {
 <div id="newsTicker" aria-label="Running text news">
 <div class="nt-label"><span class="material-symbols-outlined">campaign</span> News</div>
 <div class="nt-viewport"><div class="nt-track" id="newsTickerTrack"></div></div>
-<button type="button" id="newsTickerRefresh" class="nt-refresh" title="Muat ulang berita &amp; data part" aria-label="Muat ulang berita dan data part">
-<span class="material-symbols-outlined">refresh</span>
-</button>
 </div>
 <div class="app-shell flex min-h-screen">
 <!-- SideNavBar -->
@@ -1033,14 +1023,10 @@ html.dark ::-webkit-scrollbar-thumb {
             var lastSig = '';
             var alertSig = '';
             var stockSig = '';
-            var tickerToken = 0;
-            var tickerRaf = 0;
-            var tickerLast = 0;
-            var tickerOffset = 0;
-            var tickerCycle = 0;
-            var tickerSpeed = 50;
-            var TICKER_PX_PER_SEC = 50; // kecepatan geser running text (px/detik)
-            var tickerPaused = false;
+            var storyItems = [];
+            var storyIndex = 0;
+            var storyTimer = 0;
+            var STORY_MS = 8000; // durasi tiap berita tampil (tanpa animasi)
 
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1254,106 +1240,66 @@ html.dark ::-webkit-scrollbar-thumb {
                 }).catch(function () { return false; });
             }
 
-            function stopTicker() {
-                if (tickerRaf) cancelAnimationFrame(tickerRaf);
-                tickerRaf = 0;
-                tickerLast = 0;
+            function clearStoryTimer() {
+                if (storyTimer) clearInterval(storyTimer);
+                storyTimer = 0;
             }
 
-            function startTicker() {
-                stopTicker();
-                if (tickerPaused || !tickerCycle) return;
-                var FRAME_MS = 1000 / 120; // batasi gerakan running text maksimal 120 fps
-                var pending = 0;
-                function frame(ts) {
-                    if (tickerPaused || !tickerCycle) {
-                        tickerRaf = 0;
-                        return;
-                    }
-                    if (!tickerLast) tickerLast = ts;
-                    var dt = ts - tickerLast;
-                    tickerLast = ts;
-                    if (dt > 100) dt = 100;
-                    pending += dt;
-                    if (pending < FRAME_MS) {
-                        tickerRaf = requestAnimationFrame(frame);
-                        return;
-                    }
-                    while (pending >= FRAME_MS) {
-                        tickerOffset += tickerSpeed * FRAME_MS / 1000;
-                        pending -= FRAME_MS;
-                    }
-                    if (tickerOffset >= tickerCycle) tickerOffset %= tickerCycle;
-                    track.style.transform = 'translate3d(' + (-tickerOffset).toFixed(2) + 'px, 0, 0)';
-                    tickerRaf = requestAnimationFrame(frame);
+            function itemHtml(n) {
+                var kind = n.kind || '';
+                var titleText = n.title || newsText(n);
+                var title = titleText ? ' title="' + esc(titleText) + '"' : '';
+                if (kind.indexOf('stock-') === 0) {
+                    return '<span class="nt-item ' + kind + '"' + title + '>' +
+                        '<span class="nt-dot"></span>' +
+                        '<span class="nt-stock-name">' + esc(n.name || '') + '</span>' +
+                        '<span class="nt-stock-move">' + esc(n.move || '') + '</span>' +
+                    '</span>';
                 }
-                tickerRaf = requestAnimationFrame(frame);
+                var tag = '';
+                if (kind === 'over') tag = '<span class="nt-tag ng">NG</span>';
+                else if (kind === 'crit') tag = '<span class="nt-tag ng">KRITIS</span>';
+                else if (kind === 'warn') tag = '<span class="nt-tag warn">WARNING</span>';
+                return '<span class="nt-item ' + kind + '"' + title + '>' + tag +
+                    '<span class="nt-dot"></span>' +
+                    '<span class="nt-text">' + esc(newsText(n)) + '</span>' +
+                '</span>';
             }
 
-            function buildTicker(one) {
-                var token = ++tickerToken;
-                var tries = 0;
-                stopTicker();
-                function attempt() {
-                    if (token !== tickerToken) return;
-                    track.style.transform = 'translate3d(0, 0, 0)';
-                    track.innerHTML = one;
-                    var viewport = track.parentElement.clientWidth || 800;
-                    var oneWidth = track.scrollWidth || 0;
-                    if (!oneWidth && tries++ < 10) {
-                        requestAnimationFrame(attempt);
-                        return;
-                    }
-                    if (!oneWidth) return;
-                    var copies = Math.max(1, Math.min(12, Math.ceil((viewport * 2) / oneWidth)));
-                    var full = one.repeat(copies);
-                    track.innerHTML = full + full;
-                    tickerCycle = oneWidth * copies;
-                    tickerOffset = 0;
-                    var durationSec = Math.max(18, Math.round(tickerCycle / TICKER_PX_PER_SEC));
-                    tickerSpeed = tickerCycle / durationSec;
-                    startTicker();
+            function paintStory() {
+                if (!storyItems.length) {
+                    track.innerHTML = '<span class="nt-empty">Belum ada berita.</span>';
+                    return;
                 }
-                attempt();
+                if (storyIndex >= storyItems.length) storyIndex = 0;
+                track.innerHTML = itemHtml(storyItems[storyIndex]);
+            }
+
+            function startStory() {
+                clearStoryTimer();
+                if (document.hidden || storyItems.length < 2) return;
+                storyTimer = setInterval(function () {
+                    if (document.hidden) return;
+                    storyIndex = (storyIndex + 1) % storyItems.length;
+                    paintStory();
+                }, STORY_MS);
             }
 
             function render() {
-                var all = alerts.concat(stock).concat(items);
-                if (!all.length) {
-                    document.body.classList.add('ticker-on');
-                    stopTicker();
-                    tickerCycle = 0;
-                    track.innerHTML = '<span class="nt-empty">Belum ada berita. Tekan tombol muat ulang.</span>';
-                    track.style.transform = 'translate3d(0, 0, 0)';
-                    return;
-                }
+                var all = alerts.concat(stock).concat(items).filter(function (n) {
+                    return n.active !== false;
+                });
                 document.body.classList.add('ticker-on');
-                var one = all.filter(function (n) { return n.active !== false; }).map(function (n) {
-                    var kind = n.kind || '';
-                    var title = n.title ? ' title="' + esc(n.title) + '"' : '';
-                    if (kind.indexOf('stock-') === 0) {
-                        return '<span class="nt-item ' + kind + '"' + title + '>' +
-                            '<span class="nt-dot"></span>' +
-                            '<span class="nt-stock-name">' + esc(n.name || '') + '</span>' +
-                            '<span class="nt-stock-move">' + esc(n.move || '') + '</span>' +
-                        '</span>';
-                    }
-                    var tag = '';
-                    if (kind === 'over') tag = '<span class="nt-tag ng">NG</span>';
-                    else if (kind === 'crit') tag = '<span class="nt-tag ng">KRITIS</span>';
-                    else if (kind === 'warn') tag = '<span class="nt-tag warn">WARNING</span>';
-                    return '<span class="nt-item ' + kind + '"' + title + '>' + tag +
-                        '<span class="nt-dot"></span>' + esc(newsText(n)) + '</span>';
-                }).join('');
-                if (!one) {
-                    document.body.classList.add('ticker-on');
-                    stopTicker();
-                    tickerCycle = 0;
-                    track.innerHTML = '<span class="nt-empty">Belum ada berita. Tekan tombol muat ulang.</span>';
-                    track.style.transform = 'translate3d(0, 0, 0)';
+                storyItems = all;
+                if (!storyItems.length) {
+                    clearStoryTimer();
+                    storyIndex = 0;
+                    paintStory();
                     return;
                 }
-                buildTicker(one);
+                if (storyIndex >= storyItems.length) storyIndex = 0;
+                paintStory();
+                startStory();
             }
 
             function setItems(list) {
@@ -1412,42 +1358,19 @@ html.dark ::-webkit-scrollbar-thumb {
                 resizeTimer = setTimeout(render, 180);
             });
 
-            preview.addEventListener('mouseenter', function () {
-                tickerPaused = true;
-                stopTicker();
-            });
-            preview.addEventListener('mouseleave', function () {
-                tickerPaused = false;
-                startTicker();
-            });
             document.addEventListener('visibilitychange', function () {
-                if (document.hidden) stopTicker();
-                else if (!tickerPaused) startTicker();
+                if (document.hidden) clearStoryTimer();
+                else startStory();
             });
-
-            var refreshBtn = document.getElementById('newsTickerRefresh');
-            function refreshAll() {
-                if (!refreshBtn || refreshBtn.disabled) return;
-                refreshBtn.disabled = true;
-                refreshBtn.classList.add('spin');
-                var done = function () {
-                    refreshBtn.disabled = false;
-                    refreshBtn.classList.remove('spin');
-                };
-                var timer = setTimeout(done, 5000);
-                Promise.all([load(), loadAlerts(), loadStock()]).then(function () {
-                    clearTimeout(timer);
-                    done();
-                }, function () {
-                    clearTimeout(timer);
-                    done();
-                });
-            }
-            if (refreshBtn) refreshBtn.addEventListener('click', refreshAll);
 
             load();
             loadAlerts();
             loadStock();
+            setInterval(function () {
+                load();
+                loadAlerts();
+                loadStock();
+            }, 30000);
         })();
     </script>
 
