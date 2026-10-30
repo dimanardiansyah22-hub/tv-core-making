@@ -385,16 +385,19 @@ html.dark ::-webkit-scrollbar-thumb {
         #newsTicker .nt-track {
             display: flex;
             align-items: center;
+            justify-content: center;
             height: 100%;
             min-width: 0;
         }
         #newsTicker .nt-item {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 9px;
             width: 100%;
             min-width: 0;
             padding: 0 26px;
+            text-align: center;
             font-family: "Hanken Grotesk", "Inter", system-ui, sans-serif;
             font-size: 13px;
             font-weight: 400;
@@ -402,8 +405,9 @@ html.dark ::-webkit-scrollbar-thumb {
             color: var(--on-surface);
         }
         #newsTicker .nt-text {
-            flex: 1 1 auto;
+            flex: 0 1 auto;
             min-width: 0;
+            max-width: 100%;
             overflow: hidden;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -411,6 +415,7 @@ html.dark ::-webkit-scrollbar-thumb {
             white-space: normal;
             line-height: 1.2;
             max-height: 32px;
+            text-align: center;
         }
         #newsTicker .nt-stock-name,
         #newsTicker .nt-stock-move { white-space: nowrap; }
