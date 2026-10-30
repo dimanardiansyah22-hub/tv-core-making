@@ -1211,10 +1211,10 @@ html.dark ::-webkit-scrollbar-thumb {
                     if (!current && !yesterday) return;
                     var delta = current - yesterday;
                     var dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
-                    var arrow = delta > 0 ? '^' + delta : delta < 0 ? 'v' + Math.abs(delta) : '0';
+                    var arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '–';
                     var name = (today[key] && today[key].name) || (prev[key] && prev[key].name) || key;
                     out.push({
-                        text: name + ' ' + arrow,
+                        text: String(name).toUpperCase() + ' ' + arrow + ' ' + current,
                         active: true,
                         kind: 'stock-' + dir,
                         title: 'Hari ini ' + current + ', kemarin ' + yesterday,
