@@ -871,11 +871,8 @@ const IMG_H = 3375;
 
 const members = [
     { id: 'andi', name: 'Andi', src: 'Foto Member/Foto Member Red/andi.png' },
-    { id: 'ayang', name: 'Ayang', src: 'Foto Member/Foto Member Red/ayang.png' },
-    { id: 'boby', name: 'Boby', src: 'Foto Member/Foto Member Red/boby.png' },
     { id: 'darno', name: 'Darno', src: 'Foto Member/Foto Member Red/darno.png' },
     { id: 'diman', name: 'Diman', src: 'Foto Member/Foto Member Red/diman.png' },
-    { id: 'dini', name: 'Dini', src: 'Foto Member/Foto Member Red/dini.png' },
     { id: 'elin', name: 'Elin', src: 'Foto Member/Foto Member Red/elin.png' },
     { id: 'erwin', name: 'Erwin', src: 'Foto Member/Foto Member Red/erwin.png' },
     { id: 'fadil', name: 'Fadil', src: 'Foto Member/Foto Member Red/fadil.png' },
@@ -1065,9 +1062,6 @@ const NAME_MAP = {
     'Jalal': 'MUHAMMAD JALALUDDIN RABBANI',
     'Hari': 'HARI KARTONO',
     'Diman': 'DIMAN ARDIANSYAH',
-    'Ayang': 'AYANG MUNDIKA AZZAHRA',
-    'Dini': 'DINI HAERANI',
-    'Boby': 'BOBY SAPUTRA',
     'Vakhry': 'M. VAKHRI NUROHMAN',
     'Irfan': 'IRFAN PRASETYO'
 };
@@ -1077,7 +1071,6 @@ const NAME_MAP = {
    Member lain yang belum tercantum → tidak tampil badge capability.
    Acuan nama = nama di dropdown foto (members[]). */
 const CAPABILITY = {
-    9: { capable: [], not: ['Boby'] },
     12: { capable: ['Fadil'], not: [] }
 };
 const LS_CAP = 'capability_core_red';
@@ -1142,7 +1135,7 @@ async function capSyncFromServer() {
         }
     } catch (e) {}
 }
-const CAP_COL_ORDER = ['Darno', 'Erwin', 'Diman', 'Andi', 'Nofrizal', 'Hari', 'Jaelani', 'Fadil', 'Rizal', 'Fatta', 'Rohmanto', 'Jalal', 'Irfan', 'Boby', 'Vakhry', 'Dini', 'Ayang', 'Fauzi', 'Farrel', 'Elin', 'Rifan', 'Laila'];
+const CAP_COL_ORDER = ['Darno', 'Erwin', 'Diman', 'Andi', 'Nofrizal', 'Hari', 'Jaelani', 'Fadil', 'Rizal', 'Fatta', 'Rohmanto', 'Jalal', 'Irfan', 'Vakhry', 'Fauzi', 'Farrel', 'Elin', 'Rifan', 'Laila'];
 function capColumns() {
     return CAP_COL_ORDER
         .map(n => {
