@@ -322,7 +322,8 @@
     html.dark .status.err { color: #f87171; }
     html.dark .status.warn { color: #fbbf24; }
     .btn-primary,
-    .btn-secondary {
+    .btn-secondary,
+    .btn-danger {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -349,6 +350,51 @@
         color: var(--secondary);
     }
     .btn-secondary:hover { color: var(--on-surface); border-color: var(--outline); }
+    .btn-danger {
+        border: 1px solid #dc2626;
+        background: #dc2626;
+        color: #ffffff;
+    }
+    .btn-danger:hover { filter: brightness(1.06); }
+    .confirm-veil {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(0, 0, 0, .45);
+    }
+    .confirm-box {
+        width: min(420px, 100%);
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 24px 60px var(--shadow);
+    }
+    .confirm-box h3 {
+        margin: 0 0 8px;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--on-surface);
+    }
+    .confirm-box p {
+        margin: 0;
+        color: var(--on-surface-variant);
+        font-size: 13.5px;
+        line-height: 1.6;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+    }
+    .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 9px;
+        margin-top: 18px;
+    }
     .news-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -501,6 +547,17 @@
     <div class="news-grid" id="newsGrid"></div>
 </div>
 
+<div class="confirm-veil" id="newsConfirm" hidden>
+    <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="newsConfirmTitle">
+        <h3 id="newsConfirmTitle">Hapus berita?</h3>
+        <p id="newsConfirmText"></p>
+        <div class="confirm-actions">
+            <button class="btn-secondary" type="button" id="newsConfirmNo">Batal</button>
+            <button class="btn-danger" type="button" id="newsConfirmYes">Hapus</button>
+        </div>
+    </div>
+</div>
+
 <script src="sync-core.js"></script>
 <script src="news-data.js"></script>
 <script src="emoji-data.js"></script>
@@ -549,11 +606,54 @@
     var emojiTabsEl = document.getElementById('emojiTabs');
     var emojiGridEl = document.getElementById('emojiGrid');
     var emojiSearchEl = document.getElementById('emojiSearch');
+    var confirmEl = document.getElementById('newsConfirm');
+    var confirmTextEl = document.getElementById('newsConfirmText');
+    var confirmYesEl = document.getElementById('newsConfirmYes');
+    var confirmNoEl = document.getElementById('newsConfirmNo');
 
     var items = [];
     var editing = -1;
     var lastSig = '';
     var isAdmin = getRole() === 'admin';
+    var confirmResolve = null;
+
+    /* Konfirmasi custom: tidak memakai window.confirm agar mode fullscreen tidak keluar. */
+    function askConfirm(message) {
+        return new Promise(function (resolve) {
+            confirmResolve = resolve;
+            confirmTextEl.textContent = message;
+            confirmEl.hidden = false;
+            confirmNoEl.focus();
+        });
+    }
+
+    function closeConfirm(result) {
+        if (confirmEl.hidden) return;
+        confirmEl.hidden = true;
+        var resolve = confirmResolve;
+        confirmResolve = null;
+        if (resolve) resolve(result);
+    }
+
+    confirmYesEl.addEventListener('click', function () {
+        closeConfirm(true);
+    });
+
+    confirmNoEl.addEventListener('click', function () {
+        closeConfirm(false);
+    });
+
+    confirmEl.addEventListener('click', function (e) {
+        if (e.target === confirmEl) closeConfirm(false);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (confirmEl.hidden) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeConfirm(false);
+        }
+    });
 
     function esc(s) {
         return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -867,13 +967,15 @@
         var i = parseInt(delBtn.getAttribute('data-delete'), 10);
         if (isNaN(i) || i < 0 || i >= items.length) return;
         var previewText = newsText(items[i]);
-        if (!window.confirm('Hapus berita ini?\n\n' + (previewText.length > 100 ? previewText.slice(0, 100) + '...' : previewText))) return;
-        items.splice(i, 1);
-        lastSig = JSON.stringify(items);
-        if (editing === i) resetForm();
-        else if (editing > i) editing--;
-        render();
-        persist();
+        askConfirm('Hapus berita ini?\n\n' + (previewText.length > 100 ? previewText.slice(0, 100) + '...' : previewText)).then(function (ok) {
+            if (!ok || i < 0 || i >= items.length) return;
+            items.splice(i, 1);
+            lastSig = JSON.stringify(items);
+            if (editing === i) resetForm();
+            else if (editing > i) editing--;
+            render();
+            persist();
+        });
     });
 
     emojiToggleEl.addEventListener('click', function () {
