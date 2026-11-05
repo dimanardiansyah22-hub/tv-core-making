@@ -410,13 +410,21 @@ html.dark ::-webkit-scrollbar-thumb {
             color: var(--on-surface);
             transform: translateY(0);
             opacity: 1;
-            transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .55s ease;
             will-change: transform, opacity;
         }
-        #newsTicker .nt-item.nt-enter { transform: translateY(100%); opacity: 0; }
-        #newsTicker .nt-item.nt-leave { transform: translateY(-100%); opacity: 0; }
-        @media (prefers-reduced-motion: reduce) {
-            #newsTicker .nt-item { transition: none; }
+        @keyframes nt-slide-in {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes nt-slide-out {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100%); opacity: 0; }
+        }
+        #newsTicker .nt-item.nt-enter {
+            animation: nt-slide-in .55s cubic-bezier(.22,.61,.36,1) both;
+        }
+        #newsTicker .nt-item.nt-leave {
+            animation: nt-slide-out .55s cubic-bezier(.22,.61,.36,1) both;
         }
         #newsTicker .nt-text {
             flex: 0 1 auto;
@@ -1065,6 +1073,7 @@ html.dark ::-webkit-scrollbar-thumb {
             var storyIndex = 0;
             var storyTimer = 0;
             var storyAnimTimer = 0;
+            var storySig = null;
             var STORY_MS = 8000; // durasi tiap berita tampil sebelum swipe ke berita berikutnya
 
             function esc(s) {
@@ -1417,8 +1426,6 @@ html.dark ::-webkit-scrollbar-thumb {
                 if (!next) return;
                 next.classList.add('nt-enter');
                 track.appendChild(next);
-                void next.offsetHeight; // paksa reflow agar transisi berjalan
-                next.classList.remove('nt-enter');
                 for (var i = 0; i < oldItems.length; i++) oldItems[i].classList.add('nt-leave');
 
                 storyAnimTimer = setTimeout(function () {
@@ -1439,21 +1446,55 @@ html.dark ::-webkit-scrollbar-thumb {
                 }, STORY_MS);
             }
 
+            function storyKey(n) {
+                var kind = n.kind || '';
+                if (kind === 'stock-group') {
+                    return kind + ':' + (n.items || []).map(function (it) {
+                        return (it.name || '') + ':' + (it.move || '') + ':' + (it.kind || '');
+                    }).join('|');
+                }
+                if (kind.indexOf('stock-') === 0) {
+                    return kind + ':' + (n.name || '') + ':' + (n.move || '');
+                }
+                return kind + ':' + newsText(n);
+            }
+
             function render() {
                 var all = alerts.concat(buildStockStories()).concat(items).filter(function (n) {
                     return n.active !== false;
                 });
                 document.body.classList.add('ticker-on');
+
+                var sig = all.map(storyKey).join('||');
+                if (sig === storySig) return; // data tidak berubah, jangan potong animasi
+
+                var prevKey = storyItems[storyIndex] ? storyKey(storyItems[storyIndex]) : '';
+                var hadItems = storyItems.length > 0;
+                storySig = sig;
                 storyItems = all;
+
                 if (!storyItems.length) {
                     clearStoryTimer();
                     storyIndex = 0;
                     paintStory();
                     return;
                 }
+
+                // Jika berita yang sedang tampil masih ada, lanjutkan tanpa reset.
+                if (prevKey) {
+                    for (var i = 0; i < storyItems.length; i++) {
+                        if (storyKey(storyItems[i]) === prevKey) {
+                            storyIndex = i;
+                            if (!storyTimer && !document.hidden && storyItems.length >= 2) startStory();
+                            return;
+                        }
+                    }
+                }
+
                 if (storyIndex >= storyItems.length) storyIndex = 0;
-                paintStory();
-                startStory();
+                paintStory(hadItems);
+                if (storyItems.length < 2) clearStoryTimer();
+                else if (!storyTimer) startStory();
             }
 
             function setItems(list) {
