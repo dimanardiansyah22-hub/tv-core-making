@@ -386,15 +386,20 @@ html.dark ::-webkit-scrollbar-thumb {
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
             height: 100%;
             min-width: 0;
         }
         #newsTicker .nt-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 9px;
-            width: 100%;
             min-width: 0;
             padding: 0 26px;
             text-align: center;
@@ -403,6 +408,15 @@ html.dark ::-webkit-scrollbar-thumb {
             font-weight: 400;
             letter-spacing: .01em;
             color: var(--on-surface);
+            transform: translateY(0);
+            opacity: 1;
+            transition: transform .55s cubic-bezier(.22,.61,.36,1), opacity .55s ease;
+            will-change: transform, opacity;
+        }
+        #newsTicker .nt-item.nt-enter { transform: translateY(100%); opacity: 0; }
+        #newsTicker .nt-item.nt-leave { transform: translateY(-100%); opacity: 0; }
+        @media (prefers-reduced-motion: reduce) {
+            #newsTicker .nt-item { transition: none; }
         }
         #newsTicker .nt-text {
             flex: 0 1 auto;
@@ -1031,7 +1045,8 @@ html.dark ::-webkit-scrollbar-thumb {
             var storyItems = [];
             var storyIndex = 0;
             var storyTimer = 0;
-            var STORY_MS = 8000; // durasi tiap berita tampil (tanpa animasi)
+            var storyAnimTimer = 0;
+            var STORY_MS = 8000; // durasi tiap berita tampil sebelum swipe ke berita berikutnya
 
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1271,13 +1286,42 @@ html.dark ::-webkit-scrollbar-thumb {
                 '</span>';
             }
 
-            function paintStory() {
+            function clearStoryAnim() {
+                if (storyAnimTimer) clearTimeout(storyAnimTimer);
+                storyAnimTimer = 0;
+            }
+
+            function paintStory(animate) {
+                clearStoryAnim();
                 if (!storyItems.length) {
                     track.innerHTML = '<span class="nt-empty">Belum ada berita.</span>';
                     return;
                 }
                 if (storyIndex >= storyItems.length) storyIndex = 0;
-                track.innerHTML = itemHtml(storyItems[storyIndex]);
+                var html = itemHtml(storyItems[storyIndex]);
+
+                if (!animate) {
+                    track.innerHTML = html;
+                    return;
+                }
+
+                var oldItems = track.querySelectorAll('.nt-item');
+                var holder = document.createElement('div');
+                holder.innerHTML = html;
+                var next = holder.firstElementChild;
+                if (!next) return;
+                next.classList.add('nt-enter');
+                track.appendChild(next);
+                void next.offsetHeight; // paksa reflow agar transisi berjalan
+                next.classList.remove('nt-enter');
+                for (var i = 0; i < oldItems.length; i++) oldItems[i].classList.add('nt-leave');
+
+                storyAnimTimer = setTimeout(function () {
+                    for (var j = 0; j < oldItems.length; j++) {
+                        if (oldItems[j].parentNode) oldItems[j].parentNode.removeChild(oldItems[j]);
+                    }
+                    storyAnimTimer = 0;
+                }, 600);
             }
 
             function startStory() {
@@ -1286,7 +1330,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 storyTimer = setInterval(function () {
                     if (document.hidden) return;
                     storyIndex = (storyIndex + 1) % storyItems.length;
-                    paintStory();
+                    paintStory(true);
                 }, STORY_MS);
             }
 
