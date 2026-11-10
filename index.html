@@ -1206,15 +1206,95 @@ html.dark ::-webkit-scrollbar-thumb {
             }
             function saveStockStore(store) {
                 try {
-                    var dates = Object.keys(store.days || {}).sort().slice(-14);
+                    var dates = Object.keys(store.days || {}).sort().slice(-30);
                     var days = {};
                     dates.forEach(function (d) { days[d] = store.days[d]; });
                     store.days = days;
                     localStorage.setItem(STOCK_KEY, JSON.stringify({ days: days, updatedAt: Date.now() }));
                 } catch (e) {}
             }
+            /* Gabung dua riwayat defect: ambil angka MAX per tanggal+kunci.
+               Server memakai aturan yg sama, jadi semua device konvergen. */
+            function mergeDefectStores(a, b) {
+                var out = { days: {} };
+                [a, b].forEach(function (src) {
+                    var days = (src && src.days && typeof src.days === 'object') ? src.days : {};
+                    Object.keys(days).forEach(function (date) {
+                        var day = days[date];
+                        if (!day || typeof day !== 'object') return;
+                        var target = out.days[date] || (out.days[date] = {});
+                        Object.keys(day).forEach(function (key) {
+                            var it = day[key];
+                            var n = stockCount(it);
+                            if (!n) return;
+                            var name = (it && typeof it === 'object' && it.name) ? String(it.name) : String(key);
+                            var prev = target[key];
+                            if (!prev || stockCount(prev) < n) {
+                                target[key] = { name: (prev && prev.name) || name, count: n };
+                            }
+                        });
+                    });
+                });
+                return out;
+            }
+            /* Riwayat defect terpusat dari server; fallback ke cache lokal. */
+            function loadDefectHistory() {
+                var local = readStockStore();
+                if (!(window.Sync && Sync.hasUrl())) return Promise.resolve(local);
+                return Sync.get('defect', { action: 'get' }).then(function (r) {
+                    if (!r || !r.ok || !r.data) return local;
+                    var remote = (r.data.days && typeof r.data.days === 'object') ? r.data.days : {};
+                    /* Tanggal yg belum ada di server (riwayat lama per-device) ikut
+                       diunggah sekali supaya semua device memakai acuan yg sama. */
+                    var localOnly = {};
+                    Object.keys(local.days || {}).forEach(function (d) {
+                        if (!remote[d] && local.days[d] && typeof local.days[d] === 'object') localOnly[d] = local.days[d];
+                    });
+                    var merged = mergeDefectStores(local, r.data);
+                    saveStockStore(merged);
+                    if (Object.keys(localOnly).length) seedDefectDays(localOnly);
+                    return merged;
+                }).catch(function () { return local; });
+            }
+            var lastSeedSig = '';
+            var defectReportRetryAt = 0;
+            function seedDefectDays(days) {
+                if (!(window.Sync && Sync.hasUrl())) return;
+                if (Date.now() < defectReportRetryAt) return;
+                var sig = JSON.stringify(days);
+                if (sig === lastSeedSig) return;
+                lastSeedSig = sig;
+                var failed = function () {
+                    lastSeedSig = '';
+                    defectReportRetryAt = Date.now() + 5 * 60 * 1000;
+                };
+                Sync.save('defect', { action: 'save', days: days }).then(function (r) {
+                    if (!r || !r.ok) failed();
+                }).catch(failed);
+            }
+            var lastDefectReportSig = '';
+            /* Kirim angka defect hari ini ke server (server gabung MAX). */
+            function reportDefectDay(date, today) {
+                if (!date || !today) return;
+                if (!(window.Sync && Sync.hasUrl())) return;
+                if (Date.now() < defectReportRetryAt) return;
+                var keys = Object.keys(today);
+                if (!keys.length) return;
+                var sig = date + '|' + keys.sort().map(function (k) {
+                    return k + ':' + today[k].count;
+                }).join(',');
+                if (sig === lastDefectReportSig) return;
+                lastDefectReportSig = sig;
+                var failed = function () {
+                    lastDefectReportSig = '';
+                    defectReportRetryAt = Date.now() + 5 * 60 * 1000; /* coba lagi 5 mnt */
+                };
+                Sync.save('defect', { action: 'save', date: date, day: today }).then(function (r) {
+                    if (!r || !r.ok) failed();
+                }).catch(failed);
+            }
             function buildStock(state, mappings, store) {
-                if (!state) return [];
+                if (!state) return { list: [], date: '', today: {} };
                 var list = Array.isArray(mappings) ? mappings.filter(function (m) {
                     return m && m.line === 'Core Making';
                 }) : [];
@@ -1230,7 +1310,7 @@ html.dark ::-webkit-scrollbar-thumb {
                     if (!today[key] || today[key].count < n) today[key] = { name: name, count: n };
                 });
                 var date = String(state.date || '').slice(0, 10);
-                if (!date) return [];
+                if (!date) return { list: [], date: '', today: {} };
                 var day = store.days[date] || (store.days[date] = {});
                 Object.keys(today).forEach(function (key) {
                     var prev = stockCount(day[key]);
@@ -1266,7 +1346,7 @@ html.dark ::-webkit-scrollbar-thumb {
                     if (a.current !== b.current) return b.current - a.current;
                     return a.text.localeCompare(b.text);
                 });
-                return out;
+                return { list: out, date: date, today: today };
             }
             function setStock(list) {
                 var next = Array.isArray(list) ? list : [];
@@ -1278,13 +1358,18 @@ html.dark ::-webkit-scrollbar-thumb {
             }
             function loadStock() {
                 if (!window.fetch) return Promise.resolve(false);
+                var historyP = loadDefectHistory();
                 return fetch('/api/qc-state', { cache: 'no-store' }).then(function (r) {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
                     return r.json();
                 }).then(function (data) {
                     if (!data || !data.success) return false;
-                    setStock(buildStock(data.state, data.mappings, readStockStore()));
-                    return true;
+                    return historyP.then(function (store) {
+                        var built = buildStock(data.state, data.mappings, store);
+                        setStock(built.list);
+                        reportDefectDay(built.date, built.today);
+                        return true;
+                    });
                 }).catch(function () { return false; });
             }
 

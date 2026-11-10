@@ -60,6 +60,7 @@ var DOC_NAMES = {
   planning_white: 'planning-cuti-white.json',
   news: 'news.json',
   parts: 'pergantian-part.json',
+  defect_days: 'defect-days.json',
   machines: 'machines.json',
   capability_red: 'capability-red.json',
   capability_white: 'capability-white.json',
@@ -113,6 +114,8 @@ function doGet(e) {
       result = appGet_('wip', p.shift);
       result.now = new Date().toISOString(); /* jam server saat ini utk selaras LWW */
     } else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
+  } else if (app === 'defect') {
+    result = (action === 'get') ? defectGet_() : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'lapshift') {
     result = (action === 'get') ? appGet_('lapshift', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'lapform') {
@@ -182,6 +185,8 @@ function doPost(e) {
     result = appSave_('capability', body.core, body.data);
   } else if (app === 'news') {
     result = appSave_('news', null, body.data);
+  } else if (app === 'defect') {
+    result = defectReport_(body);
   } else if (app === 'part') {
     result = appSave_('part', null, body.data);
   } else {
@@ -238,6 +243,82 @@ function appSave_(app, variant, data, baseUpdatedAt) {
 function docGet_(name) {
   var doc = readDoc_(name);
   return { ok: true, data: doc };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RIWAYAT DEFECT HARIAN (terpusat utk running text News)
+   Struktur: { days: { "YYYY-MM-DD": { "<key>": { name, count } } } }
+   Simpan = gabung MAX per kunci, agar angka tertinggi yg pernah terlihat
+   dipakai bersama semua device. Dikunci supaya tulis bersamaan tak hilang.
+   ══════════════════════════════════════════════════════════════ */
+
+function defectGet_() {
+  var doc = readDoc_(DOC_NAMES.defect_days);
+  if (!doc || typeof doc !== 'object') doc = {};
+  if (!doc.days || typeof doc.days !== 'object') doc.days = {};
+  return { ok: true, data: doc, now: new Date().toISOString() };
+}
+
+function defectReport_(body) {
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(10000); } catch (e) { return { ok: false, error: 'Server sibuk, coba lagi' }; }
+  try {
+    var doc = readDoc_(DOC_NAMES.defect_days);
+    if (!doc || typeof doc !== 'object') doc = {};
+    if (!doc.days || typeof doc.days !== 'object') doc.days = {};
+
+    function mergeDay(date, incoming) {
+      if (!incoming || typeof incoming !== 'object') return;
+      var day = doc.days[date] || (doc.days[date] = {});
+      Object.keys(incoming).forEach(function (k) {
+        var it = incoming[k];
+        var n = (it && typeof it === 'object')
+          ? Math.max(0, Number(it.count) || 0)
+          : Math.max(0, Number(it) || 0);
+        if (!n) return;
+        var prev = day[k];
+        var prevCount = (prev && typeof prev === 'object')
+          ? Math.max(0, Number(prev.count) || 0)
+          : Math.max(0, Number(prev) || 0);
+        var name = (prev && typeof prev === 'object' && prev.name)
+          ? String(prev.name)
+          : ((it && typeof it === 'object' && it.name) ? String(it.name) : String(k));
+        day[k] = { name: name, count: Math.max(prevCount, n) };
+      });
+    }
+
+    var any = false;
+    /* Impor sekaligus (seed riwayat lokal lama): { days: { "YYYY-MM-DD": {...} } } */
+    if (body.days && typeof body.days === 'object') {
+      Object.keys(body.days).forEach(function (d) {
+        var dd = String(d || '').slice(0, 10);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dd)) return;
+        mergeDay(dd, body.days[d]);
+        any = true;
+      });
+    }
+    /* Kiriman harian biasa: { date: "YYYY-MM-DD", day: {...} } */
+    if (body.day && typeof body.day === 'object') {
+      var date = String(body.date || '').slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'Tanggal tidak valid' };
+      mergeDay(date, body.day);
+      any = true;
+    }
+    if (!any) return { ok: false, error: 'Data defect kosong' };
+
+    /* Simpan 30 hari terakhir saja. */
+    var dates = Object.keys(doc.days).sort();
+    if (dates.length > 30) {
+      var keep = {};
+      dates.slice(-30).forEach(function (d) { keep[d] = doc.days[d]; });
+      doc.days = keep;
+    }
+    doc.updatedAt = new Date().toISOString();
+    writeDoc_(DOC_NAMES.defect_days, doc);
+    return { ok: true, data: doc, updatedAt: doc.updatedAt };
+  } finally {
+    try { lock.releaseLock(); } catch (e) {}
+  }
 }
 
 /* Mode produksi per shift (Day/Night). Dokumen baru wmode-day/night.json;
