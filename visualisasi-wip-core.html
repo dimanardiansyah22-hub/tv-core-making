@@ -1671,21 +1671,12 @@ function bindCellNav() {
   build();
 }
 
+const READINESS_READY_GRADIENT = 'linear-gradient(to left,#F4D125,#C65C10)';
+const READINESS_ADVANCE_GRADIENT = 'linear-gradient(to right,#2e7d32,#4caf50,#66ff99)';
+
 function barColor(ratio, act, actCC, actFR) {
-  if (actCC === 0 && actFR === 0) return '#8b0000';
   if (actCC === 0 || actFR === 0) return '#8b0000';
-  if (ratio === 0) return 'hsl(50, 90%, 55%)';
-  const abs = Math.min(1, Math.abs(ratio));
-  if (ratio > 0) {
-    const t = Math.min(1, abs);
-    const hue = Math.round(150 - t * 15);
-    const light = Math.round(28 + t * 40);
-    return `hsl(${hue}, 75%, ${light}%)`;
-  }
-  const hue = Math.round(50 - abs * 25);
-  const sat = Math.round(90 - abs * 5);
-  const light = Math.round(55 - abs * 13);
-  return `hsl(${hue}, ${sat}%, ${light}%)`;
+  return ratio > 0 ? READINESS_ADVANCE_GRADIENT : READINESS_READY_GRADIENT;
 }
 
 function renderReadiness() {
