@@ -1671,12 +1671,36 @@ function bindCellNav() {
   build();
 }
 
-const READINESS_READY_GRADIENT = 'linear-gradient(to left,#F4D125,#C65C10)';
-const READINESS_ADVANCE_GRADIENT = 'linear-gradient(to right,#2e7d32,#4caf50,#66ff99)';
+const READINESS_READY_START = '#F4D125';
+const READINESS_READY_END = '#C65C10';
+const READINESS_ADVANCE_START = '#2e7d32';
+const READINESS_ADVANCE_MID = '#4caf50';
+const READINESS_ADVANCE_END = '#66ff99';
+
+function mixHex(a, b, t) {
+  const pa = a.replace('#', '');
+  const pb = b.replace('#', '');
+  const ar = parseInt(pa.slice(0, 2), 16);
+  const ag = parseInt(pa.slice(2, 4), 16);
+  const ab = parseInt(pa.slice(4, 6), 16);
+  const br = parseInt(pb.slice(0, 2), 16);
+  const bg = parseInt(pb.slice(2, 4), 16);
+  const bb = parseInt(pb.slice(4, 6), 16);
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bl = Math.round(ab + (bb - ab) * t);
+  return '#' + [r, g, bl].map(v => v.toString(16).padStart(2, '0')).join('');
+}
 
 function barColor(ratio, act, actCC, actFR) {
   if (actCC === 0 || actFR === 0) return '#8b0000';
-  return ratio > 0 ? READINESS_ADVANCE_GRADIENT : READINESS_READY_GRADIENT;
+  const t = Math.min(1, Math.abs(ratio));
+  if (ratio > 0) {
+    /* Advance: makin besar selisih, makin kuat gradien hijau. */
+    return `linear-gradient(to right,${READINESS_ADVANCE_START},${mixHex(READINESS_ADVANCE_START, READINESS_ADVANCE_MID, t)},${mixHex(READINESS_ADVANCE_START, READINESS_ADVANCE_END, t)})`;
+  }
+  /* Ready: makin tipis stock, makin kuat gradien kuning-oranye. */
+  return `linear-gradient(to left,${READINESS_READY_START},${mixHex(READINESS_READY_START, READINESS_READY_END, t)})`;
 }
 
 function renderReadiness() {
