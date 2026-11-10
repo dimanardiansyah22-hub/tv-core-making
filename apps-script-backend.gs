@@ -109,7 +109,10 @@ function doGet(e) {
   } else if (app === 'machines') {
     result = (action === 'get') ? docGet_('machines') : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'wip') {
-    result = (action === 'get') ? appGet_('wip', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
+    if (action === 'get') {
+      result = appGet_('wip', p.shift);
+      result.now = new Date().toISOString(); /* jam server saat ini utk selaras LWW */
+    } else result = { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'lapshift') {
     result = (action === 'get') ? appGet_('lapshift', p.shift) : { ok: false, error: 'Aksi tidak dikenal: ' + action };
   } else if (app === 'lapform') {
@@ -168,7 +171,7 @@ function doPost(e) {
   } else if (app === 'wmode' && action === 'save') {
     result = appSave_('wmode', body.shift, body.data);
   } else if (app === 'wip') {
-    result = appSave_('wip', body.shift, body.data);
+    result = appSave_('wip', body.shift, body.data, body.baseUpdatedAt);
   } else if (app === 'lapshift') {
     result = appSave_('lapshift', body.shift, body.data);
   } else if (app === 'lapform') {
@@ -214,10 +217,19 @@ function appGet_(app, variant) {
   return docGet_(name);
 }
 
-function appSave_(app, variant, data) {
+function appSave_(app, variant, data, baseUpdatedAt) {
   var name = appKey_(app, variant);
   if (!name) return { ok: false, error: 'Koleksi tidak dikenal' };
   if (!data || typeof data !== 'object') return { ok: false, error: 'Data kosong' };
+  /* Optimistic concurrency: bila client mengirim baseUpdatedAt, tolak save saat
+     server sudah berubah sejak client terakhir membaca. Client lama yg tidak
+     mengirim baseUpdatedAt tetap kompatibel (last-write-wins). */
+  if (baseUpdatedAt) {
+    var current = readDoc_(name);
+    if (current && current.updatedAt && current.updatedAt !== baseUpdatedAt) {
+      return { ok: false, conflict: true, updatedAt: current.updatedAt };
+    }
+  }
   data.updatedAt = new Date().toISOString();
   writeDoc_(name, data);
   return { ok: true, updatedAt: data.updatedAt };

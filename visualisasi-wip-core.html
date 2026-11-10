@@ -1001,6 +1001,18 @@ function getSyncedAt(shift) {
 function setSyncedAt(shift, t) {
   try { localStorage.setItem('wip-core-synced-' + shift, String(t)); } catch (e) {}
 }
+/* Waktu acuan server: offset jam device terhadap updatedAt server.
+   Dipakai untuk stempel perubahan lokal agar LWW tidak mudah kalah/menang
+   hanya karena jam device berbeda. */
+function getServerOffset() {
+  try { return Number(localStorage.getItem('wip-core-clock-offset')) || 0; } catch (e) { return 0; }
+}
+function setServerOffset(iso) {
+  const t = new Date(iso).getTime();
+  if (!isFinite(t)) return;
+  try { localStorage.setItem('wip-core-clock-offset', String(t - Date.now())); } catch (e) {}
+}
+function serverNow() { return Date.now() + getServerOffset(); }
 /* Kunci yg diubah lokal beserta WAKTU ubahnya (ms). Menang atas snapshot server
    hanya bila perubahan lokal LEBIH BARU drpd updatedAt server (last-write-wins
    antar device). Dibersihkan setelah save terkonfirmasi server. */
@@ -1025,7 +1037,7 @@ function saveAllData() {
   localStorage.setItem(key, JSON.stringify(snapshot));
   const shift = currentShift();
   if (!_wipDirty[shift]) _wipDirty[shift] = {};
-  const now = Date.now();
+  const now = serverNow();
   let changed = false;
   Object.keys(snapshot).forEach(k => {
     const pv = (prev[k] === undefined) ? '' : prev[k];
@@ -1056,9 +1068,24 @@ function scheduleWipSave() {
   const shift = currentShift();
   if (!_wipSyncedOnce[shift]) return; /* belum tahu keadaan server: tunda push, data tetap aman lokal */
   if (!_wipDeleted[shift]) { try { _wipDeleted[shift] = JSON.parse(localStorage.getItem('wip-core-del-' + shift) || '{}') || {}; } catch (e) { _wipDeleted[shift] = {}; } }
+  /* Buang penanda hapus yg LEBIH TUA drpd updatedAt server: server sudah memuat
+     keadaan setelah penghapusan itu, jadi menandanya lagi hanya bisa menghapus
+     data baru yg diisi device lain. */
+  const lastIso = getLastTs(shift);
+  const lastTs = lastIso ? (new Date(lastIso).getTime() || 0) : 0;
+  if (lastTs > 0) {
+    Object.keys(_wipDeleted[shift]).forEach(k => {
+      if ((Number(_wipDeleted[shift][k]) || 0) < lastTs) delete _wipDeleted[shift][k];
+    });
+    try {
+      if (Object.keys(_wipDeleted[shift]).length) localStorage.setItem('wip-core-del-' + shift, JSON.stringify(_wipDeleted[shift]));
+      else localStorage.removeItem('wip-core-del-' + shift);
+    } catch (e) {}
+  }
   _wipPendingSave[shift] = true;
   clearTimeout(_wipSaveTimer);
   const snapshot = { shift, data: collectWipData() };
+  snapshot.baseUpdatedAt = getLastTs(shift) || ''; /* dasar optimistik: server menolak bila sudah berubah */
   if (_wipDeleted[shift] && Object.keys(_wipDeleted[shift]).length) {
     snapshot.data._deleted = Object.assign({}, _wipDeleted[shift]); /* sertakan penanda hapus */
   }
@@ -1070,10 +1097,21 @@ async function syncWipSave(snapshot) {
   if (!window.Sync || !Sync.hasUrl()) return;
   try {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
-    const res = await Promise.race([Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data }), timeout]);
+    const res = await Promise.race([Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data, baseUpdatedAt: snapshot.baseUpdatedAt || '' }), timeout]);
+    if (res && res.conflict) {
+      /* Server sudah lebih baru drpd dasar kiriman: JANGAN paksa timpa.
+         Pertahankan data kotor lokal, tarik keadaan terbaru, gabung, lalu
+         biarkan jadwal berikutnya mengirim hasil gabungan. */
+      _wipPendingSave[snapshot.shift] = false;
+      await wipSyncFromServer();
+      return;
+    }
     if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
-    if (res && res.updatedAt) setLastTs(snapshot.shift, res.updatedAt);
-    setSyncedAt(snapshot.shift, Date.now()); /* titik konvergensi: server == yg baru dikirim */
+    if (res.updatedAt) {
+      setLastTs(snapshot.shift, res.updatedAt);
+      setServerOffset(res.updatedAt); /* selaraskan jam device dgn server */
+    }
+    setSyncedAt(snapshot.shift, serverNow()); /* titik konvergensi: server == yg baru dikirim */
     if (snapshot.data && snapshot.data._deleted) {
       Object.keys(snapshot.data._deleted).forEach(k => { if (_wipDeleted[snapshot.shift]) delete _wipDeleted[snapshot.shift][k]; });
     }
@@ -1177,17 +1215,36 @@ function mergeWipData(shift, server) {
     const lv = local[k];
     if (!guest && dirty[k] && (dirty[k] + WIP_SKEW_MS) > serverTs) return; /* ketikan sesi ini lebih baru */
     if (sv === undefined || sv === '') {
-      /* server kehilangan kunci yg lokal pegang (timpa snapshot bersamaan):
+      const serverExplicitEmpty = (sv === '');
+      if (serverExplicitEmpty) {
+        /* Server menyatakan kunci ini KOSONG secara eksplisit (mis. dihapus
+           device lain). Kosong dari server menang atas nilai lokal usang,
+           KECUALI perubahan lokal memang lebih baru (mis. simpanan lokal yg
+           belum sempat terkirim karena halaman sempat ditutup). */
+        const localGenuinelyNewer = ((localTs - serverTs) > WIP_SKEW_MS);
+        if (!guest && lv !== undefined && lv !== '') {
+          if (localGenuinelyNewer) {
+            if (!_wipDirty[shift]) _wipDirty[shift] = {};
+            _wipDirty[shift][k] = Math.max(dirty[k] || 0, localTs); /* dorong ulang */
+          } else {
+            merged[k] = '';
+            _wipCleared[shift][k] = true;
+            if (_wipDirty[shift]) delete _wipDirty[shift][k];
+          }
+        }
+        return;
+      }
+      /* Kunci tak ada di snapshot server (timpa snapshot bersamaan):
          tandai agar terdorong balik — tanpa ini divergen permanen.
          KECUALI kunci ini berpenanda hapus: biar pass penghapusan yg memutuskan
          (jangan kotori dirty agar cek waktu penghapusan tetap jujur). */
       if (!guest && delMap[k] === undefined && lv !== undefined && lv !== '') {
         if (!_wipDirty[shift]) _wipDirty[shift] = {};
-        _wipDirty[shift][k] = Date.now();
+        _wipDirty[shift][k] = serverNow();
       }
       return;
     }
-    if (!guest && (lv !== undefined && lv !== '') && (dirty[k] || localTs > serverTs)) {
+    if (!guest && (lv !== undefined && lv !== '') && ((localTs - serverTs) > WIP_SKEW_MS)) {
       if (!_wipDirty[shift]) _wipDirty[shift] = {};
       _wipDirty[shift][k] = Math.max(dirty[k] || 0, localTs); /* pastikan ikut terdorong ke server */
       return;
@@ -1219,6 +1276,21 @@ async function wipSyncFromServer() {
     const data = (res && res.ok && res.data) ? res.data : null;
     const needPush = () => Object.keys(_wipDirty[shift] || {}).length || Object.keys(_wipDeleted[shift] || {}).length;
     if (!data || !data.updatedAt) { if (needPush()) scheduleWipSave(); return; }
+    /* Acuan jam server: pakai `now` dari respons GET (bukan updatedAt dokumen
+       yg bisa sudah lama). Backend lama tanpa `now` dibiarkan apa adanya. */
+    if (res && res.now) setServerOffset(res.now);
+    /* Buang penanda hapus yg LEBIH TUA drpd updatedAt server: penghapusan itu
+       sudah tercermin di server, menyimpannya lagi hanya bisa menghapus data baru. */
+    const serverTsMs = new Date(data.updatedAt).getTime() || 0;
+    if (serverTsMs > 0 && _wipDeleted[shift]) {
+      Object.keys(_wipDeleted[shift]).forEach(k => {
+        if ((Number(_wipDeleted[shift][k]) || 0) < serverTsMs) delete _wipDeleted[shift][k];
+      });
+      try {
+        if (Object.keys(_wipDeleted[shift]).length) localStorage.setItem('wip-core-del-' + shift, JSON.stringify(_wipDeleted[shift]));
+        else localStorage.removeItem('wip-core-del-' + shift);
+      } catch (e) {}
+    }
     if (!guest && data.updatedAt === getLastTs(shift)) {
       /* Server TAK BERUBAH sejak terakhir terlihat: bukti pasti tak ada yg baru
          di mana pun -> diam total (jangan gabung, jangan dorong basi).
