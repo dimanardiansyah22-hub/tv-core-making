@@ -1,4 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null
+  "framework": null,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "tv-core-making.vercel.app"
+        }
+      ],
+      "destination": "https://coremaking.web.id/$1",
+      "permanent": true
+    }
+  ]
 }
