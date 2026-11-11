@@ -13,9 +13,21 @@
 
 const QC_BASE = 'https://qc-gate-production.vercel.app';
 const FALLBACK_CORE = ['Gas Hole', 'Gomi', 'Gyakubari', 'Mejashi', 'Togata Tare', 'Vinning'];
+const WINDOW_DAYS = 14;
 
 function normName(s) {
   return String(s == null ? '' : s).trim().replace(/\s+/g, ' ').toLowerCase().replace(/\s+/g, '');
+}
+
+/* Geser tanggal YYYY-MM-DD sebanyak delta hari (aman terhadap zona waktu). */
+function shiftDate(date, delta) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+  if (!m) return '';
+  const t = Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])) + delta * 86400000;
+  const d = new Date(t);
+  return d.getUTCFullYear() + '-' +
+    String(d.getUTCMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getUTCDate()).padStart(2, '0');
 }
 
 /* Cocokkan nama defect lapangan ke nama kanonis Core Making.
@@ -147,9 +159,32 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    const list = Object.keys(days).sort().slice(-30).map(function (k) {
-      return finalizeDay(days[k]);
-    });
+    /* Endpoint /api/history hanya mengembalikan 10 record terakhir, jadi
+       tanggal yang belum tercakup diambil satu per satu dengan ?date=.
+       Tujuannya agar chart selalu punya jendela 14 hari yang utuh. */
+    const known = Object.keys(days).sort();
+    const anchor = known.length ? known[known.length - 1] : null;
+    let list = [];
+
+    if (anchor) {
+      const windowDates = [];
+      for (let i = WINDOW_DAYS - 1; i >= 0; i--) windowDates.push(shiftDate(anchor, -i));
+
+      const missing = windowDates.filter(function (d) { return !days[d]; });
+      if (missing.length) {
+        const fetched = await Promise.allSettled(missing.map(function (d) {
+          return getJson('/api/history?date=' + encodeURIComponent(d));
+        }));
+        fetched.forEach(function (r, i) {
+          if (r.status !== 'fulfilled' || !Array.isArray(r.value) || !r.value.length) return;
+          const day = ensureDay(missing[i]);
+          if (!day) return;
+          r.value.forEach(function (rec) { addCounts(day, rec.defectData, coreNames, 'sum'); });
+        });
+      }
+
+      list = windowDates.map(function (d) { return finalizeDay(ensureDay(d)); });
+    }
 
     /* Urutkan defect berdasarkan total selama periode (paling besar dulu),
        dan hanya kirim yang pernah muncul. */
@@ -171,6 +206,7 @@ module.exports = async function handler(req, res) {
       updatedAt: new Date().toISOString(),
       defects: defects,
       totals: totals,
+      windowDays: WINDOW_DAYS,
       days: list
     });
   } catch (err) {

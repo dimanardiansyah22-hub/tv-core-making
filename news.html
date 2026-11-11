@@ -1309,7 +1309,7 @@
         var topCount = totals[topName] || 0;
 
         statsEl.innerHTML =
-            '<div class="defect-stat"><span>Total defect</span><b>' + fmtNum(grandTotal) + '</b><small>' + days.length + ' hari data</small></div>' +
+            '<div class="defect-stat"><span>Total defect</span><b>' + fmtNum(grandTotal) + '</b><small>' + days.length + ' hari terakhir</small></div>' +
             '<div class="defect-stat"><span>Rata-rata / hari</span><b>' + fmtNum(avg) + '</b><small>defect per hari</small></div>' +
             '<div class="defect-stat"><span>Terbanyak</span><b>' + esc(topName) + '</b><small>' + fmtNum(topCount) + ' defect</small></div>';
         statsEl.hidden = false;
@@ -1381,7 +1381,7 @@
                 lastLoad = Date.now();
                 var d = new Date();
                 var n = Array.isArray(j.days) ? j.days.length : 0;
-                updatedEl.textContent = 'Diperbarui ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ' • ' + n + ' hari data';
+                updatedEl.textContent = 'Diperbarui ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ' • ' + n + ' hari terakhir';
             })
             .catch(function (err) {
                 showEmpty('Gagal memuat data defect: ' + ((err && err.message) || 'tidak diketahui') + '. Coba lagi.', true);
