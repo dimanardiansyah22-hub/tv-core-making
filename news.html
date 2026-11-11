@@ -401,7 +401,7 @@
         border-radius: 16px;
         padding: 18px 20px 14px;
         box-shadow: 0 8px 24px var(--shadow);
-        margin-bottom: 18px;
+        margin: 20px 0 0;
     }
     .defect-head {
         display: flex;
@@ -647,29 +647,6 @@
         <div class="count"><span class="material-symbols-outlined" style="font-size:16px">feed</span> <b id="newsCount">0</b> berita</div>
     </div>
 
-    <section class="defect-panel" id="defectPanel" aria-labelledby="defectTitle">
-        <div class="defect-head">
-            <div>
-                <div class="eyebrow"><span class="material-symbols-outlined">insights</span> Trend Defect</div>
-                <h2 id="defectTitle">Defect Core Making</h2>
-                <p class="defect-sub">Sumber: Dashboard Finishing (QC Gate). Menampilkan defect yang berasal dari line Core Making saja.</p>
-            </div>
-            <div class="defect-actions">
-                <span class="defect-updated" id="defectUpdated">Memuat…</span>
-                <button class="btn-secondary" type="button" id="defectRefresh">
-                    <span class="material-symbols-outlined">refresh</span> Muat ulang
-                </button>
-            </div>
-        </div>
-        <div class="defect-stats" id="defectStats" hidden></div>
-        <div class="defect-chart" id="defectChart"></div>
-        <div class="defect-legend" id="defectLegend"></div>
-        <div class="defect-empty" id="defectEmpty" hidden>
-            <span class="material-symbols-outlined">query_stats</span>
-            <span id="defectEmptyText">Belum ada data defect Core Making.</span>
-        </div>
-    </section>
-
     <section class="editor" id="newsEditor" hidden>
         <div class="editor-head">
             <div>
@@ -709,6 +686,29 @@
     </section>
 
     <div class="news-grid" id="newsGrid"></div>
+
+    <section class="defect-panel" id="defectPanel" aria-labelledby="defectTitle">
+        <div class="defect-head">
+            <div>
+                <div class="eyebrow"><span class="material-symbols-outlined">insights</span> Trend Defect</div>
+                <h2 id="defectTitle">Defect Core Making</h2>
+                <p class="defect-sub">Sumber: Dashboard Finishing (QC Gate). Menampilkan defect yang berasal dari line Core Making saja.</p>
+            </div>
+            <div class="defect-actions">
+                <span class="defect-updated" id="defectUpdated">Memuat…</span>
+                <button class="btn-secondary" type="button" id="defectRefresh">
+                    <span class="material-symbols-outlined">refresh</span> Muat ulang
+                </button>
+            </div>
+        </div>
+        <div class="defect-stats" id="defectStats" hidden></div>
+        <div class="defect-chart" id="defectChart"></div>
+        <div class="defect-legend" id="defectLegend"></div>
+        <div class="defect-empty" id="defectEmpty" hidden>
+            <span class="material-symbols-outlined">query_stats</span>
+            <span id="defectEmptyText">Belum ada data defect Core Making.</span>
+        </div>
+    </section>
 </div>
 
 <div class="confirm-veil" id="newsConfirm" hidden>
