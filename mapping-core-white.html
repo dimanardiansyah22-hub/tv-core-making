@@ -1104,6 +1104,7 @@ const IMG_H = 3375;
 const members = [
     { id: 'abbas', name: 'Abbas', src: 'Foto Member/Foto Member White/abbas.png' },
     { id: 'alimudin', name: 'Alimudin', src: 'Foto Member/Foto Member White/alimudin.png' },
+    { id: 'andry', name: 'Andry', src: 'Foto Member/Foto Member White/andry.png' },
     { id: 'dedy', name: 'Dedy', src: 'Foto Member/Foto Member White/dedy.png' },
     { id: 'defa', name: 'Defa', src: 'Foto Member/Foto Member White/defa.png' },
     { id: 'doyo', name: 'Doyo', src: 'Foto Member/Foto Member White/doyo.png' },
@@ -1165,8 +1166,8 @@ const ABSENT_POSITIONS = [20, 21, 22];
 const ABSENT_REASONS = ['Cuti', 'Sakit', 'Izin', 'Opname', 'Keluarga Opname', 'Ibadah'];
 
 /* Member non-aktif tidak dihitung dalam kehadiran.
-   Shift White: semua member aktif. */
-const INACTIVE_MEMBERS = {};
+   Shift White: Andry sedang GST (Global Skill Training). */
+const INACTIVE_MEMBERS = { andry: 'GST' };
 const activeMembers = members.filter(m => !INACTIVE_MEMBERS[m.id]);
 let absenceReasons = {};
 let attSig = '';
@@ -1386,7 +1387,7 @@ async function capSyncFromServer() {
         }
     } catch (e) {}
 }
-const CAP_COL_ORDER = ['Sutarto', 'Wawan', 'Taufiq', 'Syaiful', 'Doyo', 'Sudiono', 'Dedy', 'Zainul', 'Mulfy', 'Ruly', 'Rizal', 'Egi', 'Sabdoni', 'Defa', 'Abbas', 'Alimudin', 'Shifa', 'Sultan', 'Windu', 'Rizka'];
+const CAP_COL_ORDER = ['Sutarto', 'Wawan', 'Taufiq', 'Syaiful', 'Doyo', 'Sudiono', 'Dedy', 'Zainul', 'Mulfy', 'Ruly', 'Rizal', 'Egi', 'Sabdoni', 'Defa', 'Abbas', 'Alimudin', 'Shifa', 'Sultan', 'Windu', 'Rizka', 'Andry'];
 function capColumns() {
     return CAP_COL_ORDER
         .map(n => {
