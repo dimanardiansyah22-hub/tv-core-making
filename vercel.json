@@ -12,6 +12,28 @@
       ],
       "destination": "https://coremaking.web.id/$1",
       "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "tv-core-making-core-making.vercel.app"
+        }
+      ],
+      "destination": "https://coremaking.web.id/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "tv-core-making-git-main-core-making.vercel.app"
+        }
+      ],
+      "destination": "https://coremaking.web.id/$1",
+      "permanent": true
     }
   ]
 }
