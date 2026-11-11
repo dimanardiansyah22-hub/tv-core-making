@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=1600">
-<title>News — TV Core Making</title>
+<title>News &amp; Defect Chart — TV Core Making</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -395,6 +395,147 @@
         gap: 9px;
         margin-top: 18px;
     }
+    .defect-panel {
+        background: var(--surface-container-lowest);
+        border: 1px solid var(--outline-variant);
+        border-radius: 16px;
+        padding: 18px 20px 14px;
+        box-shadow: 0 8px 24px var(--shadow);
+        margin-bottom: 18px;
+    }
+    .defect-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .defect-head h2 {
+        margin: 0;
+        font-family: "Hanken Grotesk", sans-serif;
+        font-size: 21px;
+        font-weight: 800;
+        letter-spacing: -.01em;
+    }
+    .defect-sub {
+        margin: 6px 0 0;
+        color: var(--secondary);
+        font-size: 12.5px;
+        line-height: 1.55;
+        max-width: 680px;
+    }
+    .defect-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .defect-updated { color: var(--secondary); font-size: 11.5px; font-weight: 700; }
+    .defect-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin: 14px 0 2px;
+    }
+    .defect-stat {
+        border: 1px solid var(--outline-variant);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: var(--surface-container-low);
+    }
+    .defect-stat span {
+        display: block;
+        color: var(--secondary);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .defect-stat b {
+        display: block;
+        margin-top: 3px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 21px;
+        color: var(--on-surface);
+        line-height: 1.15;
+    }
+    .defect-stat small {
+        display: block;
+        margin-top: 2px;
+        color: var(--secondary);
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .defect-chart { width: 100%; margin-top: 10px; }
+    .defect-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .defect-chart .grid-line { stroke: var(--outline-variant); stroke-width: 1; }
+    .defect-chart .axis-text { fill: var(--secondary); font-size: 11px; font-family: "Inter", sans-serif; }
+    .defect-chart .bar-total { fill: var(--on-surface); font-size: 11px; font-weight: 800; font-family: "JetBrains Mono", monospace; }
+    .defect-chart .bar-total.zero { fill: var(--secondary); font-weight: 600; }
+    .defect-chart .bar-seg { transition: opacity .15s ease; cursor: default; }
+    .defect-chart .bar-seg:hover { opacity: .82; }
+    .defect-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 18px;
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--outline-variant);
+    }
+    .defect-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--secondary);
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .defect-legend-swatch {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        display: inline-block;
+        flex: 0 0 auto;
+    }
+    .defect-legend-item b {
+        color: var(--on-surface);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11.5px;
+    }
+    .defect-empty {
+        padding: 30px 16px;
+        text-align: center;
+        color: var(--secondary);
+        font-size: 13px;
+        line-height: 1.55;
+    }
+    .defect-empty .material-symbols-outlined {
+        display: block;
+        font-size: 38px;
+        color: var(--primary);
+        opacity: .8;
+        margin-bottom: 6px;
+    }
+    .defect-empty.defect-error { color: #dc2626; }
+    html.dark .defect-empty.defect-error { color: #f87171; }
+    .defect-tip {
+        position: fixed;
+        z-index: 80;
+        padding: 6px 9px;
+        border-radius: 8px;
+        background: var(--on-surface);
+        color: var(--surface-container-lowest);
+        font-size: 11.5px;
+        font-weight: 700;
+        line-height: 1.45;
+        white-space: pre-line;
+        pointer-events: none;
+        box-shadow: 0 10px 26px var(--shadow);
+    }
+    @media (max-width: 640px) {
+        .defect-stats { grid-template-columns: 1fr; }
+        .defect-panel { padding: 14px 14px 12px; }
+    }
     .news-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -500,11 +641,34 @@
     <div class="head">
         <div>
             <div class="eyebrow"><span class="material-symbols-outlined">campaign</span> News &amp; Information</div>
-            <h1>News Core Making</h1>
-            <p class="subtitle">Informasi terbaru seputar aktivitas dan pengumuman Core Making. Setiap berita yang aktif juga tampil sebagai running text di halaman utama.</p>
+            <h1>News &amp; Defect Chart</h1>
+            <p class="subtitle">Informasi terbaru seputar aktivitas dan pengumuman Core Making, lengkap dengan trend defect Core Making dari Dashboard Finishing. Setiap berita yang aktif juga tampil sebagai running text di halaman utama.</p>
         </div>
         <div class="count"><span class="material-symbols-outlined" style="font-size:16px">feed</span> <b id="newsCount">0</b> berita</div>
     </div>
+
+    <section class="defect-panel" id="defectPanel" aria-labelledby="defectTitle">
+        <div class="defect-head">
+            <div>
+                <div class="eyebrow"><span class="material-symbols-outlined">insights</span> Trend Defect</div>
+                <h2 id="defectTitle">Defect Core Making</h2>
+                <p class="defect-sub">Sumber: Dashboard Finishing (QC Gate). Menampilkan defect yang berasal dari line Core Making saja.</p>
+            </div>
+            <div class="defect-actions">
+                <span class="defect-updated" id="defectUpdated">Memuat…</span>
+                <button class="btn-secondary" type="button" id="defectRefresh">
+                    <span class="material-symbols-outlined">refresh</span> Muat ulang
+                </button>
+            </div>
+        </div>
+        <div class="defect-stats" id="defectStats" hidden></div>
+        <div class="defect-chart" id="defectChart"></div>
+        <div class="defect-legend" id="defectLegend"></div>
+        <div class="defect-empty" id="defectEmpty" hidden>
+            <span class="material-symbols-outlined">query_stats</span>
+            <span id="defectEmptyText">Belum ada data defect Core Making.</span>
+        </div>
+    </section>
 
     <section class="editor" id="newsEditor" hidden>
         <div class="editor-head">
@@ -1050,6 +1214,211 @@
             if (editing < 0) loadFromServer(true);
         }, 30000);
     }
+})();
+</script>
+<script>
+/* ── Trend Defect Core Making (sumber: Dashboard Finishing / QC Gate) ── */
+(function () {
+    'use strict';
+
+    var chartEl = document.getElementById('defectChart');
+    var legendEl = document.getElementById('defectLegend');
+    var statsEl = document.getElementById('defectStats');
+    var emptyEl = document.getElementById('defectEmpty');
+    var emptyTextEl = document.getElementById('defectEmptyText');
+    var updatedEl = document.getElementById('defectUpdated');
+    var refreshEl = document.getElementById('defectRefresh');
+    if (!chartEl || !updatedEl) return;
+
+    var PALETTE = ['#bd0014', '#e07a1f', '#2f7d32', '#1565c0', '#6a3fb5', '#00897b', '#8d6e63', '#c2185b'];
+    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    var loading = false;
+    var lastLoad = 0;
+
+    var tipEl = document.createElement('div');
+    tipEl.className = 'defect-tip';
+    tipEl.hidden = true;
+    document.body.appendChild(tipEl);
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function fmtDate(date) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+        if (!m) return String(date || '');
+        return Number(m[3]) + ' ' + (MONTHS[Number(m[2]) - 1] || '');
+    }
+    function fmtLong(date) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date || ''));
+        if (!m) return String(date || '');
+        return Number(m[3]) + ' ' + (MONTHS[Number(m[2]) - 1] || '') + ' ' + m[1];
+    }
+    function niceMax(v) {
+        if (!isFinite(v) || v <= 5) return 5;
+        var pow = Math.pow(10, Math.floor(Math.log10(v)));
+        var n = v / pow;
+        var m = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+        return m * pow;
+    }
+    function fmtNum(n) {
+        try { return Number(n).toLocaleString('id-ID', { maximumFractionDigits: 1 }); }
+        catch (e) { return String(n); }
+    }
+    function hideTip() { tipEl.hidden = true; }
+    function hideEmpty() { emptyEl.hidden = true; emptyEl.classList.remove('defect-error'); }
+    function showEmpty(msg, isError) {
+        emptyEl.hidden = false;
+        emptyEl.classList.toggle('defect-error', !!isError);
+        emptyTextEl.textContent = msg;
+        chartEl.innerHTML = '';
+        legendEl.innerHTML = '';
+        statsEl.hidden = true;
+        hideTip();
+    }
+
+    function render(payload) {
+        var days = Array.isArray(payload.days) ? payload.days.slice(-14) : [];
+        var totals = {};
+        days.forEach(function (day) {
+            var d = (day && day.defects && typeof day.defects === 'object') ? day.defects : {};
+            Object.keys(d).forEach(function (name) {
+                var n = Math.max(0, Number(d[name]) || 0);
+                if (n) totals[name] = (totals[name] || 0) + n;
+            });
+        });
+        var defects = Object.keys(totals).sort(function (a, b) {
+            if (totals[b] !== totals[a]) return totals[b] - totals[a];
+            return a.localeCompare(b);
+        });
+
+        if (!days.length || !defects.length) {
+            showEmpty(days.length
+                ? 'Belum ada defect Core Making yang tercatat pada periode ini.'
+                : 'Belum ada data defect Core Making di Dashboard Finishing.', false);
+            return;
+        }
+        hideEmpty();
+
+        var grandTotal = 0;
+        days.forEach(function (day) { grandTotal += Math.max(0, Number(day.total) || 0); });
+        var avg = days.length ? grandTotal / days.length : 0;
+        var topName = defects[0];
+        var topCount = totals[topName] || 0;
+
+        statsEl.innerHTML =
+            '<div class="defect-stat"><span>Total defect</span><b>' + fmtNum(grandTotal) + '</b><small>' + days.length + ' hari data</small></div>' +
+            '<div class="defect-stat"><span>Rata-rata / hari</span><b>' + fmtNum(avg) + '</b><small>defect per hari</small></div>' +
+            '<div class="defect-stat"><span>Terbanyak</span><b>' + esc(topName) + '</b><small>' + fmtNum(topCount) + ' defect</small></div>';
+        statsEl.hidden = false;
+
+        var W = 960, H = 340, padL = 48, padR = 18, padT = 30, padB = 54;
+        var plotW = W - padL - padR;
+        var plotH = H - padT - padB;
+        var baseY = padT + plotH;
+        var maxTotal = 1;
+        days.forEach(function (day) { maxTotal = Math.max(maxTotal, Number(day.total) || 0); });
+        var yMax = niceMax(maxTotal);
+        var n = days.length;
+        var slot = plotW / n;
+        var barW = Math.min(56, Math.max(10, slot * 0.58));
+        var out = [];
+
+        out.push('<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Grafik trend defect Core Making">');
+
+        for (var t = 0; t <= 4; t++) {
+            var val = yMax * t / 4;
+            var gy = baseY - (val / yMax) * plotH;
+            out.push('<line class="grid-line" x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '"/>');
+            out.push('<text class="axis-text" x="' + (padL - 8) + '" y="' + (gy + 4) + '" text-anchor="end">' + Math.round(val) + '</text>');
+        }
+
+        days.forEach(function (day, i) {
+            var x = padL + i * slot + (slot - barW) / 2;
+            var total = Math.max(0, Number(day.total) || 0);
+            var acc = 0;
+            defects.forEach(function (name, di) {
+                var v = Math.max(0, Number(day.defects && day.defects[name]) || 0);
+                if (!v) return;
+                var h = (v / yMax) * plotH;
+                var y = baseY - acc - h;
+                acc += h;
+                var color = PALETTE[di % PALETTE.length];
+                var tip = fmtLong(day.date) + '\n' + name + ': ' + v;
+                out.push('<rect class="bar-seg" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + h + '" rx="2" fill="' + color + '" data-tip="' + esc(tip) + '"><title>' + esc(fmtLong(day.date) + ' — ' + name + ': ' + v) + '</title></rect>');
+            });
+            var labelY = total > 0 ? (baseY - (total / yMax) * plotH - 7) : (baseY - 7);
+            out.push('<text class="bar-total' + (total ? '' : ' zero') + '" x="' + (x + barW / 2) + '" y="' + labelY + '" text-anchor="middle">' + total + '</text>');
+            out.push('<text class="axis-text" x="' + (x + barW / 2) + '" y="' + (baseY + 20) + '" text-anchor="middle">' + esc(fmtDate(day.date)) + '</text>');
+        });
+
+        out.push('<line class="grid-line" x1="' + padL + '" y1="' + baseY + '" x2="' + (W - padR) + '" y2="' + baseY + '"/>');
+        out.push('</svg>');
+        chartEl.innerHTML = out.join('');
+
+        legendEl.innerHTML = defects.map(function (name, i) {
+            return '<span class="defect-legend-item"><span class="defect-legend-swatch" style="background:' +
+                PALETTE[i % PALETTE.length] + '"></span>' + esc(name) + ' <b>' + fmtNum(totals[name]) + '</b></span>';
+        }).join('');
+    }
+
+    function load() {
+        if (loading) return;
+        loading = true;
+        updatedEl.textContent = 'Memuat…';
+        if (refreshEl) refreshEl.disabled = true;
+        fetch('/api/qc-defects', { cache: 'no-store' })
+            .then(function (r) {
+                return r.json().then(function (j) {
+                    if (!r.ok || !j || !j.success) throw new Error((j && j.error) || ('HTTP ' + r.status));
+                    return j;
+                });
+            })
+            .then(function (j) {
+                render(j);
+                lastLoad = Date.now();
+                var d = new Date();
+                var n = Array.isArray(j.days) ? j.days.length : 0;
+                updatedEl.textContent = 'Diperbarui ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ' • ' + n + ' hari data';
+            })
+            .catch(function (err) {
+                showEmpty('Gagal memuat data defect: ' + ((err && err.message) || 'tidak diketahui') + '. Coba lagi.', true);
+                updatedEl.textContent = 'Gagal memuat';
+            })
+            .then(function () {
+                loading = false;
+                if (refreshEl) refreshEl.disabled = false;
+            });
+    }
+
+    chartEl.addEventListener('mousemove', function (e) {
+        var target = e.target;
+        var tip = target && target.getAttribute ? target.getAttribute('data-tip') : '';
+        if (!tip) { hideTip(); return; }
+        tipEl.textContent = tip;
+        tipEl.hidden = false;
+        var x = e.clientX + 14;
+        var y = e.clientY + 14;
+        var r = tipEl.getBoundingClientRect();
+        if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - 14;
+        if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - 14;
+        tipEl.style.left = x + 'px';
+        tipEl.style.top = y + 'px';
+    });
+    chartEl.addEventListener('mouseleave', hideTip);
+    window.addEventListener('scroll', hideTip, true);
+
+    if (refreshEl) refreshEl.addEventListener('click', load);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) load();
+    });
+    setInterval(function () {
+        if (document.visibilityState === 'visible' && Date.now() - lastLoad > 30000) load();
+    }, 60000);
+
+    load();
 })();
 </script>
 </body>
