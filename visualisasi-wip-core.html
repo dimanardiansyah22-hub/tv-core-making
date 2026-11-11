@@ -965,8 +965,12 @@ function setPanelVal(data, id, fallback) {
 }
 
 /* ── Sinkronisasi terpusat (sync-core.js) ── */
-let _wipSaveTimer = null;
-let _wipPendingSave = {};
+/* Timer debounce PER SHIFT: jadwal kirim pagi tak boleh membatalkan jadwal
+   malam (dan sebaliknya) saat operator berpindah shift. */
+let _wipSaveTimers = {};
+/* true = request simpan utk shift itu sedang berjalan. Hanya SATU kiriman
+   sekaligus per shift agar respons tak saling mendahului (stempel tak mundur). */
+let _wipSaving = {};
 let _wipLastTs = {};
 /* Peran TAMU = view-only penuh: boleh menarik, TAK BOLEH mendorong apa pun.
    Deteksi sama seperti guest-lock.js: ?role=guest atau sesi parent.
@@ -1029,6 +1033,46 @@ const WIP_SKEW_MS = 120000;
    snapshot sebagian: device yg belum memuat gambar penuh tak boleh menimpa server) */
 let _wipSyncedOnce = {};
 
+/* Muat status "kotor" (belum terkirim) dari localStorage. Ini kunci saat
+   halaman ditutup/di-refresh sebelum jeda 800ms sempat mengirim: ketikan
+   terakhir tetap tercatat dan didorong ke server setelah halaman dibuka lagi. */
+function ensureWipState(shift) {
+  if (!_wipDirty[shift]) {
+    try { _wipDirty[shift] = JSON.parse(localStorage.getItem('wip-core-dirty-' + shift) || '{}') || {}; } catch (e) { _wipDirty[shift] = {}; }
+  }
+  if (!_wipDeleted[shift]) {
+    try { _wipDeleted[shift] = JSON.parse(localStorage.getItem('wip-core-del-' + shift) || '{}') || {}; } catch (e) { _wipDeleted[shift] = {}; }
+  }
+}
+function persistDirty(shift) {
+  try {
+    const m = _wipDirty[shift] || {};
+    if (Object.keys(m).length) localStorage.setItem('wip-core-dirty-' + shift, JSON.stringify(m));
+    else localStorage.removeItem('wip-core-dirty-' + shift);
+  } catch (e) {}
+}
+function persistDeleted(shift) {
+  try {
+    const m = _wipDeleted[shift] || {};
+    if (Object.keys(m).length) localStorage.setItem('wip-core-del-' + shift, JSON.stringify(m));
+    else localStorage.removeItem('wip-core-del-' + shift);
+  } catch (e) {}
+}
+function hasWipPending(shift) {
+  return !!(Object.keys(_wipDirty[shift] || {}).length || Object.keys(_wipDeleted[shift] || {}).length);
+}
+/* Sedang ada jadwal kirim atau request berjalan? Poll penarik harus menunggu
+   agar tak menimpa data yg belum sempat terkirim. */
+function wipBusy(shift) {
+  return !!(_wipSaving[shift] || _wipSaveTimers[shift]);
+}
+/* Snapshot data utk shift tertentu. Shift yg sedang tampil diambil dari layar;
+   shift lain (mis. baru ditinggal saat timer menyala) dari simpanan lokalnya. */
+function wipSnapshotFor(shift) {
+  if (shift === currentShift()) return collectWipData();
+  try { return JSON.parse(localStorage.getItem('wip-core-data-' + shift) || '{}') || {}; } catch (e) { return {}; }
+}
+
 function saveAllData() {
   const snapshot = collectWipData();
   const key = getStorageKey();
@@ -1036,7 +1080,7 @@ function saveAllData() {
   try { prev = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { prev = {}; }
   localStorage.setItem(key, JSON.stringify(snapshot));
   const shift = currentShift();
-  if (!_wipDirty[shift]) _wipDirty[shift] = {};
+  ensureWipState(shift);
   const now = serverNow();
   let changed = false;
   Object.keys(snapshot).forEach(k => {
@@ -1051,80 +1095,114 @@ function saveAllData() {
       }
     }
   });
-  try {
-    if (_wipDeleted[shift] && Object.keys(_wipDeleted[shift]).length) localStorage.setItem('wip-core-del-' + shift, JSON.stringify(_wipDeleted[shift]));
-    else localStorage.removeItem('wip-core-del-' + shift);
-  } catch (e) {}
+  if (changed) persistDirty(shift);
+  persistDeleted(shift);
   /* Tak ada yg berubah + tak ada kiriman tertunda: JANGAN sentuh stempel/jadwal.
      Ini mencegah load halaman mendorong data basi ke server (meracuni device lain). */
   if (!changed && !Object.keys(_wipDirty[shift]).length) return;
   if (changed) { try { localStorage.setItem('wip-core-ts2-' + shift, String(now)); } catch (e) {} }
-  scheduleWipSave();
+  scheduleWipSave(shift);
 }
 
-function scheduleWipSave() {
+function scheduleWipSave(shiftArg) {
   if (isGuestMode()) return; /* tamu: tak pernah menjadwalkan kirim */
   if (!window.Sync || !Sync.hasUrl()) return;
-  const shift = currentShift();
+  const shift = shiftArg || currentShift();
   if (!_wipSyncedOnce[shift]) return; /* belum tahu keadaan server: tunda push, data tetap aman lokal */
-  if (!_wipDeleted[shift]) { try { _wipDeleted[shift] = JSON.parse(localStorage.getItem('wip-core-del-' + shift) || '{}') || {}; } catch (e) { _wipDeleted[shift] = {}; } }
+  ensureWipState(shift);
   /* Buang penanda hapus yg LEBIH TUA drpd updatedAt server: server sudah memuat
      keadaan setelah penghapusan itu, jadi menandanya lagi hanya bisa menghapus
      data baru yg diisi device lain. */
   const lastIso = getLastTs(shift);
   const lastTs = lastIso ? (new Date(lastIso).getTime() || 0) : 0;
   if (lastTs > 0) {
+    /* Buang catatan "kotor" yg sudah pasti kalah oleh tulisan server yg lebih
+       baru (mis. sisa reload): stempel server > waktu ubah lokal + toleransi. */
+    Object.keys(_wipDirty[shift]).forEach(k => {
+      if ((Number(_wipDirty[shift][k]) || 0) + WIP_SKEW_MS <= lastTs) delete _wipDirty[shift][k];
+    });
     Object.keys(_wipDeleted[shift]).forEach(k => {
       if ((Number(_wipDeleted[shift][k]) || 0) < lastTs) delete _wipDeleted[shift][k];
     });
-    try {
-      if (Object.keys(_wipDeleted[shift]).length) localStorage.setItem('wip-core-del-' + shift, JSON.stringify(_wipDeleted[shift]));
-      else localStorage.removeItem('wip-core-del-' + shift);
-    } catch (e) {}
+    persistDirty(shift);
+    persistDeleted(shift);
   }
-  _wipPendingSave[shift] = true;
-  clearTimeout(_wipSaveTimer);
-  const snapshot = { shift, data: collectWipData() };
-  snapshot.baseUpdatedAt = getLastTs(shift) || ''; /* dasar optimistik: server menolak bila sudah berubah */
-  if (_wipDeleted[shift] && Object.keys(_wipDeleted[shift]).length) {
-    snapshot.data._deleted = Object.assign({}, _wipDeleted[shift]); /* sertakan penanda hapus */
-  }
-  _wipSaveTimer = setTimeout(() => syncWipSave(snapshot), 800);
+  if (!hasWipPending(shift)) { return; }
+  persistDirty(shift);
+  clearTimeout(_wipSaveTimers[shift]);
+  _wipSaveTimers[shift] = setTimeout(() => {
+    _wipSaveTimers[shift] = null;
+    syncWipSave(shift);
+  }, 800);
 }
 
-async function syncWipSave(snapshot) {
+async function syncWipSave(shiftArg) {
+  const shift = shiftArg || currentShift();
   if (isGuestMode()) return; /* tamu: tak pernah mengirim */
   if (!window.Sync || !Sync.hasUrl()) return;
+  if (_wipSaving[shift]) return; /* kiriman sebelumnya masih jalan: akan dijadwalkan ulang sesudahnya */
+  ensureWipState(shift);
+  if (!hasWipPending(shift)) return;
+
+  /* Snapshot diambil SAAT KIRIM (bukan saat dijadwalkan) supaya ketikan
+     terakhir selama jeda debounce ikut terkirim. */
+  const data = wipSnapshotFor(shift);
+  const dirtyAt = Object.assign({}, _wipDirty[shift] || {});
+  const deletedAt = Object.assign({}, _wipDeleted[shift] || {});
+  if (Object.keys(deletedAt).length) data._deleted = Object.assign({}, deletedAt);
+  const baseUpdatedAt = getLastTs(shift) || ''; /* dasar optimistik: server menolak bila sudah berubah */
+
+  _wipSaving[shift] = true;
+  let sent = false;
+  let conflict = false;
   try {
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Kirim timeout')), 25000));
-    const res = await Promise.race([Sync.save('wip', { shift: snapshot.shift, action: 'save', data: snapshot.data, baseUpdatedAt: snapshot.baseUpdatedAt || '' }), timeout]);
+    const res = await Promise.race([Sync.save('wip', { shift, action: 'save', data, baseUpdatedAt }), timeout]);
     if (res && res.conflict) {
       /* Server sudah lebih baru drpd dasar kiriman: JANGAN paksa timpa.
          Pertahankan data kotor lokal, tarik keadaan terbaru, gabung, lalu
          biarkan jadwal berikutnya mengirim hasil gabungan. */
-      _wipPendingSave[snapshot.shift] = false;
-      await wipSyncFromServer();
-      return;
+      conflict = true;
+    } else {
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
+      if (res.updatedAt) {
+        const prevIso = getLastTs(shift);
+        const prevMs = prevIso ? (new Date(prevIso).getTime() || 0) : 0;
+        const nextMs = new Date(res.updatedAt).getTime() || 0;
+        if (!prevMs || nextMs >= prevMs) setLastTs(shift, res.updatedAt); /* jangan mundurkan stempel */
+        setServerOffset(res.updatedAt); /* selaraskan jam device dgn server */
+      }
+      setSyncedAt(shift, serverNow()); /* titik konvergensi: server == yg baru dikirim */
+      /* Bersihkan HANYA kunci yg tak berubah sejak snapshot dikirim. Ketikan yg
+         masuk saat request berjalan tetap "kotor" dan dikirim lagi sesudahnya. */
+      if (_wipDirty[shift]) {
+        Object.keys(dirtyAt).forEach(k => {
+          if (_wipDirty[shift][k] === dirtyAt[k]) delete _wipDirty[shift][k];
+        });
+      }
+      if (_wipDeleted[shift]) {
+        Object.keys(deletedAt).forEach(k => {
+          if (_wipDeleted[shift][k] === deletedAt[k]) delete _wipDeleted[shift][k];
+        });
+      }
+      persistDirty(shift);
+      persistDeleted(shift);
+      sent = true;
     }
-    if (!res || !res.ok) throw new Error((res && res.error) || 'Server menolak');
-    if (res.updatedAt) {
-      setLastTs(snapshot.shift, res.updatedAt);
-      setServerOffset(res.updatedAt); /* selaraskan jam device dgn server */
-    }
-    setSyncedAt(snapshot.shift, serverNow()); /* titik konvergensi: server == yg baru dikirim */
-    if (snapshot.data && snapshot.data._deleted) {
-      Object.keys(snapshot.data._deleted).forEach(k => { if (_wipDeleted[snapshot.shift]) delete _wipDeleted[snapshot.shift][k]; });
-    }
-    try {
-      const dm = _wipDeleted[snapshot.shift];
-      if (dm && Object.keys(dm).length) localStorage.setItem('wip-core-del-' + snapshot.shift, JSON.stringify(dm));
-      else localStorage.removeItem('wip-core-del-' + snapshot.shift);
-    } catch (e) {}
-    _wipDirty[snapshot.shift] = {};
-    _wipPendingSave[snapshot.shift] = false;
   } catch (e) {
-    _wipPendingSave[snapshot.shift] = false; /* gagal/timeout: buka kunci agar poll penarik tetap jalan, data kotor tetap dilindungi */
+    /* gagal/timeout: data kotor tetap tersimpan di localStorage; poll berikutnya
+       (10 detik) akan mencoba lagi tanpa mengunci sinkronisasi. */
+  } finally {
+    _wipSaving[shift] = false;
   }
+  if (conflict) {
+    /* Tarik keadaan terbaru SETELAH kunci kirim dilepas (wipSyncFromServer
+       menolak berjalan saat masih ada kiriman aktif). */
+    if (shift === currentShift()) await wipSyncFromServer();
+    return;
+  }
+  /* Masih ada ketikan yg masuk selama kiriman? Kirim susulan. */
+  if (sent && hasWipPending(shift)) scheduleWipSave(shift);
 }
 
 function noteValueForCell(data, slot, idx) {
@@ -1249,6 +1327,8 @@ function mergeWipData(shift, server) {
       _wipDirty[shift][k] = Math.max(dirty[k] || 0, localTs); /* pastikan ikut terdorong ke server */
       return;
     }
+    /* Server menang utk kunci ini: catatan kotor lama tak boleh dipakai lagi. */
+    if (!guest && _wipDirty[shift]) delete _wipDirty[shift][k];
     merged[k] = sv;
   });
   /* Terapkan penanda HAPUS dari device lain: hapus nilai lokal hanya bila penghapusan
@@ -1258,7 +1338,11 @@ function mergeWipData(shift, server) {
     const lv = local[k];
     if (lv === undefined || lv === '') return;
     const localTime = Math.max(dirty[k] || 0, 0);
-    if (dts > localTime) { merged[k] = ''; _wipCleared[shift][k] = true; }
+    if (dts > localTime) {
+      merged[k] = '';
+      _wipCleared[shift][k] = true;
+      if (_wipDirty[shift]) delete _wipDirty[shift][k];
+    }
   });
   return merged;
 }
@@ -1267,15 +1351,15 @@ async function wipSyncFromServer() {
   if (!window.Sync || !Sync.hasUrl()) return;
   const guest = isGuestMode();
   const shift = currentShift();
-  if (_wipPendingSave[shift]) return;
-  if (!_wipDeleted[shift]) { try { _wipDeleted[shift] = JSON.parse(localStorage.getItem('wip-core-del-' + shift) || '{}') || {}; } catch (e) { _wipDeleted[shift] = {}; } }
+  if (wipBusy(shift)) return; /* ada kiriman terjadwal/berjalan: jangan tarik dulu */
+  ensureWipState(shift);
   try {
     const res = await Sync.get('wip', { shift, action: 'get' });
     if (currentShift() !== shift) return; /* pindah shift saat fetch: buang respons agar pagi/malam tak tercampur */
     if (res && res.ok) _wipSyncedOnce[shift] = true; /* keadaan server diketahui: push diizinkan */
     const data = (res && res.ok && res.data) ? res.data : null;
-    const needPush = () => Object.keys(_wipDirty[shift] || {}).length || Object.keys(_wipDeleted[shift] || {}).length;
-    if (!data || !data.updatedAt) { if (needPush()) scheduleWipSave(); return; }
+    const needPush = () => hasWipPending(shift);
+    if (!data || !data.updatedAt) { if (needPush()) scheduleWipSave(shift); return; }
     /* Acuan jam server: pakai `now` dari respons GET (bukan updatedAt dokumen
        yg bisa sudah lama). Backend lama tanpa `now` dibiarkan apa adanya. */
     if (res && res.now) setServerOffset(res.now);
@@ -1286,27 +1370,25 @@ async function wipSyncFromServer() {
       Object.keys(_wipDeleted[shift]).forEach(k => {
         if ((Number(_wipDeleted[shift][k]) || 0) < serverTsMs) delete _wipDeleted[shift][k];
       });
-      try {
-        if (Object.keys(_wipDeleted[shift]).length) localStorage.setItem('wip-core-del-' + shift, JSON.stringify(_wipDeleted[shift]));
-        else localStorage.removeItem('wip-core-del-' + shift);
-      } catch (e) {}
+      persistDeleted(shift);
     }
     if (!guest && data.updatedAt === getLastTs(shift)) {
       /* Server TAK BERUBAH sejak terakhir terlihat: bukti pasti tak ada yg baru
          di mana pun -> diam total (jangan gabung, jangan dorong basi).
-         KECUALI simpanan lokal lebih baru drpd sinkron terakhir -> dorong susulan.
+         KECUALI ada perubahan lokal yg belum terkirim -> dorong susulan.
          Tamu dikecualikan: selalu terapkan snapshot server agar tampilannya
          dipastikan sama dengan device admin, termasuk saat stempel tak berubah. */
       let localTs = 0;
       try { localTs = Number(localStorage.getItem('wip-core-ts2-' + shift)) || 0; } catch (e) {}
-      if (localTs > getSyncedAt(shift)) scheduleWipSave();
+      if (needPush() || localTs > getSyncedAt(shift)) scheduleWipSave(shift);
       return;
     }
     setLastTs(shift, data.updatedAt);
     const values = mergeWipData(shift, data);
     localStorage.setItem(getStorageKey(), JSON.stringify(values));
+    persistDirty(shift); /* simpan hasil pembersihan catatan kotor */
     applyWipData(values);
-    if (needPush()) scheduleWipSave();
+    if (needPush()) scheduleWipSave(shift);
   } catch (e) {}
 }
 
