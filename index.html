@@ -382,6 +382,63 @@ html.dark ::-webkit-scrollbar-thumb {
         }
         #newsTicker .nt-label .material-symbols-outlined { font-size: 17px; }
         #newsTicker .nt-viewport { flex: 1; position: relative; overflow: hidden; }
+        /* Mode marquee: berita berjalan kanan → kiri, loop mulus.
+           Animasi hanya memakai transform (compositor), bukan JS per frame. */
+        #newsTicker .nt-viewport.is-marquee .nt-track {
+            justify-content: flex-start;
+            width: max-content;
+            min-width: max-content;
+            gap: 0;
+            will-change: transform;
+            animation: nt-marquee var(--nt-dur, 30s) linear infinite;
+        }
+        #newsTicker .nt-viewport.is-marquee .nt-track:hover { animation-play-state: paused; }
+        #newsTicker .nt-viewport.is-marquee.is-paused .nt-track { animation-play-state: paused; }
+        @keyframes nt-marquee {
+            from { transform: translate3d(0, 0, 0); }
+            to { transform: translate3d(-50%, 0, 0); }
+        }
+        #newsTicker .nt-run-group {
+            display: inline-flex;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+        #newsTicker .nt-viewport.is-marquee .nt-item {
+            position: static;
+            height: auto;
+            transform: none;
+            opacity: 1;
+            padding: 0;
+            white-space: nowrap;
+            flex: 0 0 auto;
+        }
+        #newsTicker .nt-viewport.is-marquee .nt-run-group > .nt-item:first-child {
+            margin-left: 24px;
+        }
+        #newsTicker .nt-viewport.is-marquee .nt-text {
+            display: block;
+            -webkit-line-clamp: unset;
+            -webkit-box-orient: initial;
+            max-height: none;
+            white-space: nowrap;
+            overflow: visible;
+        }
+        #newsTicker .nt-viewport.is-marquee .nt-item.stock-group { gap: 16px; }
+        #newsTicker .nt-sep {
+            flex: 0 0 auto;
+            margin: 0 26px;
+            color: var(--outline);
+            font-size: 12px;
+            line-height: 1;
+        }
+        #newsTicker .nt-empty {
+            display: inline-flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 26px;
+            color: var(--secondary);
+            font-size: 13px;
+        }
         #newsTicker .nt-track {
             display: flex;
             align-items: center;
@@ -1076,6 +1133,24 @@ html.dark ::-webkit-scrollbar-thumb {
             var storySig = null;
             var STORY_MS = 8000; // durasi tiap berita tampil sebelum swipe ke berita berikutnya
 
+            /* ── Mode ticker ──────────────────────────────────────────────
+               'marquee' : berita berjalan kanan → kiri (animasi CSS, ringan).
+               'rotate'  : mekanik lama — satu berita di tengah, berganti
+                           tiap 8 detik dengan animasi vertikal.
+
+               PENTING: kalau PC display sering mati/hang setelah marquee
+               aktif, cukup ubah nilai di bawah menjadi 'rotate' untuk
+               kembali persis ke mekanik news seperti sebelumnya, tanpa
+               perlu revert commit. */
+            var TICKER_MODE = 'marquee';
+            var MARQUEE_SPEED = 70;      // piksel per detik
+            var MARQUEE_MAX_CHARS = 260; // batas panjang teks per berita
+            try {
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    TICKER_MODE = 'rotate';
+                }
+            } catch (e) {}
+
             function esc(s) {
                 return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
                     return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
@@ -1453,7 +1528,13 @@ html.dark ::-webkit-scrollbar-thumb {
                 ];
             }
 
-            function itemHtml(n) {
+            function clampText(s, max) {
+                var t = String(s == null ? '' : s);
+                if (!max || t.length <= max) return t;
+                return t.slice(0, max - 1).replace(/\s+$/, '') + '…';
+            }
+
+            function itemHtml(n, maxChars) {
                 var kind = n.kind || '';
                 var titleText = n.title || newsText(n);
                 var title = titleText ? ' title="' + esc(titleText) + '"' : '';
@@ -1481,7 +1562,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 else if (kind === 'warn') tag = '<span class="nt-tag warn">WARNING</span>';
                 return '<span class="nt-item ' + kind + '"' + title + '>' + tag +
                     '<span class="nt-dot"></span>' +
-                    '<span class="nt-text">' + esc(newsText(n)) + '</span>' +
+                    '<span class="nt-text">' + esc(clampText(newsText(n), maxChars)) + '</span>' +
                 '</span>';
             }
 
@@ -1531,6 +1612,42 @@ html.dark ::-webkit-scrollbar-thumb {
                 }, STORY_MS);
             }
 
+            /* ── Marquee: semua berita aktif berjalan kanan → kiri ── */
+            function tickerViewport() {
+                return track.parentNode || preview.querySelector('.nt-viewport');
+            }
+
+            function applyMarqueeDuration() {
+                if (TICKER_MODE !== 'marquee') return;
+                var vp = tickerViewport();
+                if (!vp || !vp.classList.contains('is-marquee')) return;
+                var group = track.querySelector('.nt-run-group');
+                if (!group) return;
+                var w = group.getBoundingClientRect().width;
+                if (!w) return;
+                var dur = Math.max(8, w / MARQUEE_SPEED);
+                track.style.setProperty('--nt-dur', dur.toFixed(2) + 's');
+            }
+
+            function paintMarquee() {
+                clearStoryTimer();
+                clearStoryAnim();
+                var vp = tickerViewport();
+                if (vp) vp.classList.add('is-marquee');
+                if (!storyItems.length) {
+                    track.innerHTML = '<span class="nt-empty">Belum ada berita.</span>';
+                    return;
+                }
+                var group = storyItems.map(function (n) {
+                    return itemHtml(n, MARQUEE_MAX_CHARS) +
+                        '<span class="nt-sep" aria-hidden="true">•</span>';
+                }).join('');
+                track.innerHTML =
+                    '<span class="nt-run-group">' + group + '</span>' +
+                    '<span class="nt-run-group" aria-hidden="true">' + group + '</span>';
+                applyMarqueeDuration();
+            }
+
             function storyKey(n) {
                 var kind = n.kind || '';
                 if (kind === 'stock-group') {
@@ -1557,6 +1674,11 @@ html.dark ::-webkit-scrollbar-thumb {
                 var hadItems = storyItems.length > 0;
                 storySig = sig;
                 storyItems = all;
+
+                if (TICKER_MODE === 'marquee') {
+                    paintMarquee();
+                    return;
+                }
 
                 if (!storyItems.length) {
                     clearStoryTimer();
@@ -1635,13 +1757,25 @@ html.dark ::-webkit-scrollbar-thumb {
             var resizeTimer;
             window.addEventListener('resize', function () {
                 clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(render, 180);
+                resizeTimer = setTimeout(function () {
+                    render();
+                    applyMarqueeDuration();
+                }, 180);
             });
 
             document.addEventListener('visibilitychange', function () {
+                if (TICKER_MODE === 'marquee') {
+                    var vp = tickerViewport();
+                    if (vp) vp.classList.toggle('is-paused', document.hidden);
+                    return;
+                }
                 if (document.hidden) clearStoryTimer();
                 else startStory();
             });
+
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(applyMarqueeDuration).catch(function () {});
+            }
 
             load();
             loadAlerts();
