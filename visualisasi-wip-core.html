@@ -1748,6 +1748,10 @@ const READINESS_READY_END = '#C65C10';
 const READINESS_ADVANCE_START = '#2e7d32';
 const READINESS_ADVANCE_MID = '#4caf50';
 const READINESS_ADVANCE_END = '#66ff99';
+/* Gradien sudah mencapai kekuatan penuh (persis seperti legend) saat selisih
+   menyentuh 75% dari batas. Tujuannya agar perbedaan kecil tetap terlihat
+   jelas, tanpa harus menunggu selisih maksimal. */
+const READINESS_GRADIENT_FULL_AT = 0.75;
 
 function mixHex(a, b, t) {
   const pa = a.replace('#', '');
@@ -1766,7 +1770,8 @@ function mixHex(a, b, t) {
 
 function barColor(ratio, act, actCC, actFR) {
   if (actCC === 0 || actFR === 0) return '#8b0000';
-  const t = Math.min(1, Math.abs(ratio));
+  /* Selisih 75% dari batas sudah cukup untuk gradien penuh seperti legend. */
+  const t = Math.min(1, Math.abs(ratio) / READINESS_GRADIENT_FULL_AT);
   if (ratio > 0) {
     /* Advance: makin besar selisih, makin kuat gradien hijau. */
     return `linear-gradient(to right,${READINESS_ADVANCE_START},${mixHex(READINESS_ADVANCE_START, READINESS_ADVANCE_MID, t)},${mixHex(READINESS_ADVANCE_START, READINESS_ADVANCE_END, t)})`;
