@@ -118,32 +118,48 @@ body {
     color: #9ca3af;
     white-space: nowrap;
 }
-.att-pct {
+.att-ring-wrap {
+    position: relative;
+    width: 132px;
+    height: 132px;
+    margin: 2px auto 0;
+    flex: 0 0 auto;
+}
+.att-ring {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transform: rotate(-90deg);
+}
+.att-ring circle {
+    fill: none;
+    stroke-width: 10;
+}
+.att-ring .att-ring-bg { stroke: #e5e7eb; }
+.att-ring .att-ring-fg {
+    stroke: #16a34a;
+    stroke-linecap: round;
+    stroke-dasharray: 314.16;
+    stroke-dashoffset: 314.16;
+    transition: stroke-dashoffset .45s ease, stroke .25s ease;
+}
+.att-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: 'Hanken Grotesk', sans-serif;
-    font-size: 42px;
+    font-size: 34px;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -.03em;
     color: #15803d;
 }
-.att-pct small {
-    font-size: 19px;
+.att-ring-label small {
+    font-size: 15px;
     font-weight: 800;
     margin-left: 1px;
-}
-.att-bar {
-    height: 8px;
-    border-radius: 999px;
-    background: #e5e7eb;
-    overflow: hidden;
-}
-.att-bar > span {
-    display: block;
-    height: 100%;
-    width: 0;
-    border-radius: 999px;
-    background: #16a34a;
-    transition: width .35s ease;
 }
 .att-sub {
     font-size: 11.5px;
@@ -156,10 +172,10 @@ body {
     line-height: 1.4;
     color: #9ca3af;
 }
-.attendance.warn .att-pct { color: #b45309; }
-.attendance.warn .att-bar > span { background: #f59e0b; }
-.attendance.low .att-pct { color: #b91c1c; }
-.attendance.low .att-bar > span { background: #dc2626; }
+.attendance.warn .att-ring-fg { stroke: #f59e0b; }
+.attendance.warn .att-ring-label { color: #b45309; }
+.attendance.low .att-ring-fg { stroke: #dc2626; }
+.attendance.low .att-ring-label { color: #b91c1c; }
 .att-absent {
     flex: 1 1 auto;
     min-height: 0;
@@ -232,10 +248,10 @@ body.dark-mode .att-title,
 body.dark-mode .att-sub,
 body.dark-mode .att-count { color: #94a3b8; }
 body.dark-mode .att-note { color: #7c8aa0; }
-body.dark-mode .att-pct { color: #4ade80; }
-body.dark-mode .attendance.warn .att-pct { color: #fbbf24; }
-body.dark-mode .attendance.low .att-pct { color: #f87171; }
-body.dark-mode .att-bar { background: #2d2d44; }
+body.dark-mode .att-ring .att-ring-bg { stroke: #2d2d44; }
+body.dark-mode .att-ring-label { color: #4ade80; }
+body.dark-mode .attendance.warn .att-ring-label { color: #fbbf24; }
+body.dark-mode .attendance.low .att-ring-label { color: #f87171; }
 body.dark-mode .att-absent { border-color: #2d2d44; }
 body.dark-mode .att-name { color: #e8e8f0; }
 body.dark-mode .att-select {
@@ -1013,8 +1029,13 @@ body.dark-mode .ms-foot { color: #f87171; }
                 <span class="att-title">Kehadiran</span>
                 <span class="att-count" id="attCount">0 tidak hadir</span>
             </div>
-            <div class="att-pct" id="attPct">0<small>%</small></div>
-            <div class="att-bar"><span id="attBar"></span></div>
+            <div class="att-ring-wrap">
+                <svg class="att-ring" viewBox="0 0 120 120" role="img" aria-label="Persentase kehadiran">
+                    <circle class="att-ring-bg" cx="60" cy="60" r="50"></circle>
+                    <circle class="att-ring-fg" id="attRing" cx="60" cy="60" r="50"></circle>
+                </svg>
+                <div class="att-ring-label" id="attPct">0<small>%</small></div>
+            </div>
             <div class="att-sub" id="attSub">Menghitung…</div>
             <div class="att-note" id="attNote" hidden></div>
             <div class="att-absent">
@@ -1554,13 +1575,16 @@ function renderAttendance() {
     panel.classList.toggle('low', percent < 75);
 
     const pctEl = document.getElementById('attPct');
-    const barEl = document.getElementById('attBar');
+    const ringEl = document.getElementById('attRing');
     const subEl = document.getElementById('attSub');
     const countEl = document.getElementById('attCount');
     const listEl = document.getElementById('attList');
 
     pctEl.innerHTML = percent + '<small>%</small>';
-    barEl.style.width = percent + '%';
+    if (ringEl) {
+        const RING_LEN = 2 * Math.PI * 50;
+        ringEl.style.strokeDashoffset = (RING_LEN * (1 - percent / 100)).toFixed(2);
+    }
     subEl.textContent = present + ' dari ' + total + ' member aktif hadir';
     countEl.textContent = absent.length + ' tidak hadir';
 
