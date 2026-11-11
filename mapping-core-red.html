@@ -101,14 +101,16 @@ body {
 }
 .att-head {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: center;
+    gap: 3px;
+    text-align: center;
 }
 .att-title {
-    font-size: 10.5px;
+    font-size: 14px;
     font-weight: 800;
-    letter-spacing: .1em;
+    letter-spacing: .14em;
     text-transform: uppercase;
     color: #6b7280;
 }
@@ -165,12 +167,14 @@ body {
     font-size: 11.5px;
     font-weight: 600;
     color: #6b7280;
+    text-align: center;
 }
 .att-note {
     font-size: 10.5px;
     font-weight: 600;
     line-height: 1.4;
     color: #9ca3af;
+    text-align: center;
 }
 .attendance.warn .att-ring-fg { stroke: #f59e0b; }
 .attendance.warn .att-ring-label { color: #b45309; }
@@ -187,10 +191,11 @@ body {
     gap: 8px;
 }
 .att-label {
-    font-size: 10px;
+    font-size: 11.5px;
     font-weight: 800;
-    letter-spacing: .08em;
+    letter-spacing: .12em;
     text-transform: uppercase;
+    text-align: center;
     color: #9ca3af;
 }
 .att-list {
@@ -235,6 +240,7 @@ body {
 .att-empty {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     font-size: 12px;
     font-weight: 600;
@@ -343,6 +349,12 @@ body.dark-mode .dropdown .dd-item:hover {
 }
 body.dark-mode .dropdown .dd-item span {
     color: #e8e8f0;
+}
+body.dark-mode .dropdown .dd-item.inactive span {
+    color: #94a3b8;
+}
+body.dark-mode .dropdown .dd-sep {
+    background: #2d2d44;
 }
 .marker {
     position: absolute;
@@ -722,6 +734,14 @@ body.dark-mode .confirm-box .confirm-actions .btn-batal {
     font-weight: 600;
     color: #333;
     text-transform: capitalize;
+}
+.dropdown .dd-sep {
+    height: 1px;
+    margin: 6px 10px;
+    background: #e5e7eb;
+}
+.dropdown .dd-item.inactive span {
+    color: #9ca3af;
 }
 .legendbar {
     display: flex;
@@ -1709,12 +1729,17 @@ const dropdown = document.getElementById('dropdown');
 function openDropdown(x, y, posId) {
     activePosId = posId;
     let html = '<div class="dd-title">Pilih Foto Member</div>';
-    html += activeMembers.map(m => `
-        <div class="dd-item" data-member="${m.id}">
+    const ddItem = (m, extraClass) => `
+        <div class="dd-item${extraClass ? ' ' + extraClass : ''}" data-member="${m.id}">
             <img src="${m.src}" alt="${m.name}">
             <span>${m.name}</span>
-        </div>
-    `).join('');
+        </div>`;
+    html += activeMembers.map(m => ddItem(m)).join('');
+    const inactiveMembers = members.filter(m => INACTIVE_MEMBERS[m.id]);
+    if (inactiveMembers.length) {
+        html += '<div class="dd-sep"></div>';
+        html += inactiveMembers.map(m => ddItem(m, 'inactive')).join('');
+    }
     dropdown.innerHTML = html;
     dropdown.classList.add('on');
     dropdown.style.visibility = 'hidden';
