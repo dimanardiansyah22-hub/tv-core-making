@@ -1205,6 +1205,21 @@ async function syncWipSave(shiftArg) {
   if (sent && hasWipPending(shift)) scheduleWipSave(shift);
 }
 
+/* Kirim SEGERA perubahan yg tertunda — dipakai saat operator selesai mengisi
+   lalu menekan Enter / pindah sel / keluar dari sel, tanpa menunggu debounce.
+   Tidak melakukan apa-apa bila tak ada perubahan yg belum terkirim. */
+function flushWipSave(shiftArg) {
+  if (isGuestMode()) return;
+  if (!window.Sync || !Sync.hasUrl()) return;
+  const shift = shiftArg || currentShift();
+  if (!_wipSyncedOnce[shift]) return; /* keadaan server belum diketahui: tunggu GET */
+  ensureWipState(shift);
+  if (!hasWipPending(shift)) return;
+  clearTimeout(_wipSaveTimers[shift]);
+  _wipSaveTimers[shift] = null;
+  syncWipSave(shift);
+}
+
 function noteValueForCell(data, slot, idx) {
   let str = data[`note_${slot}_${idx}`];
   if (!str && String(idx) === '2') str = data[`note_${slot}_3`];
@@ -1690,6 +1705,8 @@ function bindInputEvents() {
       saveAllData();
       updateEfficiency();
     });
+    /* Keluar dari sel (klik sel lain / klik di luar): pastikan angka terkirim. */
+    el.addEventListener('change', () => flushWipSave());
   });
   bindCellNav();
 }
@@ -1721,6 +1738,8 @@ function bindPanelInputs() {
         saveAllData();
         updateEfficiency();
       });
+      /* Keluar dari kolom: pastikan angka Planning/CT terkirim segera. */
+      el.addEventListener('change', () => flushWipSave());
     }
   });
 }
@@ -1739,6 +1758,8 @@ function bindPanelNav() {
     el.__navBound = true;
     el.addEventListener('keydown', e => {
       const k = e.key;
+      /* Enter / pindah kolom-baris: kirim angka yg baru diisi segera. */
+      if (k === 'Enter' || k === 'Tab' || k.indexOf('Arrow') === 0) flushWipSave();
       const cur = index(el);
       let next = -1;
 
@@ -1801,10 +1822,13 @@ function bindCellNav() {
     table.addEventListener('keydown', (e) => {
       const el = e.target;
       if (!el.classList || !el.classList.contains('cell-input')) return;
+      const k = e.key;
+      /* Selesai mengisi (Enter) atau pindah sel: kirim segera, jangan tunggu
+         jeda debounce. Bila tak ada angka baru, flush tidak mengirim apa pun. */
+      if (k === 'Enter' || k === 'Tab' || k.indexOf('Arrow') === 0) flushWipSave();
       const grid = build();
       const cur = el._grid;
       if (!cur) return;
-      const k = e.key;
       let nS = cur.sidx, nR = cur.row, nC = cur.col;
       if (k === 'ArrowRight') { nC = Math.min(5, nC + 1); }
       else if (k === 'ArrowLeft') { nC = Math.max(0, nC - 1); }
@@ -2858,7 +2882,11 @@ wipSyncFromServer();
 wipSyncModeFromServer();
 if (window.Sync) { setInterval(wipSyncFromServer, Sync.pollMs); setInterval(wipSyncModeFromServer, Sync.pollMs); }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') return;
+  if (document.visibilityState !== 'visible') {
+    /* Pindah tab / minimize / kunci layar: kirim dulu yg masih tertunda. */
+    flushWipSave();
+    return;
+  }
   wipSyncFromServer();
   wipSyncModeFromServer();
 });
