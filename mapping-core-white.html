@@ -1407,18 +1407,25 @@ function moodAt(st) {
 async function loadMood() {
     if (!sbMood) return;
     try {
-        const names = members.map(m => moodKey(dataName(m.name)));
-        if (!names.length) return;
+        const wanted = {};
+        members.forEach(m => { wanted[moodKey(dataName(m.name))] = true; });
+        if (!Object.keys(wanted).length) return;
+        /* Nama di log_mood bisa tersimpan dengan huruf besar/kecil campuran
+           (mis. "Siti Nurlianah"), jadi pencocokan dilakukan case-insensitive
+           di sisi client, bukan lewat filter .in() yang case-sensitive. */
+        const since = new Date(Date.now() - 2 * 24 * 3600 * 1000);
+        const sinceDate = since.toISOString().slice(0, 10);
         const { data, error } = await sbMood.from('log_mood')
             .select('nama,mood,tanggal,jam,created_at')
-            .in('nama', names)
+            .gte('tanggal', sinceDate)
             .order('created_at', { ascending: false })
             .order('id', { ascending: false });
         if (error) return;
         const m = {};
         (data || []).forEach(r => {
             const k = moodKey(r.nama);
-            if (k && MOOD_EMOJI[r.mood] && !(k in m)) m[k] = { mood: r.mood, tanggal: r.tanggal, jam: r.jam, created_at: r.created_at };
+            if (!k || !wanted[k] || !MOOD_EMOJI[r.mood] || (k in m)) return;
+            m[k] = { mood: r.mood, tanggal: r.tanggal, jam: r.jam, created_at: r.created_at };
         });
         moodByName = m;
         refreshMoodBadges();
