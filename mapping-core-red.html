@@ -1091,25 +1091,25 @@ const IMG_W = 6000;
 const IMG_H = 3375;
 
 const members = [
-    { id: 'andi', name: 'Andi', src: 'Foto Member/Foto Member Red/andi.png' },
-    { id: 'darno', name: 'Darno', src: 'Foto Member/Foto Member Red/darno.png' },
-    { id: 'diman', name: 'Diman', src: 'Foto Member/Foto Member Red/diman.png' },
-    { id: 'elin', name: 'Elin', src: 'Foto Member/Foto Member Red/elin.png' },
-    { id: 'erwin', name: 'Erwin', src: 'Foto Member/Foto Member Red/erwin.png' },
-    { id: 'fadil', name: 'Fadil', src: 'Foto Member/Foto Member Red/fadil.png' },
-    { id: 'farrel', name: 'Farrel', src: 'Foto Member/Foto Member Red/farrel.png' },
-    { id: 'fatta', name: 'Fatta', src: 'Foto Member/Foto Member Red/fatta.png' },
-    { id: 'fauzi', name: 'Fauzi', src: 'Foto Member/Foto Member Red/fauzi.png' },
-    { id: 'hari', name: 'Hari', src: 'Foto Member/Foto Member Red/hari.png' },
-    { id: 'irfan', name: 'Irfan', src: 'Foto Member/Foto Member Red/irfan.png' },
-    { id: 'jaelani', name: 'Jaelani', src: 'Foto Member/Foto Member Red/jaelani.png' },
-    { id: 'jalal', name: 'Jalal', src: 'Foto Member/Foto Member Red/jalal.png' },
-    { id: 'laila', name: 'Laila', src: 'Foto Member/Foto Member Red/laila.png' },
-    { id: 'nofrizal', name: 'Nofrizal', src: 'Foto Member/Foto Member Red/nofrizal.png' },
-    { id: 'rifan', name: 'Rifan', src: 'Foto Member/Foto Member Red/rifan.png' },
-    { id: 'rizal', name: 'Rizal', src: 'Foto Member/Foto Member Red/rizal.png' },
-    { id: 'rohmanto', name: 'Rohmanto', src: 'Foto Member/Foto Member Red/rohmanto.png' },
-    { id: 'vakhry', name: 'Vakhry', src: 'Foto Member/Foto Member Red/vakhry.png' },
+    { id: 'andi', name: 'Andi', src: 'Foto Member/Foto Member Red/andi.webp' },
+    { id: 'darno', name: 'Darno', src: 'Foto Member/Foto Member Red/darno.webp' },
+    { id: 'diman', name: 'Diman', src: 'Foto Member/Foto Member Red/diman.webp' },
+    { id: 'elin', name: 'Elin', src: 'Foto Member/Foto Member Red/elin.webp' },
+    { id: 'erwin', name: 'Erwin', src: 'Foto Member/Foto Member Red/erwin.webp' },
+    { id: 'fadil', name: 'Fadil', src: 'Foto Member/Foto Member Red/fadil.webp' },
+    { id: 'farrel', name: 'Farrel', src: 'Foto Member/Foto Member Red/farrel.webp' },
+    { id: 'fatta', name: 'Fatta', src: 'Foto Member/Foto Member Red/fatta.webp' },
+    { id: 'fauzi', name: 'Fauzi', src: 'Foto Member/Foto Member Red/fauzi.webp' },
+    { id: 'hari', name: 'Hari', src: 'Foto Member/Foto Member Red/hari.webp' },
+    { id: 'irfan', name: 'Irfan', src: 'Foto Member/Foto Member Red/irfan.webp' },
+    { id: 'jaelani', name: 'Jaelani', src: 'Foto Member/Foto Member Red/jaelani.webp' },
+    { id: 'jalal', name: 'Jalal', src: 'Foto Member/Foto Member Red/jalal.webp' },
+    { id: 'laila', name: 'Laila', src: 'Foto Member/Foto Member Red/laila.webp' },
+    { id: 'nofrizal', name: 'Nofrizal', src: 'Foto Member/Foto Member Red/nofrizal.webp' },
+    { id: 'rifan', name: 'Rifan', src: 'Foto Member/Foto Member Red/rifan.webp' },
+    { id: 'rizal', name: 'Rizal', src: 'Foto Member/Foto Member Red/rizal.webp' },
+    { id: 'rohmanto', name: 'Rohmanto', src: 'Foto Member/Foto Member Red/rohmanto.webp' },
+    { id: 'vakhry', name: 'Vakhry', src: 'Foto Member/Foto Member Red/vakhry.webp' },
 ];
 
 const DEFAULT_POSITIONS = [
@@ -1304,6 +1304,14 @@ const NAME_MAP = {
     'Vakhry': 'M. VAKHRI NUROHMAN',
     'Irfan': 'IRFAN PRASETYO'
 };
+
+/* ── Foto sudah dikompres ke WebP (400x568, q88) ──
+   Layout yang tersimpan sebelum kompresi masih memakai path .png/.jpg,
+   jadi path lama otomatis diarahkan ke file .webp agar tidak hilang. */
+function photoSrc(src) {
+    if (!src || src.indexOf('Foto Member/') !== 0) return src;
+    return src.replace(/\.(png|jpe?g)$/i, '.webp');
+}
 
 /* ── Tabel Capability per posisi ──
    id posisi: { capable: [member yang CAPABLE], not: [member yang TIDAK capable] }
@@ -1661,7 +1669,7 @@ function render() {
         img.className = 'photo';
         img.draggable = false;
         if (state[p.id]) {
-            img.src = state[p.id].src;
+            img.src = photoSrc(state[p.id].src);
             img.style.width = state[p.id].w + 'px';
             img.style.height = state[p.id].h + 'px';
             img.classList.add('on');
