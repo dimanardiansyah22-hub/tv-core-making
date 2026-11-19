@@ -589,6 +589,15 @@ html.dark ::-webkit-scrollbar-thumb {
     <div id="tvcLoginErr" style="display:none;margin-top:10px;text-align:center;font-size:13px;color:var(--error)">PIN salah. Coba lagi.</div>
     <button id="tvcLoginBtn" style="width:100%;margin-top:16px;padding:13px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">Masuk Sebagai Admin</button>
     <button id="tvcGuestBtn" style="width:100%;margin-top:10px;padding:12px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;">Login as Guest</button>
+    <div id="tvcGuestBox" style="display:none;margin-top:10px;">
+      <input id="tvcGuestPin" type="password" maxlength="64" autocomplete="off" placeholder="Password guest"
+        style="width:100%;box-sizing:border-box;background:var(--background);border:1px solid var(--outline-variant);color:var(--on-background);font-family:inherit;text-align:center;font-size:15px;padding:11px 10px;border-radius:10px;outline:none;">
+      <div id="tvcGuestErr" style="display:none;margin-top:8px;text-align:center;font-size:12.5px;color:var(--error)">Password guest salah. Coba lagi.</div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="tvcGuestSubmit" type="button" style="flex:1;padding:11px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;">Masuk Guest</button>
+        <button id="tvcGuestCancel" type="button" style="flex:0 0 auto;padding:11px 14px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:12.5px;cursor:pointer;">Batal</button>
+      </div>
+    </div>
   </div>
 </div>
 <script>
@@ -1030,6 +1039,7 @@ html.dark ::-webkit-scrollbar-thumb {
     <script>
         (function () {
             var PIN = '4231';              // <<< GANTI PIN ADMIN DI SINI sebelum dipakai publik
+            var GUEST_PASSWORD = 'CoreGuest#2026'; // <<< GANTI PASSWORD MODE GUEST DI SINI
             var SESSION_DAYS = 7;          // lama sesi login (hari) tanpa PIN ulang
             var KEY = 'tvcm-pin-auth';
             var veil = document.getElementById('tvcLoginVeil');
@@ -1055,10 +1065,40 @@ html.dark ::-webkit-scrollbar-thumb {
             updateGuestBadge();
             function show() {
                 veil.style.display = 'flex';
+                hideGuestBox();
+                var err = document.getElementById('tvcLoginErr');
+                if (err) err.style.display = 'none';
                 var inp = document.getElementById('tvcLoginPin');
                 if (inp) setTimeout(function () { inp.focus(); }, 50);
             }
             function hide() { veil.style.display = 'none'; }
+            function showGuestBox() {
+                var box = document.getElementById('tvcGuestBox');
+                var inp = document.getElementById('tvcGuestPin');
+                var err = document.getElementById('tvcGuestErr');
+                if (err) err.style.display = 'none';
+                if (box) box.style.display = 'block';
+                if (inp) { inp.value = ''; setTimeout(function () { inp.focus(); }, 50); }
+            }
+            function hideGuestBox() {
+                var box = document.getElementById('tvcGuestBox');
+                var inp = document.getElementById('tvcGuestPin');
+                if (box) box.style.display = 'none';
+                if (inp) inp.value = '';
+            }
+            function tryGuestLogin() {
+                var inp = document.getElementById('tvcGuestPin');
+                var err = document.getElementById('tvcGuestErr');
+                if (!inp) return;
+                if (inp.value === GUEST_PASSWORD) {
+                    hideGuestBox();
+                    grant('guest');
+                } else {
+                    if (err) err.style.display = 'block';
+                    inp.value = '';
+                    inp.focus();
+                }
+            }
             function grant(role) {
                 try {
                     localStorage.setItem(KEY, JSON.stringify({ t: (role === 'admin' ? token() : 'guest-' + Date.now()), exp: Date.now() + SESSION_DAYS * 24 * 3600000, role: role }));
@@ -1067,6 +1107,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 if (err) err.style.display = 'none';
                 var inp = document.getElementById('tvcLoginPin');
                 if (inp) inp.value = '';
+                hideGuestBox();
                 hide();
                 updateGuestBadge();
                 reloadActiveInternal();
@@ -1104,10 +1145,14 @@ html.dark ::-webkit-scrollbar-thumb {
                 }
             }
             document.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && veil.style.display === 'flex' && document.getElementById('tvcLoginPin') === document.activeElement) tryLogin();
+                if (e.key !== 'Enter' || veil.style.display !== 'flex') return;
+                if (document.activeElement === document.getElementById('tvcLoginPin')) tryLogin();
+                else if (document.activeElement === document.getElementById('tvcGuestPin')) tryGuestLogin();
             });
             document.getElementById('tvcLoginBtn').addEventListener('click', tryLogin);
-            document.getElementById('tvcGuestBtn').addEventListener('click', function () { grant('guest'); });
+            document.getElementById('tvcGuestBtn').addEventListener('click', showGuestBox);
+            document.getElementById('tvcGuestSubmit').addEventListener('click', tryGuestLogin);
+            document.getElementById('tvcGuestCancel').addEventListener('click', hideGuestBox);
             if (!session()) show();
         })();
     </script>
