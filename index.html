@@ -565,7 +565,7 @@ html.dark ::-webkit-scrollbar-thumb {
 <!-- Login Gate: PIN sebelum mengakses project -->
 <style>
 #tvcVeilParticles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
-        html.dark #tvcLoginCard{background:rgba(18,18,26,.05);border-color:rgba(255,255,255,.16);}
+        html.dark #tvcLoginCard,html.dark #tvcGuestCard{background:rgba(18,18,26,.05);border-color:rgba(255,255,255,.16);}
         .tvc-logo{position:absolute;border-radius:50%;object-fit:cover;will-change:transform,opacity;}
         @keyframes tvc-float{
             0%{transform:translate(0,0) rotate(var(--r0,-12deg)) scale(.85);}
@@ -578,25 +578,37 @@ html.dark ::-webkit-scrollbar-thumb {
     </style>
 <div id="tvcLoginVeil" style="position:fixed;inset:0;z-index:10000;background:var(--background);display:none;align-items:center;justify-content:center;padding:16px">
   <div id="tvcVeilParticles" aria-hidden="true"></div>
-  <div id="tvcLoginCard" style="width:100%;max-width:340px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.4);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35)">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
-      <img src="logocore.png" alt="Logo" style="width:136px;height:136px;border-radius:50%;object-fit:cover;background:var(--surface-container-high);border:1px solid var(--outline-variant)">
-      <div style="font-size:20px;font-weight:700;font-family:'Futura','Futura PT','Century Gothic',sans-serif;color:var(--primary);line-height:1.1;letter-spacing:.04em;">TV CORE MAKING</div>
-      <div style="font-size:13px;color:var(--secondary);">Masukkan PIN untuk melanjutkan</div>
-    </div>
-    <input id="tvcLoginPin" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••"
-      style="width:100%;box-sizing:border-box;margin-top:16px;background:var(--background);border:1px solid var(--outline-variant);color:var(--on-background);font-family:inherit;text-align:center;font-size:26px;letter-spacing:.5em;padding:12px 4px;border-radius:10px;outline:none;">
-    <div id="tvcLoginErr" style="display:none;margin-top:10px;text-align:center;font-size:13px;color:var(--error)">PIN salah. Coba lagi.</div>
-    <button id="tvcLoginBtn" style="width:100%;margin-top:16px;padding:13px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">Masuk Sebagai Admin</button>
-    <button id="tvcGuestBtn" style="width:100%;margin-top:10px;padding:12px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;">Login as Guest</button>
-    <div id="tvcGuestBox" style="display:none;margin-top:10px;">
-      <input id="tvcGuestPin" type="password" maxlength="64" autocomplete="off" placeholder="Password guest"
-        style="width:100%;box-sizing:border-box;background:var(--background);border:1px solid var(--outline-variant);color:var(--on-background);font-family:inherit;text-align:center;font-size:15px;padding:11px 10px;border-radius:10px;outline:none;">
-      <div id="tvcGuestErr" style="display:none;margin-top:8px;text-align:center;font-size:12.5px;color:var(--error)">Password guest salah. Coba lagi.</div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
-        <button id="tvcGuestSubmit" type="button" style="flex:1;padding:11px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;">Masuk Guest</button>
-        <button id="tvcGuestCancel" type="button" style="flex:0 0 auto;padding:11px 14px;border:1px solid var(--outline);background:transparent;color:var(--secondary);border-radius:10px;font-weight:600;font-size:12.5px;cursor:pointer;">Batal</button>
+  <div id="tvcLoginPanels" style="position:relative;display:flex;gap:14px;align-items:stretch;justify-content:center;width:100%;max-width:700px;flex-wrap:wrap">
+    <!-- Panel Admin -->
+    <div id="tvcLoginCard" style="flex:1 1 300px;max-width:340px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.4);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+        <img src="logocore.png" alt="Logo" style="width:136px;height:136px;border-radius:50%;object-fit:cover;background:var(--surface-container-high);border:1px solid var(--outline-variant)">
+        <div style="font-size:20px;font-weight:700;font-family:'Futura','Futura PT','Century Gothic',sans-serif;color:var(--primary);line-height:1.1;letter-spacing:.04em;">TV CORE MAKING</div>
+        <div style="font-size:13px;color:var(--secondary);">Masuk sebagai Admin</div>
       </div>
+      <input id="tvcLoginPin" type="text" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••"
+        style="width:100%;box-sizing:border-box;margin-top:16px;background:var(--background);border:1px solid var(--outline-variant);color:var(--on-background);font-family:inherit;text-align:center;font-size:26px;letter-spacing:.5em;padding:12px 4px;border-radius:10px;outline:none;">
+      <div id="tvcLoginErr" style="display:none;margin-top:10px;text-align:center;font-size:13px;color:var(--error)">PIN salah. Coba lagi.</div>
+      <button id="tvcLoginBtn" style="width:100%;margin-top:auto;padding:13px;border:none;border-radius:10px;background:var(--primary);color:var(--on-primary);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;">Masuk Sebagai Admin</button>
+    </div>
+
+    <!-- Panel Guest -->
+    <div id="tvcGuestCard" style="flex:1 1 300px;max-width:340px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.4);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+        <div style="width:136px;height:136px;border-radius:50%;background:var(--surface-container-high);border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" width="78" height="78" aria-hidden="true" style="fill:var(--secondary);opacity:.85">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        <div style="font-size:20px;font-weight:700;font-family:'Futura','Futura PT','Century Gothic',sans-serif;color:var(--primary);line-height:1.1;letter-spacing:.04em;">MODE TAMU</div>
+        <div style="font-size:13px;color:var(--secondary);">Masukkan password tamu</div>
+      </div>
+      <div id="tvcGuestBox" style="margin-top:16px">
+        <input id="tvcGuestPin" type="password" maxlength="64" autocomplete="off" placeholder="Password tamu"
+          style="width:100%;box-sizing:border-box;background:var(--background);border:1px solid var(--outline-variant);color:var(--on-background);font-family:inherit;text-align:center;font-size:15px;padding:11px 10px;border-radius:10px;outline:none;">
+        <div id="tvcGuestErr" style="display:none;margin-top:10px;text-align:center;font-size:12.5px;color:var(--error)">Password tamu salah. Coba lagi.</div>
+      </div>
+      <button id="tvcGuestSubmit" type="button" style="width:100%;margin-top:auto;padding:13px;border:1px solid var(--primary);border-radius:10px;background:transparent;color:var(--primary);font-weight:700;font-size:13.5px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;">Masuk Guest</button>
     </div>
   </div>
 </div>
@@ -1090,19 +1102,13 @@ html.dark ::-webkit-scrollbar-thumb {
                 if (inp) setTimeout(function () { inp.focus(); }, 50);
             }
             function hide() { veil.style.display = 'none'; }
-            function showGuestBox() {
-                var box = document.getElementById('tvcGuestBox');
+            /* Panel tamu selalu tampil berdampingan dengan panel admin,
+               jadi fungsi ini hanya membersihkan isian dan pesan error. */
+            function hideGuestBox() {
                 var inp = document.getElementById('tvcGuestPin');
                 var err = document.getElementById('tvcGuestErr');
-                if (err) err.style.display = 'none';
-                if (box) box.style.display = 'block';
-                if (inp) { inp.value = ''; setTimeout(function () { inp.focus(); }, 50); }
-            }
-            function hideGuestBox() {
-                var box = document.getElementById('tvcGuestBox');
-                var inp = document.getElementById('tvcGuestPin');
-                if (box) box.style.display = 'none';
                 if (inp) inp.value = '';
+                if (err) err.style.display = 'none';
             }
             var guestBusy = false;
             async function tryGuestLogin() {
@@ -1192,9 +1198,7 @@ html.dark ::-webkit-scrollbar-thumb {
                 else if (document.activeElement === document.getElementById('tvcGuestPin')) tryGuestLogin();
             });
             document.getElementById('tvcLoginBtn').addEventListener('click', tryLogin);
-            document.getElementById('tvcGuestBtn').addEventListener('click', showGuestBox);
             document.getElementById('tvcGuestSubmit').addEventListener('click', tryGuestLogin);
-            document.getElementById('tvcGuestCancel').addEventListener('click', hideGuestBox);
             if (!session()) show();
         })();
     </script>
