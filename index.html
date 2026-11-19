@@ -1038,15 +1038,33 @@ html.dark ::-webkit-scrollbar-thumb {
     <!-- Login Gate logic -->
     <script>
         (function () {
-            var PIN = '4231';              // <<< GANTI PIN ADMIN DI SINI sebelum dipakai publik
-            var GUEST_PASSWORD = 'CoreGuest#2026'; // <<< GANTI PASSWORD MODE GUEST DI SINI
+            /* Password TIDAK lagi disimpan di source code. Validasi dilakukan
+               oleh /api/auth memakai Environment Variable Vercel:
+               ADMIN_PIN, GUEST_PASSWORD, AUTH_SECRET. */
             var SESSION_DAYS = 7;          // lama sesi login (hari) tanpa PIN ulang
             var KEY = 'tvcm-pin-auth';
             var veil = document.getElementById('tvcLoginVeil');
             if (!veil) return;
 
-            function token() {
-                try { return btoa('tvcm:' + PIN); } catch (e) { return 'tvcm'; }
+            function authLogin(role, password) {
+                return fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: role, password: password })
+                }).then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (j) {
+                        return { status: r.status, ok: !!(r.ok && j && j.ok), data: j || {} };
+                    });
+                }).catch(function () {
+                    return { status: 0, ok: false, data: {} };
+                });
+            }
+
+            function loginErrorMessage(out) {
+                if (out && out.status === 401) return 'Password salah. Coba lagi.';
+                if (out && out.status === 429) return (out.data && out.data.error) || 'Terlalu banyak percobaan. Coba lagi nanti.';
+                if (out && out.status === 500) return 'Layanan login belum siap. Hubungi admin.';
+                return 'Layanan login tidak tersedia. Coba lagi.';
             }
             function session() {
                 try {
@@ -1086,22 +1104,37 @@ html.dark ::-webkit-scrollbar-thumb {
                 if (box) box.style.display = 'none';
                 if (inp) inp.value = '';
             }
-            function tryGuestLogin() {
+            var guestBusy = false;
+            async function tryGuestLogin() {
                 var inp = document.getElementById('tvcGuestPin');
                 var err = document.getElementById('tvcGuestErr');
-                if (!inp) return;
-                if (inp.value === GUEST_PASSWORD) {
+                var btn = document.getElementById('tvcGuestSubmit');
+                if (!inp || guestBusy) return;
+                if (!inp.value) { inp.focus(); return; }
+                guestBusy = true;
+                var oldText = btn ? btn.textContent : '';
+                if (btn) { btn.disabled = true; btn.textContent = 'Memeriksa…'; }
+                var out = await authLogin('guest', inp.value);
+                guestBusy = false;
+                if (btn) { btn.disabled = false; btn.textContent = oldText; }
+                if (out.ok) {
                     hideGuestBox();
-                    grant('guest');
-                } else {
-                    if (err) err.style.display = 'block';
-                    inp.value = '';
-                    inp.focus();
+                    grant('guest', out.data);
+                    return;
                 }
+                if (err) { err.textContent = loginErrorMessage(out); err.style.display = 'block'; }
+                inp.value = '';
+                inp.focus();
             }
-            function grant(role) {
+            function grant(role, auth) {
+                var now = Date.now();
+                var data = auth || {};
                 try {
-                    localStorage.setItem(KEY, JSON.stringify({ t: (role === 'admin' ? token() : 'guest-' + Date.now()), exp: Date.now() + SESSION_DAYS * 24 * 3600000, role: role }));
+                    localStorage.setItem(KEY, JSON.stringify({
+                        t: data.token || '',
+                        exp: data.exp || (now + SESSION_DAYS * 24 * 3600000),
+                        role: role
+                    }));
                 } catch (e) {}
                 var err = document.getElementById('tvcLoginErr');
                 if (err) err.style.display = 'none';
@@ -1132,17 +1165,26 @@ html.dark ::-webkit-scrollbar-thumb {
                     iframe.src = u.href;
                 } catch (e) {}
             }
-            function tryLogin() {
+            var adminBusy = false;
+            async function tryLogin() {
                 var inp = document.getElementById('tvcLoginPin');
                 var err = document.getElementById('tvcLoginErr');
-                if (!inp) return;
-                if (inp.value === PIN) {
-                    grant('admin');
-                } else {
-                    if (err) err.style.display = 'block';
-                    inp.value = '';
-                    inp.focus();
+                var btn = document.getElementById('tvcLoginBtn');
+                if (!inp || adminBusy) return;
+                if (!inp.value) { inp.focus(); return; }
+                adminBusy = true;
+                var oldText = btn ? btn.textContent : '';
+                if (btn) { btn.disabled = true; btn.textContent = 'Memeriksa…'; }
+                var out = await authLogin('admin', inp.value);
+                adminBusy = false;
+                if (btn) { btn.disabled = false; btn.textContent = oldText; }
+                if (out.ok) {
+                    grant('admin', out.data);
+                    return;
                 }
+                if (err) { err.textContent = loginErrorMessage(out); err.style.display = 'block'; }
+                inp.value = '';
+                inp.focus();
             }
             document.addEventListener('keydown', function (e) {
                 if (e.key !== 'Enter' || veil.style.display !== 'flex') return;
